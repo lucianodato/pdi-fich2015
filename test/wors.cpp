@@ -5,8 +5,8 @@ int main()
 {
 std::cout << "run CImg hello world..." << std::endl;
 cimg_library::CImg<unsigned char> img;
-std::string strFileInput = "lena.jpg";
-std::string strFileOutput = "lena.png";
+std::string strFileInput = "../images/lena.jpg";
+std::string strFileOutput = "../images/llena.png";
 img = cimg_library::CImg<unsigned char>(strFileInput.c_str());
 std::cout << "load " << strFileInput << "..." << std::endl;
 std::cout << "width = " << img.width() << std::endl;
