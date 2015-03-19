@@ -34,6 +34,7 @@ cmake/
 m4/
 scripts/
 utests/testgcal
+bin/
 
 CMakeCache.txt
 Doxyfile
