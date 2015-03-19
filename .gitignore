@@ -54,3 +54,5 @@ stamp-h1
 *.lo*
 *.pc*
 *.so*
+*.txt.user
+*.cbp
