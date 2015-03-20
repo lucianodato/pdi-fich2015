@@ -10,6 +10,7 @@ int main(int argc, char *argv[])
               CImgDisplay displayImagen, displayImagen1;
 
               img.load("../../../../images/rmn.jpg");
+              // ...
               listaImagenes.insert(img);
               listaImagenes1.insert(img);
               for(unsigned i=0; i<5; i++){
