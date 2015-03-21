@@ -33,15 +33,18 @@ int main(int argc, char *argv[])
 //    CImgDisplay vent3(img3,"recortada_2");
 
    //guardo en disco
-    img2.save_bmp("modificada");
-    cout<<img2.size();
 
-    //Calculo el tamaño de la imagen
-    int wx=130-94;
-    int wy=80-38;
-    int wtotal = (wx*wy) + 54;
-    cout << wtotal<<endl;
-    cout<<img2.size()<<endl;
+    img2.save_bmp("modificada");
+
+    //Calculo el tamaño de la imagen. BMP ES UNA IMAGEN SIN COMPRESION!, GUARDA LOS 3 CANALES.
+    int wx=img2.width();
+    int wy=img2.height();
+    int wtotal = (wx*wy)+ 54;
+    int wtotal_BMP = (wx*wy)*3 + 54;
+
+    cout <<"Valor calculado: "<<wtotal<<endl;
+    cout<<"Valor en Memoria: "<< img2.size()<<endl;
+    cout<<"Valor Calculado BMP (3Canales): "<< wtotal_BMP<<endl;
 
 
     while(!vent1.is_closed() || !vent2.is_closed() /*|| !vent3.is_closed()*/){}
