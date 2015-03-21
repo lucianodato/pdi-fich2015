@@ -7,20 +7,34 @@ int main()
 {
 
 
-    CImg<unsigned char> img;
-    CImgList<unsigned char> listaImagenes;
-    CImgDisplay displayImagen;
+    CImg<unsigned char> imgOrig, imgQuant;
+        CImgDisplay displayImagen;
+        unsigned nBits=8;
+        unsigned nLevels; // maxima cantidad de niveles segun el tipo de dato usado
+        char window_title[50];
 
-    img.load("../../../../images/huang2.jpg");
-    listaImagenes.insert(img);
-    for(unsigned i=8; i>1; i--){
-        listaImagenes.insert(img.get_quantize(i));
-    }
-    displayImagen.assign(listaImagenes, "Quantizacion 8bit(256 niveles) to 2 bit(2 niveles )");
+        imgOrig.load("../../../../images/huang2.jpg");
+        imgQuant=imgOrig;
+        displayImagen.assign(imgQuant);
 
-    while(!displayImagen.is_closed()){
-        displayImagen.wait_all(); // esperamos algun evento en cualquier display
-    }
+        while(!displayImagen.is_closed()){
+            displayImagen.wait(); // esperamos algun evento en el display
+            if(displayImagen.is_keyARROWUP()){nBits+=1;}
+            if(displayImagen.is_keyARROWDOWN()){nBits-=1;}
+            if(nBits>8) nBits=8;
+            if(nBits<1) nBits=1;
+            nLevels=pow(2, nBits);
+
+
+            imgQuant=imgOrig;
+            imgQuant.quantize(nLevels);
+            displayImagen.render(imgQuant);
+            sprintf(window_title,"Quant %i bits",nBits);
+            displayImagen.set_title(window_title);
+            displayImagen.paint();
+        }
+
+
 
     return 0;
 }
