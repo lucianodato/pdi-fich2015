@@ -1,0 +1,5 @@
+#ifndef PASAR_MEDIOS_TONOS
+#define PASAR_MEDIOS_TONOS
+
+#endif // PASAR_MEDIOS_TONOS
+
