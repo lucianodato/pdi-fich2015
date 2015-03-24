@@ -24,8 +24,7 @@ struct infOffset  {
 int main(int argc, char *argv[])
 {
     CImg<unsigned char> image,aux;
-    image.load("../../../../images/botellas.tif");
-    //image.load("/home/asusn56/Copy cristiaan3003@gmail.com/PDI-2015/pdi-fich2015/images/botellas2.tif");
+    image.load("../../../images/botellas.tif");
     CImgDisplay main_disp(image,"Original");
     vector<infOffset> offsets;
     CImgList<> img;
@@ -62,12 +61,7 @@ int main(int argc, char *argv[])
         if(auxiliar.flag==1) //es botella-->entonces recorto y guardo
             img.push_back(image.get_crop(auxiliar.xini,0,0,0,auxiliar.xini+auxiliar.offset-1,image.height(),0,0));
     }
-    //buscar vacias
-    for(int i;i<offsets.size();i++)
-        if((int)*img(i).data(img(i).width()/2,50,0,0)==255)
-            cout<<"VACIA"<<endl;
-        else
-            cout<<"LLENA"<<endl;
+
 
     for(int i;i<offsets.size();i++){
         auxiliar=offsets[i];
@@ -83,7 +77,12 @@ int main(int argc, char *argv[])
     aux.display("Fila de imagen");
     img.display("Recortes");
 
-
+    //buscar vacias
+    for(int i;i<offsets.size();i++)
+        if((int)*img(i).data(img(i).width()/2,50,0,0)==255)
+            cout<<"VACIA"<<endl;
+        else
+            cout<<"LLENA"<<endl;
 
 
     while (!main_disp.is_closed() ) {
