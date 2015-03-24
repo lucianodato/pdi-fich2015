@@ -5,7 +5,7 @@ using namespace cimg_library;
 using namespace std;
 int main(int argc, char *argv[])
 {
-    const char* filename = cimg_option("-i","../../../../images/huang2.jpg","Image file\n");
+    const char* filename = cimg_option("-i","../../../../../../../images/huang2.jpg","Image file\n");
     //Imagen color, 8 bits de profundidad por componente.
     //Asigna 0 a todos los pıxeles
     //Visualiza
