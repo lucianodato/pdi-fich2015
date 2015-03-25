@@ -1,0 +1,5 @@
+#ifndef PASAR_BINARIO
+#define PASAR_BINARIO
+
+#endif // PASAR_BINARIO
+
