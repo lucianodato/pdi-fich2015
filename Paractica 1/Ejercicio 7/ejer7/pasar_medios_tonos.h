@@ -15,6 +15,7 @@ CImg<unsigned char> detectar_tono(int intensidad){
     //9 niveles de 28 cada uno. El ultimo tiene 31
     if(intensidad >=0 && intensidad<25){
         //nivel 0
+
         return nivel.fill(0);
     }
     if(intensidad >=25 && intensidad<50){
@@ -101,7 +102,7 @@ CImg<unsigned char> detectar_tono(int intensidad){
 CImg<unsigned char> pasar_medios_tonos(CImg<unsigned char> original){
 
     CImg<unsigned char> modificada(original.width()*3,original.height()*3,1,1);
-    //original.normalize(0,1);
+    original.normalize(0,255);
 
     for (int x =0;x<original.width();x++){
         for (int y =0;y<original.height();y++){
@@ -111,8 +112,7 @@ CImg<unsigned char> pasar_medios_tonos(CImg<unsigned char> original){
 
             var_x=3*x;
             var_y=3*y;
-            //for (int i=var_x;i<var_x+3;i++){
-            //  for (int j=var_y;j<var_y+3;j++){
+
             modificada(var_x,var_y) = aux(0,0);
             modificada(var_x,var_y+1) = aux(0,1);
             modificada(var_x,var_y+2) = aux(0,2);
@@ -122,13 +122,11 @@ CImg<unsigned char> pasar_medios_tonos(CImg<unsigned char> original){
             modificada(var_x+2,var_y) = aux(2,0);
             modificada(var_x+2,var_y+1) = aux(2,1);
             modificada(var_x+2,var_y+2) = aux(2,2);
-            //}
-            //}
         }
 
     }
 
-    modificada.resize(original.width(),original.height());
+    modificada.resize(original.width(),original.height(),-100,-100,3);
     return modificada;
 }
 
