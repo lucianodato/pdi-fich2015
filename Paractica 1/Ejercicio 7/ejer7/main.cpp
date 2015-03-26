@@ -9,6 +9,7 @@ int main(int argc, char *argv[])
 {
     const char* filename = cimg_option("-i","../../../../images/huang1.jpg","Image file\n");
     CImg<unsigned char> img0(filename);
+    img0.normalize(0,255);
 
 //    CImg<unsigned char> img0(256,256,1,1); // Define a 256x256 color image
 //    cimg_forXY(img0,x,y) { img0(x,y) =x; }
