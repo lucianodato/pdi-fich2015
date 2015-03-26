@@ -4,63 +4,90 @@
 using namespace cimg_library;
 using namespace std;
 
-using namespace std;
+/*
+ *
+ *OBTENER VALOR DE PIXELES en Cimg
+ * src.data(10, 10, 0, canal)
+unsigned char *r = src.data(10, 10, 0, 0);
+unsigned char *g = src.data(10, 10, 0, 1);
+unsigned char *b = src.data(10, 10, 0, 2);
+ *
+ *
+ *
+ *
+ * */
+struct infOffset  {
+    int offset,flag,xini;
+};
 
- CImg<unsigned char> umbral( CImg<unsigned char>img,int val1,int val2){
-     cimg_forX(img,i)
-             cimg_forY(img,j)
-             if (img(i,j)<val1) img(i,j)=0; else
-             if (img(i,j)>val2) img(i,j)=255; else img(i,j)=127;
-
-     return img;
- }
 
 int main(int argc, char *argv[])
 {
-    CImg<unsigned char> imgOrig,aux;
-    vector<int> v;
-    imgOrig.load("../../../../images/botellas.tif");
-    CImgDisplay displayImagen;
-   // um=umbral(um,50,250);
-    displayImagen.assign(imgOrig);
-    char window_title[50];
-    //varias imagenes en una pantalla
-       CImgList<> img;
-       // img.insert(img1);
-       // img.insert(img2);
-       // img.display("My List");
-    int contador=0,m=0,l=0;
-    int j=imgOrig.height()/2;
-    bool flag=true;
-    cimg_forX(imgOrig,i){
-            if(imgOrig(i,j)!=0){
-                if (i=0) flag=false;
-                v.push_back(m);
-                contador++;
-                m=0;
+    CImg<unsigned char> image,aux;
+    image.load("../../../images/botellas.tif");
+    CImgDisplay main_disp(image,"Original");
+    vector<infOffset> offsets;
+    CImgList<> img;
+    infOffset auxiliar;
+    const int y = image.height()/2;//tomo fila a la mitad de la foto original
+    aux=image.get_crop(0,y,0,0,image.width()-1,y,0,0);
+    // aux(aux.width(),0)=0;
+    int cont=0,cont0=0,cantBotellas=0;
+
+    //offsets
+    for(int i;i<aux.width();i++)
+        if((int)*aux.data(i,0,0,0)!=0) {
+            cont++;
+            if((int)*aux.data(i+1,0,0,0)==0){
+                auxiliar.offset=cont-1;
+                auxiliar.flag=1;
+                auxiliar.xini=i-auxiliar.offset;
+                offsets.push_back(auxiliar);
+                cont0=0;}
+        }
+        else {cont0++;
+            if((int)*aux.data(i+1,0,0,0)!=0){
+                auxiliar.offset=cont0-1;
+                auxiliar.flag=0;
+                auxiliar.xini=i-auxiliar.offset;
+                offsets.push_back(auxiliar);
+                cont=0;
             }
-            else
-            {    v.push_back(contador);
-                m++;
-                contador=0;
-            }
+        }
 
-            for(int i=0;i<v.size()-1;i++)
-               img.insert( aux.get_crop(v[i],0,v[i+1],imgOrig.height()));
-            aux.clear();
-
-
+    //recortar
+    for(int i;i<offsets.size();i++){
+        auxiliar=offsets[i];
+        if(auxiliar.flag==1) //es botella-->entonces recorto y guardo
+            img.push_back(image.get_crop(auxiliar.xini,0,0,0,auxiliar.xini+auxiliar.offset-1,image.height(),0,0));
     }
 
 
+    for(int i;i<offsets.size();i++){
+        auxiliar=offsets[i];
+        cout<<"Offset: "<<auxiliar.offset<<" Flag: "<<auxiliar.flag <<" x:"<<auxiliar.xini <<endl;
+    }
+    for(int i;i<offsets.size();i++){
+        auxiliar=offsets[i];
+        if(auxiliar.flag==1) cantBotellas++;
+    }
+
+    cout<<"Botellas: "<<cantBotellas<<endl;
+
+    aux.display("Fila de imagen");
+    img.display("Recortes");
+
+    //buscar vacias
+    for(int i;i<offsets.size();i++)
+        if((int)*img(i).data(img(i).width()/2,50,0,0)==255)
+            cout<<"VACIA"<<endl;
+        else
+            cout<<"LLENA"<<endl;
 
 
-    while(!displayImagen.is_closed()){
-        displayImagen.wait_all(); // esperamos algun evento en el display
-        displayImagen.render(imgOrig);
-        sprintf(window_title,"Botellas");
-        displayImagen.set_title(window_title);
-        displayImagen.paint();
+    while (!main_disp.is_closed() ) {
+        main_disp.wait_all();
+
     }
 
 

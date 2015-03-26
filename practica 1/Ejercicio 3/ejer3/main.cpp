@@ -17,7 +17,7 @@ int main(int argc, char *argv[])
     //declaro color de linea para intensidad
     const unsigned char white[] = { 255,255,255 };
     int a=2;
-    if (a==1){ // items 2 y 3
+    if (a==1){ // items 2 y 3   // um=umbral(um,50,250);
          CImgDisplay main_disp(image,"Click a point"), draw_disp(visu,"Intensity profile fila"),draw_disp1(visu,"Intensity profile columna"),draw_disp2(visu,"Intensity profile columna");
     while (!main_disp.is_closed() && !draw_disp.is_closed()) {
         main_disp.wait();
