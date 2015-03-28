@@ -17,7 +17,7 @@ include_directories(${FUNCTIONS_DIRECTORY})
 #change outputs directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
-add_executable(${PROJECT_NAME} ${SRC_LIST} ${MySources} ${funciones})
+add_executable(${PROJECT_NAME} ${SRC_LIST} ${MySources} ${functions})
 
 #added X11 config
 find_package(X11)
