@@ -11,37 +11,84 @@ using namespace std;
 
 //------------------------------FUNCIONES AUXILIARES--------------------------------------------
 
+//s=a*r+c
+//con r: valor de entrada
+//a = factor de ganancia
+//c = offset
 
-//FUNCION LUT - Reliza una transformacion lineal segun el alpha y el offset que recibe
 //Caso que tengo todos los grises
-const CImg<unsigned char> lut(float a=1,float c=0){
-
-    CImg <unsigned char> lut(1,256,1,1);
-    int s;
-
-    for(int i=0;i<256;i++)
-    {
-        s=a*i+c;
-
-        if(s<0)
-        {
-            lut(1,i) = 0;
+//item 1
+CImg<unsigned char> generar_lut_lin(float a,float c){
+        CImg<unsigned char> lut(1,256,1,1);
+        int s;
+        for (int i=0;i<256;i++){
+                s=int(a*i+c);
+                if (s>255) s=255;
+                if (s<0) s=0;
+                lut(i)=s;
         }
-        else
-        {
-            if(s>255)
-            {
-                lut(1,i) = 255;
-            }
-            else
-            {
-                lut(1,i) = s;
-            }
-        }
-    }
-
-    return lut;
+        return lut;
 }
+
+
+//lut recta 3 tramos,(solo 3 tramos, hacerla de muchos tramos muy bien gracias)
+CImg<unsigned char> generar_lut_mod(int r1,int r2,int s1,int s2){
+        CImg<unsigned char> lut(1,256,1,1);
+        int s;
+        for (int i=0;i<256;i++){
+                if (i<=r1) s=(((s1-0)/(r1-0))*(i-0))+0;
+                if (i>r1 && i<=r2) s=(((s2-s1)/(r2-r1))*(i-r1))+s1;
+
+                if (i>r2 ) s=(((255-s2)/(255-r2))*(i-r2))+s2;
+                if (s>255) s=255;
+                if (s<0) s=0;
+                lut(i)=s;
+        }
+        return lut;
+}
+
+//logaritmica: imagenes resultantes son mas claras
+//Caso que tengo todos los grises
+CImg<int> generar_lut_logb(float c){
+        CImg<unsigned char> lut(1,256,1,1);
+        int s;
+        for (int i=0;i<256;i++){
+                s=(int)(c*(255*((log(1+i)/log(1+255)))));// normalizo -.- mmmm
+                if (s>255) s=255;
+                if (s<0) s=0;
+                lut(i)=s;
+        }
+        return lut;
+}
+
+
+
+//lut exponencial bis: REDUCE el rango de grises, las imagenes resultantes son mas oscuras
+//Caso que tengo todos los grises
+CImg<unsigned char> generar_lut_expb(float c,float gamma){
+        CImg<unsigned char> lut(1,256,1,1);
+        int s;
+        for (int i=0;i<256;i++){
+                s=int(c*(pow(i,gamma)/255));
+                if (s>255) s=255;
+                if (s<0) s=0;
+                lut(i)=s;
+        }
+        return lut;
+}
+
+//aplica la transformacion que se la pase en "lut" a la imagen "img"
+CImg<unsigned char> transformacion(CImg<unsigned char> img,CImg<unsigned char> lut){
+        cimg_forXY(img,i,j)
+                        img(i,j)=lut(img(i,j)); // "map"
+        return img;
+}
+
+
+//lut que no andan
+//FUNCION LUT - Reliza una transformacion lineal segun el alpha y el offset que recibe
+
+
 
 //FUNCION LUT - Reliza una transformacion lineal segun el alpha y el offset que recibe
 //Caso que tengo un tramo de grises especifico
@@ -233,6 +280,46 @@ CImg<unsigned char> mediotono(CImg<unsigned char> original){
     modificada.resize(original.width(),original.height(),-100,-100,3);
     return modificada;
 }
+
+
+//SUMA
+CImg<unsigned char> sumaImg(CImg<unsigned char> img1, CImg<unsigned char> img2){
+        CImg<unsigned char> resultado(img1.width(),img1.height(),1,1);
+        cimg_forXY(img1,i,j) resultado(i,j)=(img1(i,j)+ img2(i,j))/2;
+        return resultado;
+}
+//DIFERENCIA
+CImg<unsigned char> DifImg(CImg<unsigned char> img1, CImg<unsigned char> img2){
+        CImg<unsigned char> resultado(img1.width(),img1.height(),1,1);
+        cimg_forXY(img1,i,j)  resultado(i,j)=(img1(i,j)- img2(i,j)+255)/2;
+        return resultado;
+}
+//MULTIPLICACION
+CImg<unsigned char> multiplicacion(CImg<unsigned char> &img, CImg<unsigned char> &masc){
+        CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+        cimg_forXY(img,i,j) resultado(i,j)=img(i,j) * masc(i,j)/255; //divid0 por 255 para normalizar la mascara
+        return resultado;
+}
+//DIVISION
+CImg<unsigned char> division(CImg<unsigned char> &img, CImg<unsigned char> &masc){
+    CImg<unsigned char> lut(generar_lut_lin(-1,255));
+    CImg<unsigned char> mascara;
+    mascara=transformacion(masc,lut);
+    return multiplicacion(img,mascara);
+}
+//REDUCIR RUIDO //pasar una imagen con ruido en "img",  //genera la suma de "n" imagenes con ruido
+//noise(desvio, tipo de ruido a gnerar)
+//(0=gaussian, 1=uniform, 2=Salt and Pepper, 3=Poisson or 4=Rician).
+CImg<unsigned char> reducRuido(CImg<unsigned char>img,unsigned int n, int ruido){
+        CImg<unsigned char> suma(img.width(),img.height(),1,1,0);
+        for(unsigned char i=0;i<n;i++){
+                CImg<unsigned char>img2(img);
+                suma=sumaImg(suma,img2.get_noise(ruido,0)); //sumo
+        }
+                return suma;
+}
+
+
 
 
 #endif // FUNCIONES
