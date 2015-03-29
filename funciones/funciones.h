@@ -10,10 +10,22 @@ using namespace cimg_library;
 using namespace std;
 
 //Variables auxiliares
-struct punto{
-    int x;
-    int y;
-};
+typedef struct punto{
+    float x;
+    float y;
+    void print(bool cr) {
+        std::cout<<x<<' '<<y;
+        if (cr)
+            std::cout<<'\n';
+    }
+    float norma() {
+        return sqrt(x*x + y*y);
+    }
+    float normaManhattan() {
+        return x+y;
+    }
+}punto;
+
 
 //Para usar sort con vectores de puntos
 bool compara_puntos(const punto &a, const punto &b)
@@ -30,11 +42,11 @@ bool compara_puntos(const punto &a, const punto &b)
 
 //Caso generico. Recibe un gris inicial y un final. Por tramos
 //item 1
-CImg<unsigned char> calcular_lut(float a,float c,int ini,int fin){
-
+CImg<unsigned char> generar_lut(float a,float c,int ini,int fin){
+    cout<<"ini: "<<ini <<" fin: "<<fin<<" abs: "<< abs(fin-ini)+1<<endl;
     CImg<unsigned char> lut(1,abs(fin-ini)+1,1,1);
     int s;
-    for (int i=ini;i<fin+1;i++){
+    for (int i=ini;i<abs(fin-ini)+1;i++){
         s=int(a*i+c);
         if (s>255) s=255;
         if (s<0) s=0;
@@ -275,7 +287,7 @@ CImg<unsigned char> multiplicacion(CImg<unsigned char> &img, CImg<unsigned char>
 }
 //DIVISION
 CImg<unsigned char> division(CImg<unsigned char> &img, CImg<unsigned char> &masc){
-    CImg<unsigned char> lut(calcular_lut(-1,255,0,255));
+    CImg<unsigned char> lut(generar_lut(-1,255,0,255));
     CImg<unsigned char> mascara;
     mascara=transformacion(masc,lut);
     return multiplicacion(img,mascara);
@@ -294,7 +306,6 @@ CImg<unsigned char> reducRuido(CImg<unsigned char>img,unsigned int n, int ruido)
 
 //Funcion curva!... importante
 CImg <unsigned char> generar_curva(CImg<unsigned char> lut,vector<punto> puntos){
-
     int x0,x1,y0,y1;
     float a,c;
     a=1;
@@ -304,7 +315,7 @@ CImg <unsigned char> generar_curva(CImg<unsigned char> lut,vector<punto> puntos)
     //Ordeno el vector para que los puntos esten ordenados
     //sort(puntos.begin(),puntos.end(),compara_puntos);
 
-    if (puntos.size() == 2) return calcular_lut(1,0,0,255);
+    if (puntos.size() == 2) return generar_lut(1,0,0,255);
 
     x0 = puntos[0].x;
     y0 = puntos[0].y;
@@ -319,7 +330,7 @@ CImg <unsigned char> generar_curva(CImg<unsigned char> lut,vector<punto> puntos)
         printf("%.12f", a);
         cout<<endl;
 
-        aux = calcular_lut(a,c,x0,x1);
+        aux = generar_lut(a,c,x0,x1);
 
         for(int i=x0;i<x1;i++){
             curva(1,i) = aux(1,i);
@@ -331,6 +342,13 @@ CImg <unsigned char> generar_curva(CImg<unsigned char> lut,vector<punto> puntos)
     }
 
     return curva;
+}
+
+bool myfunction (punto i,punto j) { return (i.normaManhattan()<j.normaManhattan()); }
+vector<punto> ordenarCoordenadas(vector<punto> puntos){
+    // using object as comp
+     std::sort (puntos.begin(), puntos.end(),myfunction);
+     return puntos;
 }
 
 
