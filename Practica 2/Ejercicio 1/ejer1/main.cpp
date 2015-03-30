@@ -59,13 +59,13 @@ int main(int argc, char *argv[])
             //ordenar puntos  segun distancia al origen (0,0)
             puntos=ordenarCoordenadas(puntos);
             for(int i=1;i<puntos.size();i++)//m= y2-y1/x2-x1
-                pendientes.push_back((puntos[i].y-puntos[i-1].y)/(puntos[i].x-puntos[i-1].x));//las coordenadas estan ordenadas
+                pendientes.push_back(abs(puntos[i].y-puntos[i-1].y)/abs(puntos[i].x-puntos[i-1].x));//las coordenadas estan ordenadas
 //cout<<"m: "<<(puntos[i].y-puntos[i-1].y)/(puntos[i].x-puntos[i-1].x)<<endl;
             //float aa=5/4;
            // cout<<"m: "<<aa/1.0<<endl;
-//for(int i=0;i<pendientes.size();i++)
- //   cout<<i<<": "<<pendientes[i]<<endl;
-          //    cout<<"size pendiente: "<<pendientes.size()<<"size puntos: "<<puntos.size()<<endl;
+for(int i=0;i<pendientes.size();i++)
+  cout<<i<<": "<<pendientes[i]<<endl;
+           //   cout<<"size pendiente: "<<pendientes.size()<<"size puntos: "<<puntos.size()<<endl;
             //generar luts
 
     //la primer tramo de la curva bien
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
             for(int i=0;i<pendientes.size();i++){
                // CImg<unsigned char> lut_aux(1,puntos[i+1].x-puntos[i].x,1,1);
                // cout<<"offset: "<<puntos[i].y<<"punto x: "<<puntos[i].x<<"puntox +1: "<<puntos[i+1].x<<endl;
-                  cout<<i<<": "<<pendientes[i]<<endl;
+               //   cout<<i<<": "<<pendientes[i]<<endl;
             listLut.push_back(generar_lut(pendientes[i],puntos[i].y,puntos[i].x,puntos[i+1].x));
             }
             //pegar luts-- no pega bien!!
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
 
             //lut.display();
             //lut.clear();
-            cantclick++;
+            //cantclick++;
             //aplico nuevo mapeo de lut
             modificada=transformacion(modificada,lut);
             //Redibujo las nuevas ventanas

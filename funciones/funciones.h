@@ -13,11 +13,6 @@ using namespace std;
 typedef struct punto{
     float x;
     float y;
-    void print(bool cr) {
-        std::cout<<x<<' '<<y;
-        if (cr)
-            std::cout<<'\n';
-    }
     float norma() {
         return sqrt(x*x + y*y);
     }
@@ -43,7 +38,6 @@ bool compara_puntos(const punto &a, const punto &b)
 //Caso generico. Recibe un gris inicial y un final. Por tramos
 //item 1
 CImg<unsigned char> generar_lut(float a,float c,int ini,int fin){
-    cout<<"ini: "<<ini <<" fin: "<<fin<<" abs: "<< abs(fin-ini)+1<<endl;
     CImg<unsigned char> lut(1,abs(fin-ini)+1,1,1);
     int s;
     for (int i=ini;i<abs(fin-ini)+1;i++){
@@ -268,9 +262,10 @@ CImg<unsigned char> mediotono(CImg<unsigned char> original){
 
 
 //SUMA
-CImg<unsigned char> sumaImg(CImg<unsigned char> img1, CImg<unsigned char> img2){
+//slipping=0 si quiero sumar sin corrimiento
+CImg<unsigned char> sumaImg(CImg<unsigned char> img1, CImg<unsigned char> img2, int slipping ){
     CImg<unsigned char> resultado(img1.width(),img1.height(),1,1);
-    cimg_forXY(img1,i,j) resultado(i,j)=(img1(i,j)+ img2(i,j))/2;
+    cimg_forXY(img1,i,j) resultado(i,j)=(img1(i+slipping,j+slipping)+ img2(i,j))/2;
     return resultado;
 }
 //DIFERENCIA
@@ -293,16 +288,14 @@ CImg<unsigned char> division(CImg<unsigned char> &img, CImg<unsigned char> &masc
     return multiplicacion(img,mascara);
 }
 //REDUCIR RUIDO //pasar una imagen con ruido en "img",  //genera la suma de "n" imagenes con ruido
-//noise(desvio, tipo de ruido a gnerar)
-//(0=gaussian, 1=uniform, 2=Salt and Pepper, 3=Poisson or 4=Rician).
-CImg<unsigned char> reducRuido(CImg<unsigned char>img,unsigned int n, int ruido){
-    CImg<unsigned char> suma(img.width(),img.height(),1,1,0);
-    for(unsigned char i=0;i<n;i++){
-        CImg<unsigned char>img2(img);
-        suma=sumaImg(suma,img2.get_noise(ruido,0)); //sumo
-    }
+//pasar lista de imagenes con ruido
+CImg<unsigned char> reducRuido(CImgList<unsigned char>img){
+    CImg<unsigned char> suma(img[0].width(),img[0].height(),1,1,0);
+    for(unsigned char i=0;i<img.size();i++)
+        suma=sumaImg(suma,img[i],0); //sumo
     return suma;
 }
+
 
 //Funcion curva!... importante
 CImg <unsigned char> generar_curva(CImg<unsigned char> lut,vector<punto> puntos){
@@ -350,6 +343,114 @@ vector<punto> ordenarCoordenadas(vector<punto> puntos){
      std::sort (puntos.begin(), puntos.end(),myfunction);
      return puntos;
 }
+
+
+
+///umbral invertido
+CImg<unsigned char> umbral_invertido(CImg<unsigned char> &img, int p){
+    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+        cimg_forXY(img,i,j)
+            if (img(i,j)<=p)
+                resultado(i,j)=img.max();
+            else
+                resultado(i,j)=0;
+    return resultado;
+}
+
+///umbral_por_tramos
+CImg<unsigned char> umbral_por_tramos(CImg<unsigned char> &img, int p1,int p2){
+    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+     cimg_forXY(img,i,j)
+            if (img(i,j)<=p1 || img(i,j)>=p2)
+                resultado(i,j)=img.max();
+            else
+                resultado(i,j)=0;
+    return resultado;
+}
+///umbral_invertido_por_tramos
+CImg<unsigned char> umbral_invertido_por_tramos(CImg<unsigned char> &img, int p1,int p2){
+    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+     cimg_forXY(img,i,j)
+            if (img(i,j)<=p1 || img(i,j)>=p2)
+                resultado(i,j)=0;
+            else
+                resultado(i,j)=img.max();
+
+    return resultado;
+}
+
+///NOT
+CImg<unsigned char> NOTimg(CImg<unsigned char> &img){
+    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+     cimg_forXY(img,i,j)
+            if (img(i,j)==img.max())
+                resultado(i,j)=0;
+            else
+                resultado(i,j)=img.max();
+
+    return resultado;
+}
+
+///OR
+//Or entre imagen y una mascara binaria (Que la imagen original siempre)
+CImg<unsigned char> ORimg(CImg<unsigned char> &img, CImg<unsigned char> &masc){
+    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+     cimg_forXY(img,i,j)
+            if ( (img(i,j)==img.max()) || (masc(i,j)==img.max()) )
+                resultado(i,j)=img.max();
+            else
+                resultado(i,j)=0;
+
+    return resultado;
+}
+
+///AND
+//And entre imagen y una mascara binaria
+CImg<unsigned char> ANDimg(CImg<unsigned char> &img, CImg<unsigned char> &masc){
+    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+     cimg_forXY(img,i,j)
+            resultado(i,j)=img(i,j)*masc(i,j);
+    return resultado;
+}
+
+///MAYOR
+CImg<unsigned char> MAYORimg(CImg<unsigned char> &img, CImg<unsigned char> &img2){
+    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+     cimg_forXY(img,i,j)
+            if ( img(i,j)>img2(i,j) )
+                resultado(i,j)=255;
+            else
+                resultado(i,j)=0;
+
+    return resultado;
+}
+///MENOR
+CImg<unsigned char> MENORimg(CImg<unsigned char> &img, CImg<unsigned char> &img2){
+    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+     cimg_forXY(img,i,j)
+            if ( img(i,j)<img2(i,j) )
+                resultado(i,j)=255;
+            else
+                resultado(i,j)=0;
+
+    return resultado;
+}
+
+vector<int> binario(int numero) {
+
+    vector<int> bin;
+    while(numero>=1){
+        bin.push_back(numero%2);//voy guardando el modulo
+        numero=numero/2;
+
+    }
+    while(bin.size()<8)
+        bin.push_back(0);
+
+    return bin;
+}
+
+
 
 
 
