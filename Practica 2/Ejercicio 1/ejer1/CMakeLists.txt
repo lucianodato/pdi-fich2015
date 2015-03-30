@@ -6,13 +6,12 @@ aux_source_directory(. SRC_LIST)
 #Paths
 set(FUNCTIONS_DIRECTORY ../../../funciones)
 set(functions ../../../funciones/funciones.h)
-#get_filename_component(funciones funciones.h ${FUNCTIONS_DIRECTORY})
 
 #Adds directories
 include_directories(${FUNCTIONS_DIRECTORY})
 
 #Add auxiliary libraries or funcion files
-#file(GLOB MySources *.c *.h *.cpp)
+file(GLOB MySources *.c *.h *.cpp)
 
 #change outputs directories
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)

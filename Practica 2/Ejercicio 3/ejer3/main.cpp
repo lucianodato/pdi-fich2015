@@ -15,7 +15,7 @@ int main(int argc, char *argv[])
     img2.load("../../../../images/coins.tif");
     listaImagenes.push_back(img1);
     listaImagenes.push_back(img2);
-    listaImagenes.push_back(sumaImg(img1,img2));
+    listaImagenes.push_back(sumaImg(img1,img2,0));
     CImgDisplay displayImagen(listaImagenes,"G2 - Ejer3-1-a - Suma Imagenes");
     listaImagenes.clear();
     listaImagenes.push_back(img1);
