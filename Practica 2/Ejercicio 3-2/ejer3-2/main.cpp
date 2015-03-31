@@ -6,7 +6,7 @@
 using namespace cimg_library;
 using namespace std;
 
-int numImagenes=100,desvio_ruido=20;
+float numImagenes=100,desvio_ruido=20;
 
 int main()
 {
@@ -15,7 +15,7 @@ int main()
     CImgList<unsigned char> disp;
 
     img1.clear();
-    img1.load("../../../../images/coins.tif");//carga imagen en memo
+    img1.load("../../../../images/cameraman.tif");//carga imagen en memo
     CImg<unsigned char> noiseImg(img1),promedio;
     CImgList<unsigned char> listaImagenes;
     //Hacer Imagen Ruidosa
@@ -31,8 +31,6 @@ int main()
     while (!displayImagen.is_closed()) {
         displayImagen.wait();
     }
-
-
 
     return 0;
 }
