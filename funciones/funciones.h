@@ -60,6 +60,13 @@ CImg<unsigned char> generar_lut(float a,float c,int ini,int fin){
     return lut;
 }
 
+///FUNCION NEGATIVO - Devuelve el negativo de una imagen
+CImg<unsigned char> negativo(CImg<unsigned char> imagen){
+    cimg_forXY(imagen,i,j)
+        imagen(i,j) = abs(((int)*imagen.data(i,j,0,0))-255);
+    return imagen.normalize(0,255);
+}
+
 //Funcion curva Solo cuando se necesitan tramos
 CImg <unsigned char> generar_curva(CImg<unsigned char> lut,vector<punto> puntos){
     int x0,x1,y0,y1;
@@ -137,14 +144,6 @@ CImg<unsigned char> transformacion(CImg<unsigned char> img,CImg<unsigned char> l
     cimg_forXY(img,i,j)
             img(i,j)=lut(img(i,j)); // "map"
     return img;
-}
-
-///FUNCION NEGATIVO - Devuelve el negativo de una imagen
-CImg<unsigned char> negativo(CImg<unsigned char> imagen){
-
-    cimg_forXY(imagen,i,j){
-        imagen(i,j) = abs(((int)*imagen.data(i,j,0,0) -255));}
-    return imagen.normalize(0,255);
 }
 
 
@@ -354,41 +353,52 @@ CImg<unsigned char> reducRuido(CImgList<unsigned char>img){
 }
 
 ///umbral invertido
+//recibe imagen en escala de gris
 CImg<unsigned char> umbral_invertido(CImg<unsigned char> &img, int p){
     return negativo(img.get_threshold(p));
 }
 
 ///umbral_por_tramos
+//recibe imagen en escala de gris
 CImg<unsigned char> umbral_por_tramos(CImg<unsigned char> &img, int p1,int p2){
     CImg<unsigned char> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j){
         if (img(i,j)<=p1 || img(i,j)>=p2)
-        {
             resultado(i,j)=255;
-        }
         else
-        {
             resultado(i,j)=0;
-        }
+    }
+    return resultado;
+}
+
+///umbral_por_tramos
+//recibe imagen en escala de gris
+CImg<unsigned char> umbral_por_tramos_gris(CImg<unsigned char> &img, int p1,int p2){
+    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+    cimg_forXY(img,i,j){
+        if (img(i,j)<=p1 || img(i,j)>=p2)
+            resultado(i,j)=255;
+        else
+            resultado(i,j)=img(i,j);
     }
     return resultado;
 }
 
 ///OR
-//Or entre imagen y una mascara binaria (Que la imagen original siempre)
+//Or entre imagen binaria y una mascara binaria
 CImg<unsigned char> ORimg(CImg<unsigned char> img, CImg<unsigned char> masc){
-    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+    CImg<unsigned char> resultado(img.width(),img.height(),1,1,0);
     cimg_forXY(img,i,j){
-        if (( int)*img.data(i,j,0,0)==255 || (int)*masc.data(i,j,0,0)==255)
-            resultado(i,j)=255;
-        else
+        if ((int)*img.data(i,j,0,0)==0 & (int)*masc.data(i,j,0,0)==0)
             resultado(i,j)=0;
+        else
+            resultado(i,j)=1;
     }
     return resultado;
 }
 
 ///AND
-//And entre imagen y una mascara binaria
+//And entre imagen binaria y una mascara binaria
 CImg<unsigned char> ANDimg(CImg<unsigned char> &img, CImg<unsigned char> &masc){
     CImg<unsigned char> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j)
@@ -397,22 +407,24 @@ CImg<unsigned char> ANDimg(CImg<unsigned char> &img, CImg<unsigned char> &masc){
 }
 
 ///MAYOR
+// las imagenes en escala de griz
 CImg<unsigned char> MAYORimg(CImg<unsigned char> &img, CImg<unsigned char> &img2){
     CImg<unsigned char> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j)
             if ( img(i,j)>img2(i,j) )
-            resultado(i,j)=255;
+            resultado(i,j)=1;
     else
     resultado(i,j)=0;
 
     return resultado;
 }
 ///MENOR
+//imagenes en escala de griz
 CImg<unsigned char> MENORimg(CImg<unsigned char> &img, CImg<unsigned char> &img2){
     CImg<unsigned char> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j)
             if ( img(i,j)<img2(i,j) )
-            resultado(i,j)=255;
+            resultado(i,j)=1;
     else
     resultado(i,j)=0;
 
@@ -420,8 +432,8 @@ CImg<unsigned char> MENORimg(CImg<unsigned char> &img, CImg<unsigned char> &img2
 }
 
 ///BINARIO
+//Pasar numero a binario
 vector<int> binario(int numero) {
-
     vector<int> bin;
     while(numero>=1){
         bin.push_back(numero%2);//voy guardando el modulo
@@ -435,6 +447,7 @@ vector<int> binario(int numero) {
 }
 
 ///EMBOSS
+//Filtro emboss
 CImg<unsigned char> emboss(CImg<unsigned char> img,int corrimiento){
     CImg<unsigned char> img_neg(img.width(),img.height(),1,1);//
     img_neg = negativo(img);
