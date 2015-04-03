@@ -6,39 +6,54 @@ using namespace std;
 int main(int argc, char *argv[])
 {
     const char* path = "../../../../images/cameraman.tif";
-        CImg<unsigned char> img,img_b0,img_b1,img_b2,img_b3,img_b4,img_b5,img_b6,img_b7;
-        img_b0=img_b1=img_b2=img_b3=img_b4=img_b5=img_b6=img_b7=img.load(path);
-        vector<int> bit;
-        cimg_forXY(img,i,j){
-            bit= binario(img(i,j));
-            img_b0(i,j) = bit[0]*pow(2.0,0.0);
+    int nBits = 7;
+    char window_title[50];
+
+    CImg<unsigned char> img;
+    img.load(path);
+
+    CImgList<unsigned char> disp = bitlist(img);
+    //disp.display("   Original   /     Bitplanes: bit 0 al 7  ");
+
+    //Calculamos el error cuadratico medio de cada imagen con la original
+    //cout<<endl<<endl<<"Errores cuadraticos medios:"<<endl;
+    //cout<<"Plano de bit 0: "<<img.MSE(img_b0)<<endl;
+    //para hacerlo que cambie con el teclado
+
+    CImgDisplay displayImagen;
+    CImg<unsigned char> auxiliar(img);
+    //auxiliar.fill(0);
+    displayImagen.assign(auxiliar);
+
+
+    while(!displayImagen.is_closed()){
+        displayImagen.wait(); // esperamos algun evento en el display
+        if(displayImagen.is_keyARROWUP()){
+           auxiliar.fill(0);
+            nBits+=1;
+            if(nBits>7) nBits=7;
+            if(nBits<0) nBits=0;
+            for (int k = 7 ;k>nBits;k--){
+                auxiliar+=disp[k];
+            }
+        }
+        if(displayImagen.is_keyARROWDOWN()){
+            auxiliar.fill(0);
+            nBits-=1;
+            if(nBits>7) nBits=7;
+            if(nBits<0) nBits=0;
+            for (int k = 7 ;k>nBits;k--){
+                auxiliar+=disp[k];
+            }
 
         }
 
-        //Calculamos el error cuadratico medio de cada imagen con la original
-        cout<<endl<<endl<<"Errores cuadraticos medios:"<<endl;
-        cout<<"Plano de bit 0: "<<img.MSE(img_b0)<<endl;
-        //para hacerlo que cambie con el teclado
-     /*   while(!displayImagen.is_closed()){
-                  displayImagen.wait(); // esperamos algun evento en el display
-                  if(displayImagen.is_keyARROWUP()){nBits+=1;}
-                  if(displayImagen.is_keyARROWDOWN()){nBits-=1;}
-                  if(nBits>8) nBits=8;
-                  if(nBits<1) nBits=1;
-                  nLevels=pow(2, nBits);
-
-
-                  imgQuant=imgOrig;
-                             imgQuant.quantize(nLevels);
-                             displayImagen.render(imgQuant);
-                             sprintf(window_title,"Quant %i bits",nBits);
-                             displayImagen.set_title(window_title);
-                             displayImagen.paint();
-        }*/
-
-
-        CImgList<unsigned char> disp(img_b0);
-        disp.display("   Original   /     Bitplanes: bit 0 al 7  ");
+        displayImagen.render(auxiliar);
+        sprintf(window_title," %i bits",nBits+1);
+        displayImagen.set_title(window_title);
+        displayImagen.paint();
+        //auxiliar.fill(0);
+    }
 
 
     return 0;

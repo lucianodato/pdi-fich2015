@@ -31,21 +31,27 @@ int main(int argc, char *argv[])
      CImgList<unsigned char> disp3(umbral, umbral2, ANDimg(umbral,umbral2));
      disp3.display("AND");
 
-     CImgList<unsigned char> disp4(umbral,  not_img, umbral | not_img); //correcto??-> revisar
+     img.load("../../../../images/carlock1.png");
+     img2.load("../../../../images/carlock2.png");
+
+     CImgList<unsigned char> disp4(img.get_threshold(128),  img2.get_threshold(128) , img.get_threshold(128) | img2.get_threshold(128) ); //correcto??-> revisar
      disp4.display("OR");
 
-
-     CImgList<unsigned char> disp10(umbral,  not_img, umbral ^ not_img); // correcto??->revisar
+     CImgList<unsigned char> disp10(img.get_threshold(128) ,  img2.get_threshold(128) , img.get_threshold(128) ^ img2.get_threshold(128)); // correcto??->revisar
      disp10.display("XOR");
 
-//    //Punto 3
-      img3.load("../../../../images/coins.tif");
 
-      CImgList<unsigned char> disp5(img, img3, MAYORimg(img, img3), MAYORimg(img3,img));
-      disp5.display("MAYOR -  Img1   /   Img2   /   Img1 > Img2   /   Img2 > Img1 ");
+     ////Punto 3
+     img.load("../../../../images/cameraman.tif");
+     img2.load("../../../../images/cameraman.tif");
+     img3.load("../../../../images/coins.tif");
 
-      CImgList<unsigned char> disp6(img, img3, MENORimg(img, img3), MENORimg(img3,img));
-      disp6.display("MENOR -  Img1   /   Img2   /   Img1 < Img2   /   Img2 < Img1 ");
 
-    return 0;
+     CImgList<unsigned char> disp5(img, img3, MAYORimg(img, img3), MAYORimg(img3,img));
+     disp5.display("MAYOR -  Img1   /   Img2   /   Img1 > Img2   /   Img2 > Img1 ");
+
+     CImgList<unsigned char> disp6(img, img3, MENORimg(img, img3), MENORimg(img3,img));
+     disp6.display("MENOR -  Img1   /   Img2   /   Img1 < Img2   /   Img2 < Img1 ");
+
+     return 0;
 }

@@ -453,5 +453,37 @@ CImg<unsigned char> emboss(CImg<unsigned char> img,int corrimiento){
     img_neg = negativo(img);
     return sumaImg(img, img_neg,corrimiento);//suma a img su negativo un poquito desplazado
 }
-#endif // FUNCIONES
 
+///BIT LIST
+CImgList<unsigned char> bitlist(CImg<unsigned char> original)
+{
+    CImg<unsigned char> img_b0,img_b1,img_b2,img_b3,img_b4,img_b5,img_b6,img_b7;
+    img_b0=img_b1=img_b2=img_b3=img_b4=img_b5=img_b6=img_b7=original;
+
+    vector<int> bit;
+    cimg_forXY(original,i,j){
+        bit= binario(original(i,j));
+        img_b0(i,j) = bit[0]*pow(2.0,0.0);
+        img_b1(i,j) = bit[1]*pow(2.0,1.0);
+        img_b2(i,j) = bit[2]*pow(2.0,2.0);
+        img_b3(i,j) = bit[3]*pow(2.0,3.0);
+        img_b4(i,j) = bit[4]*pow(2.0,4.0);
+        img_b5(i,j) = bit[5]*pow(2.0,5.0);
+        img_b6(i,j) = bit[6]*pow(2.0,6.0);
+        img_b7(i,j) = bit[7]*pow(2.0,7.0);
+    }
+
+    CImgList<unsigned char> lista;
+    lista.push_back(img_b0);
+    lista.push_back(img_b1);
+    lista.push_back(img_b2);
+    lista.push_back(img_b3);
+    lista.push_back(img_b4);
+    lista.push_back(img_b5);
+    lista.push_back(img_b6);
+    lista.push_back(img_b7);
+
+    return lista;
+}
+
+#endif // FUNCIONES
