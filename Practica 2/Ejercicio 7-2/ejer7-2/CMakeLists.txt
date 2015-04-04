@@ -2,9 +2,6 @@ project(ejer7-2)
 cmake_minimum_required(VERSION 2.8)
 aux_source_directory(. SRC_LIST)
 
-
-
-
 #Paths
 set(FUNCTIONS_DIRECTORY ../../../funciones)
 set(functions ../../../funciones/funciones.h)
