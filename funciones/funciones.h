@@ -503,4 +503,5 @@ CImgList<unsigned char> bitlist(CImg<unsigned char> original)
     return lista;
 }
 
+
 #endif // FUNCIONES
