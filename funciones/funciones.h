@@ -454,6 +454,23 @@ CImg<unsigned char> emboss(CImg<unsigned char> img,int corrimiento){
     return sumaImg(img, img_neg,corrimiento);//suma a img su negativo un poquito desplazado
 }
 
+///Blister
+//Detector de faltantes de pastillas en bliter,
+//Recive:la imagen blister (es deseable que este umbralizada o con buen contraste)
+//Retorna: vector con coordenadas en las que faltan pastillas
+template<typename T>
+vector<punto> blister(CImg<T> img)
+{   vector<punto> vectorcoord;
+    punto puntos;
+    for (int j=53;j<142;j=j+48)
+        for (int i=53;i<img.width();i=i+50)
+            if(img.get_crop(i-18,j-18,i+18,j+18).mean()<0.2){
+             puntos.x=i;puntos.y=j;
+             vectorcoord.push_back(puntos);
+            }
+    return vectorcoord;
+}
+
 ///BIT LIST
 CImgList<unsigned char> bitlist(CImg<unsigned char> original)
 {
