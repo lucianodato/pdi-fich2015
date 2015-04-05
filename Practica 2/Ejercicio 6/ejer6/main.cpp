@@ -29,10 +29,10 @@ int main(int argc, char *argv[])
     while(!displayImagen.is_closed()){
         displayImagen.wait(); // esperamos algun evento en el display
         if(displayImagen.is_keyARROWUP()){
-           auxiliar.fill(0);
+            auxiliar.fill(0);
             nBits+=1;
             if(nBits>7) nBits=7;
-            if(nBits<0) nBits=0;
+            //if(nBits<0) nBits=0;
             for (int k = 7 ;k>nBits;k--){
                 auxiliar+=disp[k];
             }
@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
         if(displayImagen.is_keyARROWDOWN()){
             auxiliar.fill(0);
             nBits-=1;
-            if(nBits>7) nBits=7;
+            //if(nBits>7) nBits=7;
             if(nBits<0) nBits=0;
             for (int k = 7 ;k>nBits;k--){
                 auxiliar+=disp[k];
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
         }
 
         displayImagen.render(auxiliar);
-        sprintf(window_title," %i bits",nBits+1);
+        sprintf(window_title," %i bits",nBits);
         displayImagen.set_title(window_title);
         displayImagen.paint();
         //auxiliar.fill(0);
