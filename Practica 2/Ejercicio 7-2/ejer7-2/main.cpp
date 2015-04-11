@@ -24,7 +24,7 @@ int main()
     CImgList<unsigned char> imagenes;
     CImg<unsigned char> img;
     CImg<unsigned char> img_mask;
-    img.load(path4);
+    img.load(path3);
     imagenes.push_back(img);
 
     //Limpiar ruido impulsivo

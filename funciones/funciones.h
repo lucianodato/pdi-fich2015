@@ -10,6 +10,7 @@
 using namespace cimg_library;
 using namespace std;
 
+
 //Variables auxiliares
 
 //Punto
@@ -501,6 +502,16 @@ CImgList<unsigned char> bitlist(CImg<unsigned char> original)
     lista.push_back(img_b7);
 
     return lista;
+}
+
+//Funcion que devuelve el kernel promediado en func. del tamaño
+CImg<float> mask(int tamanio){
+
+    CImg<float> mascara (tamanio,tamanio,1,1,1);
+
+    //Retorno el kernel.Tamaño
+    return mascara/(tamanio*tamanio);
+
 }
 
 
