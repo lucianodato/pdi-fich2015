@@ -299,8 +299,8 @@ CImg<unsigned char> mediotono(CImg<unsigned char> original){
 
 ///SUMA
 //corrimiento=0 si quiero sumar sin corrimiento
-CImg<unsigned char> sumaImg(CImg<unsigned char> img1, CImg<unsigned char> img2, int corrimiento ){
-    CImg<unsigned char> resultado(img1.width(),img1.height(),1,1);
+CImg<float> sumaImg(CImg<float> img1, CImg<float> img2, int corrimiento=0 ){
+    CImg<float> resultado(img1.width(),img1.height(),1,1);
     cimg_forXY(img1,i,j){
         if((i+corrimiento) >= 0 && (j+corrimiento)>=0){
             resultado(i,j)=(img1(i,j)+ img2(i+corrimiento,j+corrimiento))/2;
@@ -312,8 +312,8 @@ CImg<unsigned char> sumaImg(CImg<unsigned char> img1, CImg<unsigned char> img2, 
     return resultado;
 }
 ///DIFERENCIA
-CImg<unsigned char> DifImg(CImg<unsigned char> img1, CImg<unsigned char> img2){
-    CImg<unsigned char> resultado(img1.width(),img1.height(),1,1);
+CImg<float> DifImg(CImg<float> img1, CImg<float> img2){
+    CImg<float> resultado(img1.width(),img1.height(),1,1);
     cimg_forXY(img1,i,j)
     {
         if((img1(i,j)- img2(i,j)/2) < 0)
@@ -333,9 +333,9 @@ CImg<unsigned char> DifImg(CImg<unsigned char> img1, CImg<unsigned char> img2){
     return resultado;
 }
 ///MULTIPLICACION
-CImg<unsigned char> multiplicacion(CImg<unsigned char> &img, CImg<unsigned char> &masc){
+CImg<unsigned char> multiplicacion(CImg<unsigned char> img, CImg<unsigned char> masc){
     CImg<unsigned char> resultado(img.width(),img.height(),1,1);
-    cimg_forXY(img,i,j) resultado(i,j)=img(i,j) * masc(i,j)/255; //divid0 por 255 para normalizar la mascara
+    cimg_forXY(img,i,j) resultado(i,j)=img(i,j) * masc(i,j); //divid0 por 255 para normalizar la mascara
     return resultado;
 }
 ///DIVISION
@@ -505,7 +505,7 @@ CImgList<unsigned char> bitlist(CImg<unsigned char> original)
 }
 
 //Funcion que devuelve el kernel promediado en func. del tamaño
-CImg<float> mask(int tamanio){
+CImg<float> mask(float tamanio){
 
     CImg<float> mascara (tamanio,tamanio,1,1,1);
 
@@ -513,6 +513,42 @@ CImg<float> mask(int tamanio){
     return mascara/(tamanio*tamanio);
 
 }
+
+
+/**
+ * \file         gauss_filter.h
+ * \author       Alain Lehmann <lehmann at vision.ee.ethz.ch>
+ * \version      $Id: gauss_filter.h 337 2009-09-22 16:01:15Z lehmanal $
+ * \date         2009-09-22 created
+ */
+
+/** compute Gaussian derivatives filter weights
+ * \param sigma = bandwidth of the Gaussian
+ * \param deriv = computing the 'deriv'-th derivatives of a Gaussian
+ * the width of the filter is automatically determined from sigma.
+ * g  = \frac{1}{\sqrt{2\pi}\sigma}   \exp(-0.5 \frac{x^2}{\sigma^2} )
+ * g' = \frac{x}{\sqrt{2\pi}\sigma^3} \exp(-0.5 \frac{x^2}{\sigma^2} )
+ *    = -\frac{x}{\sigma^2} g
+ * g''= (\frac{x^2}{\sigma^2} - 1) \frac{1}{\sigma^2} g
+ */
+CImg<float> gauss_filter (float sigma=1.0f, int deriv=0) {
+  float width = 3*sigma;               // may be less width?
+  float sigma2 = sigma*sigma;
+  CImg<float> filter;
+  filter.assign(int(2*width)+1);
+
+  int i=0;
+  for (float x=-width; x<=width; x+=1.0f) {
+    float g = exp(-0.5*x*x/sigma2) / sqrt(2*M_PI) / sigma;
+    if (deriv==1) g *= -x/sigma2;
+    if (deriv==2) g *= (x*x/sigma2 - 1.0f)/sigma2;
+    filter[i] = g ;
+    //printf ("i=%f -> %f\n", x, filter[i]);
+    i++;
+  }
+  return filter;
+}
+
 
 
 #endif // FUNCIONES
