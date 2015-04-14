@@ -40,6 +40,10 @@ vector<punto> ordenarCoordenadas(vector<punto> puntos){
     return puntos;
 }
 
+//Colores auxiliares
+
+const unsigned char red[] = { 255,0,0 }, green[] = { 0,255,0 }, blue[] = { 0,0,255 }, white[] = { 255,255,255 }, black[] = { 0,0,0 };
+
 //------------------------------FUNCIONES AUXILIARES--------------------------------------------
 
 //s=a*r+c
@@ -64,7 +68,7 @@ CImg<unsigned char> generar_lut(float a,float c,int ini,int fin){
 ///FUNCION NEGATIVO - Devuelve el negativo de una imagen
 CImg<unsigned char> negativo(CImg<unsigned char> imagen){
     cimg_forXY(imagen,i,j)
-        imagen(i,j) = abs(((int)*imagen.data(i,j,0,0))-255);
+            imagen(i,j) = abs(((int)*imagen.data(i,j,0,0))-255);
     return imagen.normalize(0,255);
 }
 
@@ -318,7 +322,7 @@ CImg<float> DifImg(CImg<float> img1, CImg<float> img2){
     {
         if((img1(i,j)- img2(i,j)/2) < 0)
         {
-        resultado(i,j)= 0;
+            resultado(i,j)= 0;
         }
         else
         {
@@ -326,7 +330,7 @@ CImg<float> DifImg(CImg<float> img1, CImg<float> img2){
                 resultado(i,j)= 255;
             }else
             {
-               resultado(i,j)= (img1(i,j)- img2(i,j))/2;
+                resultado(i,j)= (img1(i,j)- img2(i,j))/2;
             }
         }
     }
@@ -466,8 +470,8 @@ vector<punto> blister(CImg<T> img)
     for (int j=53;j<142;j=j+48)
         for (int i=53;i<img.width();i=i+50)
             if(img.get_crop(i-18,j-18,i+18,j+18).mean()<0.2){
-             puntos.x=i;puntos.y=j;
-             vectorcoord.push_back(puntos);
+                puntos.x=i;puntos.y=j;
+                vectorcoord.push_back(puntos);
             }
     return vectorcoord;
 }
@@ -532,23 +536,54 @@ CImg<float> mask(float tamanio){
  * g''= (\frac{x^2}{\sigma^2} - 1) \frac{1}{\sigma^2} g
  */
 CImg<float> gauss_filter (float sigma=1.0f, int deriv=0) {
-  float width = 3*sigma;               // may be less width?
-  float sigma2 = sigma*sigma;
-  CImg<float> filter;
-  filter.assign(int(2*width)+1);
+    float width = 3*sigma;               // may be less width?
+    float sigma2 = sigma*sigma;
+    CImg<float> filter;
+    filter.assign(int(2*width)+1);
 
-  int i=0;
-  for (float x=-width; x<=width; x+=1.0f) {
-    float g = exp(-0.5*x*x/sigma2) / sqrt(2*M_PI) / sigma;
-    if (deriv==1) g *= -x/sigma2;
-    if (deriv==2) g *= (x*x/sigma2 - 1.0f)/sigma2;
-    filter[i] = g ;
-    //printf ("i=%f -> %f\n", x, filter[i]);
-    i++;
-  }
-  return filter;
+    int i=0;
+    for (float x=-width; x<=width; x+=1.0f) {
+        float g = exp(-0.5*x*x/sigma2) / sqrt(2*M_PI) / sigma;
+        if (deriv==1) g *= -x/sigma2;
+        if (deriv==2) g *= (x*x/sigma2 - 1.0f)/sigma2;
+        filter[i] = g ;
+        //printf ("i=%f -> %f\n", x, filter[i]);
+        i++;
+    }
+    return filter;
 }
 
+///CONSTUYE HISTOGRAMA
+CImg<float> construye_histograma(CImg<float> hist){
+    CImg<float> histograma(256,256);
 
+    histograma.fill(255);
+    histograma.draw_graph(hist,black);
+
+    ///ToDo ---> Faltaria hacerle los ejes coordenados y dejarlo mas lindo
+
+
+    return histograma;
+}
+
+///LLENADO DESDE PUNTO 1 A PUNTO 2 sobre una mascara pasada como referencia
+void llenado_puntos(CImg<float> &mask,punto a,punto b,bool color){
+    //Color es false -> 0 / true -> 1
+
+    for (int i = a.x;i<=b.x;i++){
+        for(int j = a.y;j<=b.y;j++){
+            if (color){
+                mask(i,j)= 1.0;
+            }
+            else
+            {
+                mask(i,j)= 0.0;
+            }
+
+        }
+    }
+
+
+}
 
 #endif // FUNCIONES
