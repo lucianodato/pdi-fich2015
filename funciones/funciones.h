@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include <math.h>
+#include <string>
 
 using namespace cimg_library;
 using namespace std;
@@ -66,7 +67,7 @@ CImg<unsigned char> generar_lut(float a,float c,int ini,int fin){
 }
 
 ///FUNCION NEGATIVO - Devuelve el negativo de una imagen
-CImg<unsigned char> negativo(CImg<unsigned char> imagen){
+CImg<float> negativo(CImg<float> imagen){
     cimg_forXY(imagen,i,j)
             imagen(i,j) = abs(((int)*imagen.data(i,j,0,0))-255);
     return imagen.normalize(0,255);
@@ -337,10 +338,9 @@ CImg<float> DifImg(CImg<float> img1, CImg<float> img2){
     return resultado;
 }
 ///MULTIPLICACION
-template<typename T>
-CImg<T> multiplicacion(CImg<T> img, CImg<T> masc){
-    CImg<T> resultado(img.width(),img.height(),1,1);
-    cimg_forXY(img,i,j) resultado(i,j)=img(i,j) * masc(i,j); //divid0 por 255 para normalizar la mascara
+CImg<float> multiplicacion(CImg<float> img, CImg<float> masc){
+    CImg<float> resultado(img.width(),img.height(),1,1);
+    cimg_forXY(img,i,j) resultado(i,j)=img(i,j) * masc(i,j);
     return resultado;
 }
 ///DIVISION
@@ -581,7 +581,6 @@ void llenado_puntos(CImg<float> &mask,punto a,punto b,bool color){
             {
                 mask(i,j)= 0.0;
             }
-
         }
     }
 
@@ -604,4 +603,24 @@ CImg<T> Sobel(CImg<T> img){
     return (img.get_convolve(Gx)+img.get_convolve(Gy)).abs().normalize(0,255);
 }
 
+
+CImg<float> promedio_histograma(CImgList<float> lista){
+
+    CImg <float> img,promedio(256,1);
+    promedio = lista(0);
+
+    for (int p=1;p<lista.size();p++){
+        img = lista(p);
+        for (int i=0;i<promedio.width();i++){
+            promedio(i)+=img(i);
+            promedio(i)*=0.5;
+        }
+    }
+
+    return promedio;
+
+}
+
 #endif // FUNCIONES
+
+
