@@ -337,8 +337,9 @@ CImg<float> DifImg(CImg<float> img1, CImg<float> img2){
     return resultado;
 }
 ///MULTIPLICACION
-CImg<unsigned char> multiplicacion(CImg<unsigned char> img, CImg<unsigned char> masc){
-    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+template<typename T>
+CImg<T> multiplicacion(CImg<T> img, CImg<T> masc){
+    CImg<T> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j) resultado(i,j)=img(i,j) * masc(i,j); //divid0 por 255 para normalizar la mascara
     return resultado;
 }
@@ -509,9 +510,10 @@ CImgList<unsigned char> bitlist(CImg<unsigned char> original)
 }
 
 //Funcion que devuelve el kernel promediado en func. del tamaño
-CImg<float> mask(float tamanio){
+template<typename T>
+CImg<T> mask(T tamanio){
 
-    CImg<float> mascara (tamanio,tamanio,1,1,1);
+    CImg<T> mascara (tamanio,tamanio,1,1,1);
 
     //Retorno el kernel.Tamaño
     return mascara/(tamanio*tamanio);
@@ -584,6 +586,22 @@ void llenado_puntos(CImg<float> &mask,punto a,punto b,bool color){
     }
 
 
+}
+
+///Sobel
+///idea de gradiente en dos direcciones
+template<typename T>
+CImg<T> Sobel(CImg<T> img){
+    CImg<T> Gx(3, 3), Gy(3,3);
+    Gx(0,0)=-1; Gx(0,1)=-2; Gx(0,2)=-1;
+    Gx(1,0)=0; Gx(1,1)=0; Gx(1,2)=0;
+    Gx(2,0)=1; Gx(2,1)=2; Gx(2,2)=1;
+
+    Gy(0,0)=-1; Gy(1,0)=0; Gy(2,0)=1;
+    Gy(0,1)=-2; Gy(1,1)=0; Gy(2,1)=2;
+    Gy(0,2)=-1; Gy(1,2)=0; Gy(2,2)=1;
+
+    return (img.get_convolve(Gx)+img.get_convolve(Gy)).abs().normalize(0,255);
 }
 
 #endif // FUNCIONES

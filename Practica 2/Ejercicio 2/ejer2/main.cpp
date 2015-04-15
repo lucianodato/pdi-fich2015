@@ -7,8 +7,8 @@ using namespace cimg_library;
 using namespace std;
 
 //Parametros de inicializacion
-float c=1;
-float cc=1,potencia=2.0;
+float c=1; //log
+float cc=1,potencia=2;//potencia
 
 using namespace std;
 
