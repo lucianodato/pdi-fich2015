@@ -13,16 +13,10 @@ int main()
 
 //    //kernel 3x3
     //suma 1
-    CImg<float> kernel1(3,3,1,1);
-    kernel1(0,0)=0;
-    kernel1(0,1)=0.125;
-    kernel1(0,2)=0;
-    kernel1(1,0)=0.125;
-    kernel1(1,1)=0.5;
-    kernel1(1,2)=0.125;
-    kernel1(2,0)=0;
-    kernel1(2,1)=0.125;
-    kernel1(2,2)=0;
+    CImg<float> kernel1(3,3);
+    kernel1.fill(0,0.125,0,
+                 0.125,0.5,0.125,
+                 0,0.125,0);
     pb=img.get_convolve(mask(3.0));
     diferencia=DifImg(img,pb);
 
@@ -73,9 +67,9 @@ int main()
 //    mask(2,0)=0;
 //    mask(2,1)=0;
 //    mask(2,2)=0;
+suma=sumaImg((A-1.0)*img,diferencia);
 
-
-        CImgList<float> lista (img,pb,diferencia,sumaImg((A-1.0)*img,diferencia));
+        CImgList<float> lista (img,pb.normalize(0,255),diferencia.normalize(0,255),suma.normalize(0,255));
         lista.display("Original ");
 
 
