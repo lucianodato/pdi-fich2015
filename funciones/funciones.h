@@ -555,7 +555,7 @@ CImg<float> gauss_filter (float sigma=1.0f, int deriv=0) {
     return filter;
 }
 
-///CONSTUYE HISTOGRAMA
+///CONSTUYE HISTOGRAMA   ---> entiendo que con esto era pensado para dibujar el histograma lucho,  no estaba seguro, por la duda hice uno aparte abajo --> draw_histograma
 CImg<float> construye_histograma(CImg<float> hist){
     CImg<float> histograma(256,256);
 
@@ -620,6 +620,64 @@ CImg<float> promedio_histograma(CImgList<float> lista){
     return promedio;
 
 }
+
+
+template <class T>
+CImg<T> draw_histogram(CImg<T> &img){
+    CImg<T> histograma;
+    histograma.assign(img.width(), img.height(), 1, img.spectrum());
+    histograma.fill(0);
+    if(img.spectrum()==1){ // es de 1 solo canal
+        T white[]={255};
+        histograma.draw_graph(img.get_histogram(256, 0, 255), white, 1 , 3, 0);
+    }else{
+        T red[]={255,0,0};
+        T green[]={0,255,0};
+        T blue[]={0,0,255};
+        CImg<T> r, g, b;
+        r=img.get_channel(0);
+        g=img.get_channel(1);
+        b=img.get_channel(2);
+        histograma.draw_graph(r.get_histogram(256, 0, 255), red, 1 , 1, 0);
+        histograma.draw_graph(g.get_histogram(256, 0, 255), green, 1 , 1, 0);
+        histograma.draw_graph(b.get_histogram(256, 0, 255), blue, 1 , 1, 0);
+    }
+    return histograma;
+}
+
+// ecualizacion de histograma local para unsigned char descartando los bordes
+void LocalHistoEq(CImg<unsigned char> &img, unsigned windowSize){
+    //CImg<unsigned char> histo=img.get_histogram(256, 0, 255);
+    CImg<unsigned char> ret(img.width()-windowSize*2-1, img.height()-windowSize*2-1);
+    unsigned i, j, m, l, ii, jj, mm, ll;
+    ii=img.width()-windowSize-1; //img original menos el borde
+    jj=img.height()-windowSize-1;
+    unsigned char pixelValue;//valor actual de pixel
+    int newPixelValue;	//nuevo valor de pixel
+    // recorre los pixeles de la imagen original
+    for(i=windowSize; i<ii; i++){
+        for(j=windowSize; j<jj; j++){
+            // calcula el nuevo valor del pixel segun la ecualizacion de histograma local
+            pixelValue=img(i,j);
+            mm=i+windowSize;
+            ll=j+windowSize;
+            // recorre la ventana
+            newPixelValue=0;
+            //ahora recorro solamente la porcion determinada por la ventana
+            for(m=i-windowSize; m<mm; m++){
+                for(l=j-windowSize; l<ll; l++){
+                    if(img(m,l)<=pixelValue) //si el valor de imagen es menor al valor actual de pixel, sumar hasta que sea mayor
+                        newPixelValue++;     //newPixelValue es el valor cumulado
+                }
+            }
+            // el valor que le corresponde al nuevo pixel segun la probabilidad acumulada
+            newPixelValue*=255.0/float((windowSize*2+1)*(windowSize*2+1)); // normaliza la imagen y saca probabilidad acumulada
+            ret(i-windowSize,j-windowSize)=newPixelValue;
+        }
+    }
+    img=ret;
+}
+
 
 #endif // FUNCIONES
 
