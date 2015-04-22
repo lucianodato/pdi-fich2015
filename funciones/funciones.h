@@ -11,8 +11,7 @@
 using namespace cimg_library;
 using namespace std;
 
-
-//Variables auxiliares
+/// STRUCTS Y VARIABLES AUXILIARES
 
 //Punto
 typedef struct punto{
@@ -45,7 +44,12 @@ vector<punto> ordenarCoordenadas(vector<punto> puntos){
 
 const unsigned char red[] = { 255,0,0 }, green[] = { 0,255,0 }, blue[] = { 0,0,255 }, white[] = { 255,255,255 }, black[] = { 0,0,0 };
 
+
+
 //------------------------------FUNCIONES AUXILIARES--------------------------------------------
+
+
+///--------FUNCIONES LUT----------
 
 //s=a*r+c
 //con r: valor de entrada
@@ -54,11 +58,12 @@ const unsigned char red[] = { 255,0,0 }, green[] = { 0,255,0 }, blue[] = { 0,0,2
 
 //Caso generico. Recibe un gris inicial y un final. Por tramos
 //item 1
-CImg<unsigned char> generar_lut(float a,float c,int ini,int fin){
-    CImg<unsigned char> lut(1,abs(fin-ini)+1,1,1);
-    int s;
+template<typename T>
+CImg<T> generar_lut(T a,T c,T ini,T fin){
+    CImg<T> lut(1,abs(fin-ini)+1,1,1);
+    T s;
     for (int i=ini;i<abs(fin-ini)+1;i++){
-        s=int(a*i+c);
+        s=T(a*i+c);
         if (s>255) s=255;
         if (s<0) s=0;
         lut(i)=s;
@@ -66,20 +71,14 @@ CImg<unsigned char> generar_lut(float a,float c,int ini,int fin){
     return lut;
 }
 
-///FUNCION NEGATIVO - Devuelve el negativo de una imagen
-CImg<float> negativo(CImg<float> imagen){
-    cimg_forXY(imagen,i,j)
-            imagen(i,j) = abs(((int)*imagen.data(i,j,0,0))-255);
-    return imagen.normalize(0,255);
-}
-
 //Funcion curva Solo cuando se necesitan tramos
-CImg <unsigned char> generar_curva(CImg<unsigned char> lut,vector<punto> puntos){
-    int x0,x1,y0,y1;
-    float a,c;
+template<typename T>
+CImg <T> generar_curva(CImg<T> lut,vector<punto> puntos){
+    T x0,x1,y0,y1;
+    T a,c;
     a=1;
     c=0;
-    CImg<unsigned char> curva(lut.width(),lut.height(),1,1),aux(lut.width(),lut.height(),1,1);
+    CImg<T> curva(lut.width(),lut.height(),1,1),aux(lut.width(),lut.height(),1,1);
 
     //Ordeno el vector para que los puntos esten ordenados
     //sort(puntos.begin(),puntos.end(),compara_puntos);
@@ -113,15 +112,15 @@ CImg <unsigned char> generar_curva(CImg<unsigned char> lut,vector<punto> puntos)
     return curva;
 }
 
-
 //logaritmica: imagenes resultantes son mas claras
 //Caso que tengo todos los grises
-CImg<int> generar_lut_logb(float c){
-    CImg<unsigned char> lut(1,256,1,1);
-    int s;
+template<typename T>
+CImg<T> generar_lut_logb(T c){
+    CImg<T> lut(1,256,1,1);
+    T s;
     for (int i=0;i<256;i++){
         //Aca mapeamos el rango total resultante para que despues se traduzca en un nivel de gris
-        s=(int)(c*(255*((log(1+i)/log(1+255)))));// normalizo -.- mmmm
+        s=floor(c*(255*((log(1+i)/log(1+255)))));// normalizo -.- mmmm
         if (s>255) s=255;
         if (s<0) s=0;
         lut(i)=s;
@@ -133,11 +132,12 @@ CImg<int> generar_lut_logb(float c){
 
 //lut exponencial bis: REDUCE el rango de grises, las imagenes resultantes son mas oscuras
 //Caso que tengo todos los grises
-CImg<unsigned char> generar_lut_expb(float c,float gamma){
-    CImg<unsigned char> lut(1,256,1,1);
-    int s;
+template<typename T>
+CImg<T> generar_lut_expb(T c,T gamma){
+    CImg<T> lut(1,256,1,1);
+    T s;
     for (int i=0;i<256;i++){
-        s=int(c*(pow(i,gamma)/255));
+        s=floor(c*(pow(i,gamma)/255));
         if (s>255) s=255;
         if (s<0) s=0;
         lut(i)=s;
@@ -146,40 +146,20 @@ CImg<unsigned char> generar_lut_expb(float c,float gamma){
 }
 
 //aplica la transformacion que se la pase en "lut" a la imagen "img"
-CImg<unsigned char> transformacion(CImg<unsigned char> img,CImg<unsigned char> lut){
+template<typename T>
+CImg<T> transformacion(CImg<T> img,CImg<T> lut){
     cimg_forXY(img,i,j)
             img(i,j)=lut(img(i,j)); // "map"
     return img;
 }
 
-
-///FUNCION BINARIO - Caso que recibe un umbral (En la libreria esta la funcion get_threshold tambien)
-CImg<unsigned char> binario(CImg<unsigned char> imagen, int umbral){
-
-    CImg<unsigned char> modificada(imagen.width(),imagen.height(),1,1);
-
-    for (int i=0;i<imagen.width();i++){
-        for(int j=0;j<imagen.height();j++){
-
-            if( (int)*imagen.data(i,j,0,0) > umbral )
-            {
-                modificada(i,j)= 255;
-            }
-            else
-            {
-                modificada (i,j)=0;
-            }
-
-        }
-    }
-    return modificada;
-
-}
+///--------------------------
 
 /// FUNCION DETECTAR_MEDIOTONO - Devuelve una imagen 3x3 del mediotono correspondiente a la intensidad recibida
-CImg<unsigned char> detectar_mediotono(int intensidad){
+template<typename T>
+CImg<T> detectar_mediotono(T intensidad){
     
-    CImg <unsigned char> nivel(3,3,1,1);
+    CImg <T> nivel(3,3,1,1);
     
     //9 niveles de 28 cada uno. El ultimo tiene 31
     if(intensidad >=0 && intensidad<25){
@@ -268,10 +248,11 @@ CImg<unsigned char> detectar_mediotono(int intensidad){
 }
 
 ///FUNCION MEDIOTONO - Recibe una imagen y la devuelve en binario con los medios tonos correspondientes
-CImg<unsigned char> mediotono(CImg<unsigned char> original){
+template<typename T>
+CImg<T> mediotono(CImg<T> original){
 
-    CImg<unsigned char> modificada(original.width()*3,original.height()*3,1,1), aux(3,3,1,1);
-    int var_x,var_y;
+    CImg<T> modificada(original.width()*3,original.height()*3,1,1), aux(3,3,1,1);
+    T var_x,var_y;
     
     original.normalize(0,255);
 
@@ -302,10 +283,44 @@ CImg<unsigned char> mediotono(CImg<unsigned char> original){
 }
 
 
+///FUNCION NEGATIVO - Devuelve el negativo de una imagen
+template<typename T>
+CImg<T> negativo(CImg<T> imagen){
+    cimg_forXY(imagen,i,j)
+            imagen(i,j) = abs(((int)*imagen.data(i,j,0,0))-255);
+    return imagen.normalize(0,255);
+}
+
+
+///FUNCION BINARIO - Caso que recibe un umbral (En la libreria esta la funcion get_threshold tambien)
+template<typename T>
+CImg<T> binario(CImg<T> imagen, T umbral){
+
+    CImg<T> modificada(imagen.width(),imagen.height(),1,1);
+
+    for (int i=0;i<imagen.width();i++){
+        for(int j=0;j<imagen.height();j++){
+
+            if( (int)*imagen.data(i,j,0,0) > umbral )
+            {
+                modificada(i,j)= 255;
+            }
+            else
+            {
+                modificada (i,j)=0;
+            }
+
+        }
+    }
+    return modificada;
+
+}
+
 ///SUMA
 //corrimiento=0 si quiero sumar sin corrimiento
-CImg<float> sumaImg(CImg<float> img1, CImg<float> img2, int corrimiento=0 ){
-    CImg<float> resultado(img1.width(),img1.height(),1,1);
+template<typename T>
+CImg<T> sumaImg(CImg<T> img1, CImg<T> img2, T corrimiento=0 ){
+    CImg<T> resultado(img1.width(),img1.height(),1,1);
     cimg_forXY(img1,i,j){
         if((i+corrimiento) >= 0 && (j+corrimiento)>=0){
             resultado(i,j)=(img1(i,j)+ img2(i+corrimiento,j+corrimiento))/2;
@@ -317,8 +332,9 @@ CImg<float> sumaImg(CImg<float> img1, CImg<float> img2, int corrimiento=0 ){
     return resultado;
 }
 ///DIFERENCIA
-CImg<float> DifImg(CImg<float> img1, CImg<float> img2){
-    CImg<float> resultado(img1.width(),img1.height(),1,1);
+template<typename T>
+CImg<T> DifImg(CImg<T> img1, CImg<T> img2){
+    CImg<T> resultado(img1.width(),img1.height(),1,1);
     cimg_forXY(img1,i,j)
     {
         if((img1(i,j)- img2(i,j)/2) < 0)
@@ -338,36 +354,41 @@ CImg<float> DifImg(CImg<float> img1, CImg<float> img2){
     return resultado;
 }
 ///MULTIPLICACION
-CImg<float> multiplicacion(CImg<float> img, CImg<float> masc){
-    CImg<float> resultado(img.width(),img.height(),1,1);
+template<typename T>
+CImg<T> multiplicacion(CImg<T> img, CImg<T> masc){
+    CImg<T> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j) resultado(i,j)=img(i,j) * masc(i,j);
     return resultado;
 }
 ///DIVISION
-CImg<unsigned char> division(CImg<unsigned char> &img, CImg<unsigned char> &masc){
+template<typename T>
+CImg<T> division(CImg<T> &img, CImg<T> &masc){
     cimg_forXY(masc,i,j) masc(i,j) = 255 * 1/masc(i,j);
     return multiplicacion(img,masc);
 
 }
 ///REDUCIR RUIDO //pasar una imagen con ruido en "img",  //genera la suma de "n" imagenes con ruido
 //pasar lista de imagenes con ruido
-CImg<unsigned char> reducRuido(CImgList<unsigned char>img){
-    CImg<unsigned char> suma(img[0].width(),img[0].height(),1,1,0);
-    for(unsigned char i=0;i<img.size();i++)
+template<typename T>
+CImg<T> reducRuido(CImgList<T>img){
+    CImg<T> suma(img[0].width(),img[0].height(),1,1,0);
+    for(int i=0;i<img.size();i++)
         suma=sumaImg(suma,img[i],0); //sumo
     return suma;
 }
 
-///umbral invertido
+///UMBRAL INVERTIDO
 //recibe imagen en escala de gris
-CImg<unsigned char> umbral_invertido(CImg<unsigned char> &img, int p){
+template<typename T>
+CImg<T> umbral_invertido(CImg<T> &img, T p){
     return negativo(img.get_threshold(p));
 }
 
-///umbral_por_tramos
+///UMBRAL POR TRAMOS
 //recibe imagen en escala de gris
-CImg<unsigned char> umbral_por_tramos(CImg<unsigned char> &img, int p1,int p2){
-    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+template<typename T>
+CImg<T> umbral_por_tramos(CImg<T> &img, T p1,T p2){
+    CImg<T> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j){
         if (img(i,j)<=p1 || img(i,j)>=p2)
             resultado(i,j)=255;
@@ -377,23 +398,11 @@ CImg<unsigned char> umbral_por_tramos(CImg<unsigned char> &img, int p1,int p2){
     return resultado;
 }
 
-///umbral_por_tramos
-//recibe imagen en escala de gris
-CImg<unsigned char> umbral_por_tramos_gris(CImg<unsigned char> &img, int p1,int p2){
-    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
-    cimg_forXY(img,i,j){
-        if (img(i,j)<=p1 || img(i,j)>=p2)
-            resultado(i,j)=255;
-        else
-            resultado(i,j)=img(i,j);
-    }
-    return resultado;
-}
-
 ///OR
 //Or entre imagen binaria y una mascara binaria
-CImg<unsigned char> ORimg(CImg<unsigned char> img, CImg<unsigned char> masc){
-    CImg<unsigned char> resultado(img.width(),img.height(),1,1,0);
+template<typename T>
+CImg<T> ORimg(CImg<T> img, CImg<T> masc){
+    CImg<T> resultado(img.width(),img.height(),1,1,0);
     cimg_forXY(img,i,j){
         if ((int)*img.data(i,j,0,0)==0 & (int)*masc.data(i,j,0,0)==0)
             resultado(i,j)=0;
@@ -405,8 +414,9 @@ CImg<unsigned char> ORimg(CImg<unsigned char> img, CImg<unsigned char> masc){
 
 ///AND
 //And entre imagen binaria y una mascara binaria
-CImg<unsigned char> ANDimg(CImg<unsigned char> &img, CImg<unsigned char> &masc){
-    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+template<typename T>
+CImg<T> ANDimg(CImg<T> &img, CImg<T> &masc){
+    CImg<T> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j)
             resultado(i,j)=(img(i,j)*masc(i,j));
     return resultado;
@@ -414,8 +424,9 @@ CImg<unsigned char> ANDimg(CImg<unsigned char> &img, CImg<unsigned char> &masc){
 
 ///MAYOR
 // las imagenes en escala de griz
-CImg<unsigned char> MAYORimg(CImg<unsigned char> &img, CImg<unsigned char> &img2){
-    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+template<typename T>
+CImg<T> MAYORimg(CImg<T> &img, CImg<T> &img2){
+    CImg<T> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j)
             if ( img(i,j)>img2(i,j) )
             resultado(i,j)=1;
@@ -426,8 +437,9 @@ CImg<unsigned char> MAYORimg(CImg<unsigned char> &img, CImg<unsigned char> &img2
 }
 ///MENOR
 //imagenes en escala de griz
-CImg<unsigned char> MENORimg(CImg<unsigned char> &img, CImg<unsigned char> &img2){
-    CImg<unsigned char> resultado(img.width(),img.height(),1,1);
+template<typename T>
+CImg<T> MENORimg(CImg<T> &img, CImg<T> &img2){
+    CImg<T> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j)
             if ( img(i,j)<img2(i,j) )
             resultado(i,j)=1;
@@ -439,8 +451,9 @@ CImg<unsigned char> MENORimg(CImg<unsigned char> &img, CImg<unsigned char> &img2
 
 ///BINARIO
 //Pasar numero a binario
-vector<int> binario(int numero) {
-    vector<int> bin;
+template<typename T>
+vector<T> binario(T numero) {
+    vector<T> bin;
     while(numero>=1){
         bin.push_back(numero%2);//voy guardando el modulo
         numero=numero/2;
@@ -454,13 +467,14 @@ vector<int> binario(int numero) {
 
 ///EMBOSS
 //Filtro emboss
-CImg<unsigned char> emboss(CImg<unsigned char> img,int corrimiento){
-    CImg<unsigned char> img_neg(img.width(),img.height(),1,1);//
+template<typename T>
+CImg<T> emboss(CImg<T> img,int corrimiento){
+    CImg<T> img_neg(img.width(),img.height(),1,1);//
     img_neg = negativo(img);
     return sumaImg(img, img_neg,corrimiento);//suma a img su negativo un poquito desplazado
 }
 
-///Blister
+///BLISTER
 //Detector de faltantes de pastillas en bliter,
 //Recive:la imagen blister (es deseable que este umbralizada o con buen contraste)
 //Retorna: vector con coordenadas en las que faltan pastillas
@@ -478,12 +492,13 @@ vector<punto> blister(CImg<T> img)
 }
 
 ///BIT LIST
-CImgList<unsigned char> bitlist(CImg<unsigned char> original)
+template<typename T>
+CImgList<T> bitlist(CImg<T> original)
 {
-    CImg<unsigned char> img_b0,img_b1,img_b2,img_b3,img_b4,img_b5,img_b6,img_b7;
+    CImg<T> img_b0,img_b1,img_b2,img_b3,img_b4,img_b5,img_b6,img_b7;
     img_b0=img_b1=img_b2=img_b3=img_b4=img_b5=img_b6=img_b7=original;
 
-    vector<int> bit;
+    vector<T> bit;
     cimg_forXY(original,i,j){
         bit= binario(original(i,j));
         img_b0(i,j) = bit[0]*pow(2.0,0.0);
@@ -496,7 +511,7 @@ CImgList<unsigned char> bitlist(CImg<unsigned char> original)
         img_b7(i,j) = bit[7]*pow(2.0,7.0);
     }
 
-    CImgList<unsigned char> lista;
+    CImgList<T> lista;
     lista.push_back(img_b0);
     lista.push_back(img_b1);
     lista.push_back(img_b2);
@@ -509,6 +524,7 @@ CImgList<unsigned char> bitlist(CImg<unsigned char> original)
     return lista;
 }
 
+///PROMEDIO KERNEL
 //Funcion que devuelve el kernel promediado en func. del tamaño
 template<typename T>
 CImg<T> mask(T tamanio){
@@ -520,7 +536,7 @@ CImg<T> mask(T tamanio){
 
 }
 
-
+///GENERADOR DE KERNEL GAUSSIANO
 /**
  * \file         gauss_filter.h
  * \author       Alain Lehmann <lehmann at vision.ee.ethz.ch>
@@ -537,15 +553,16 @@ CImg<T> mask(T tamanio){
  *    = -\frac{x}{\sigma^2} g
  * g''= (\frac{x^2}{\sigma^2} - 1) \frac{1}{\sigma^2} g
  */
-CImg<float> gauss_filter (float sigma=1.0f, int deriv=0) {
-    float width = 3*sigma;               // may be less width?
-    float sigma2 = sigma*sigma;
-    CImg<float> filter;
+template<typename T>
+CImg<T> gauss_filter (T sigma=1.0f, T deriv=0) {
+    T width = 3*sigma;               // may be less width?
+    T sigma2 = sigma*sigma;
+    CImg<T> filter;
     filter.assign(int(2*width)+1);
 
-    int i=0;
-    for (float x=-width; x<=width; x+=1.0f) {
-        float g = exp(-0.5*x*x/sigma2) / sqrt(2*M_PI) / sigma;
+    T i=0;
+    for (T x=-width; x<=width; x+=1.0f) {
+        T g = exp(-0.5*x*x/sigma2) / sqrt(2*M_PI) / sigma;
         if (deriv==1) g *= -x/sigma2;
         if (deriv==2) g *= (x*x/sigma2 - 1.0f)/sigma2;
         filter[i] = g ;
@@ -555,39 +572,7 @@ CImg<float> gauss_filter (float sigma=1.0f, int deriv=0) {
     return filter;
 }
 
-///CONSTUYE HISTOGRAMA   ---> entiendo que con esto era pensado para dibujar el histograma lucho,  no estaba seguro, por la duda hice uno aparte abajo --> draw_histograma
-CImg<float> construye_histograma(CImg<float> hist){
-    CImg<float> histograma(256,256);
-
-    histograma.fill(255);
-    histograma.draw_graph(hist,black);
-
-    ///ToDo ---> Faltaria hacerle los ejes coordenados y dejarlo mas lindo
-
-
-    return histograma;
-}
-
-///LLENADO DESDE PUNTO 1 A PUNTO 2 sobre una mascara pasada como referencia
-void llenado_puntos(CImg<float> &mask,punto a,punto b,bool color){
-    //Color es false -> 0 / true -> 1
-
-    for (int i = a.x;i<=b.x;i++){
-        for(int j = a.y;j<=b.y;j++){
-            if (color){
-                mask(i,j)= 1.0;
-            }
-            else
-            {
-                mask(i,j)= 0.0;
-            }
-        }
-    }
-
-
-}
-
-///Sobel
+///SOBEL
 ///idea de gradiente en dos direcciones
 template<typename T>
 CImg<T> Sobel(CImg<T> img){
@@ -603,10 +588,11 @@ CImg<T> Sobel(CImg<T> img){
     return (img.get_convolve(Gx)+img.get_convolve(Gy)).abs().normalize(0,255);
 }
 
+///PROMEDIO HISTOGRAMA
+template<typename T>
+CImg<T> promedio_histograma(CImgList<T> lista){
 
-CImg<float> promedio_histograma(CImgList<float> lista){
-
-    CImg <float> img,promedio(256,1);
+    CImg <T> img,promedio(256,1);
     promedio = lista(0);
 
     for (int p=1;p<lista.size();p++){
@@ -621,7 +607,8 @@ CImg<float> promedio_histograma(CImgList<float> lista){
 
 }
 
-
+///HISTOGRAMA
+/// Construye un histograma y lo devuelve en una imagen
 template <class T>
 CImg<T> draw_histogram(CImg<T> &img){
     CImg<T> histograma;
@@ -645,15 +632,18 @@ CImg<T> draw_histogram(CImg<T> &img){
     return histograma;
 }
 
+
+///ECUALIZACION LOCAL DE HISTOGRAMA
 // ecualizacion de histograma local para unsigned char descartando los bordes
-void LocalHistoEq(CImg<unsigned char> &img, unsigned windowSize){
-    //CImg<unsigned char> histo=img.get_histogram(256, 0, 255);
-    CImg<unsigned char> ret(img.width()-windowSize*2-1, img.height()-windowSize*2-1);
-    unsigned i, j, m, l, ii, jj, mm, ll;
+template<typename T>
+void LocalHistoEq(CImg<T> &img, T windowSize){
+    //CImg<T> histo=img.get_histogram(256, 0, 255);
+    CImg<T> ret(img.width()-windowSize*2-1, img.height()-windowSize*2-1);
+    T i, j, m, l, ii, jj, mm, ll;
     ii=img.width()-windowSize-1; //img original menos el borde
     jj=img.height()-windowSize-1;
-    unsigned char pixelValue;//valor actual de pixel
-    int newPixelValue;	//nuevo valor de pixel
+    T pixelValue;//valor actual de pixel
+    T newPixelValue;	//nuevo valor de pixel
     // recorre los pixeles de la imagen original
     for(i=windowSize; i<ii; i++){
         for(j=windowSize; j<jj; j++){
