@@ -597,7 +597,110 @@ CImg<T> promedio_histograma(CImgList<T> lista){
 
     for (int p=1;p<lista.size();p++){
         img = lista(p);
-         for (int i=0;i<promedio.width();i++){
+        
+        
+        
+        ///la idea es girar el H 180 grados en todos sus puntos de la circunfencia del plato de color
+/// y e invertir la intensidad
+CImg<double> complemento_color(CImg<double> img){
+	CImg<double> imgaux(img);
+	imgaux.RGBtoHSI();
+	
+	cimg_forXY(imgaux,x,y){
+		
+		imgaux(x,y,0,0)+=180;
+		if(imgaux(x,y,0,0) > 360)
+			imgaux(x,y,0,0)=(imgaux(x,y,0,0)-360);
+		/*cout<<imgaux(x,y,0,0)<<" ";*/
+		imgaux(x,y,0,2)=1-imgaux(x,y,0,2);
+	}
+	imgaux.HSItoRGB();
+	return imgaux;
+}
+
+	//r, g, b deben estar normalizadas en 0,1
+template <class T> 
+void DecomposeRGB(CImg<T> &img, CImg<T> &r, CImg<T> &g, CImg<T> &b){
+	r=img.get_channel(0);
+	g=img.get_channel(1);
+	b=img.get_channel(2);
+}
+
+template <class T>
+void DecomposeHSI(CImg<T> &img, CImg<T> &h, CImg<T> &s, CImg<T> &i){
+	img.RGBtoHSI();
+	h=img.get_channel(0);
+	s=img.get_channel(1);
+	i=img.get_channel(2);
+	img.HSItoRGB();
+}
+
+template <class T>
+void ComposeRGB(CImg<T> &img, CImg<T> &r, CImg<T> &g, CImg<T> &b){
+	unsigned ww=r.width(), hh=r.height(), i, j;
+	img.assign(ww, hh, 1, 3);
+	for(i=0; i<ww; i++){
+		for(j=0; j<hh; j++){
+			img(i,j,0,0)=r(i,j);
+			img(i,j,0,1)=g(i,j);
+			img(i,j,0,2)=b(i,j);
+		}
+	}
+}
+
+template <class T>
+void ComposeHSI(CImg<T> &img, CImg<T> &h, CImg<T> &s, CImg<T> &I){
+	unsigned ww=h.width(), hh=h.height(), i, j;
+	img.assign(ww, hh, 1, 3);
+	img.RGBtoHSI();
+	for(i=0; i<ww; i++){
+		for(j=0; j<hh; j++){
+			img(i,j,0,0)=h(i,j);
+			img(i,j,0,1)=s(i,j);
+			img(i,j,0,2)=I(i,j);
+		}
+	}
+	img.HSItoRGB();
+}
+
+template <class T>
+void ColorMask(CImg<T> &img, unsigned char x, unsigned char y, float radio){
+	unsigned ww=img.width();
+	unsigned hh=img.height();
+	T r0, g0, b0;
+	r0=img(x, y, 0, 0);
+	g0=img(x, y, 0, 1);
+	b0=img(x, y, 0, 2);
+	float dist;
+	for(unsigned i=0; i<ww; i++){
+		for(unsigned j=0; j<hh; j++){
+			dist=sqrt(powf(r0-img(i,j,0,0),2)+powf(g0-img(i,j,0,1),2)+powf(b0-img(i,j,0,2),2));
+			if(dist>radio){
+				img(i,j,0,0)=0;
+				img(i,j,0,1)=0;
+				img(i,j,0,2)=0;
+			}
+		}
+	}
+}
+
+
+void ColorMaskHSI(CImg<float> &img, float h, float s, float radio){
+	unsigned ww=img.width();
+	unsigned hh=img.height();
+	float dist;
+	for(unsigned i=0; i<ww; i++){
+		for(unsigned j=0; j<hh; j++){
+			dist=sqrt(powf(h-img(i,j,0,0),2)+powf(s-img(i,j,0,1),2));
+			if(dist>radio){
+				img(i,j,0,0)=0;
+				img(i,j,0,1)=0;
+				img(i,j,0,2)=0;
+			}
+		}
+	}
+}
+        for (int i=0;i<promedio.width();i++){
             promedio(i)+=img(i);
             promedio(i)*=0.5;
         }
