@@ -685,52 +685,7 @@ CImg<T> complemento_color(CImg<T> img){
     return img;
 }
 
-//estas de componer y descomponer la hice medio al cuete por que se puede hacer facil con
-// las funciones de cimg.
-//r, g, b deben estar normalizadas en 0,1
-template <class T> 
-void DecomposeRGB(CImg<T> &img, CImg<T> &r, CImg<T> &g, CImg<T> &b){
-	r=img.get_channel(0);
-	g=img.get_channel(1);
-	b=img.get_channel(2);
-}
 
-template <class T>
-void DecomposeHSI(CImg<T> &img, CImg<T> &h, CImg<T> &s, CImg<T> &i){
-	img.RGBtoHSI();
-	h=img.get_channel(0);
-	s=img.get_channel(1);
-	i=img.get_channel(2);
-	img.HSItoRGB();
-}
-//r, g, b deben estar normalizadas en 0,1
-template <class T>
-void ComposeRGB(CImg<T> &img, CImg<T> &r, CImg<T> &g, CImg<T> &b){
-	unsigned ww=r.width(), hh=r.height(), i, j;
-	img.assign(ww, hh, 1, 3);
-	for(i=0; i<ww; i++){
-		for(j=0; j<hh; j++){
-			img(i,j,0,0)=r(i,j);
-			img(i,j,0,1)=g(i,j);
-			img(i,j,0,2)=b(i,j);
-		}
-	}
-}
-
-template <class T>
-void ComposeHSI(CImg<T> &img, CImg<T> &h, CImg<T> &s, CImg<T> &I){
-	unsigned ww=h.width(), hh=h.height(), i, j;
-	img.assign(ww, hh, 1, 3);
-	img.RGBtoHSI();
-	for(i=0; i<ww; i++){
-		for(j=0; j<hh; j++){
-			img(i,j,0,0)=h(i,j);
-			img(i,j,0,1)=s(i,j);
-			img(i,j,0,2)=I(i,j);
-		}
-	}
-	img.HSItoRGB();
-}
 
 template <class T>
 CImg<T> ColorMaskRGB(CImg<T> img, unsigned char x, unsigned char y, float radio){

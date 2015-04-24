@@ -58,3 +58,4 @@ stamp-h1
 *.txt.user
 *.cbp
 *.autosave
+*.*~
