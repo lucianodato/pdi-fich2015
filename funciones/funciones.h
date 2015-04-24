@@ -668,26 +668,26 @@ void LocalHistoEq(CImg<T> &img, T windowSize){
     img=ret;
 }
 
-///la idea es girar el H 180 grados en todos sus puntos(como decia Rena y no veia el porque yo Cristian)
+///la idea es girar el H 180 grados en todos sus puntos(como decia Rena)
 ///  de la circunfencia del plato de color
 /// y e invertir la intensidad
-CImg<double> complemento_color(CImg<double> img){
-	CImg<double> imgaux(img);
-	imgaux.RGBtoHSI();
-	
-	cimg_forXY(imgaux,x,y){
-		
-		imgaux(x,y,0,0)+=180;
-		if(imgaux(x,y,0,0) > 360)
-			imgaux(x,y,0,0)=(imgaux(x,y,0,0)-360);
-		/*cout<<imgaux(x,y,0,0)<<" ";*/
-		imgaux(x,y,0,2)=1-imgaux(x,y,0,2);
+template <class T>
+CImg<T> complemento_color(CImg<T> img){
+    img.RGBtoHSI();
+    cimg_forXY(img,i,j){
+        img(i,j,0,0)+=180;
+        if(img(i,j,0,0) > 360)
+            img(i,j,0,0)=(img(i,j,0,0)-360);
+        /*cout<<img(x,y,0,0)<<" ";*/
+        img(i,j,0,2)=1-img(i,j,0,2);
 	}
-	imgaux.HSItoRGB();
-	return imgaux;
+    img.HSItoRGB();
+    return img;
 }
 
-	//r, g, b deben estar normalizadas en 0,1
+//estas de componer y descomponer la hice medio al cuete por que se puede hacer facil con
+// las funciones de cimg.
+//r, g, b deben estar normalizadas en 0,1
 template <class T> 
 void DecomposeRGB(CImg<T> &img, CImg<T> &r, CImg<T> &g, CImg<T> &b){
 	r=img.get_channel(0);
@@ -733,9 +733,9 @@ void ComposeHSI(CImg<T> &img, CImg<T> &h, CImg<T> &s, CImg<T> &I){
 }
 
 template <class T>
-void ColorMaskRGB(CImg<T> &img, unsigned char x, unsigned char y, float radio){
+CImg<T> ColorMaskRGB(CImg<T> img, unsigned char x, unsigned char y, float radio){
 	unsigned ww=img.width();
-	unsigned hh=img.height();
+	unsigned hh=img.height();   
 	T r0, g0, b0;
 	r0=img(x, y, 0, 0);
 	g0=img(x, y, 0, 1);
@@ -751,10 +751,15 @@ void ColorMaskRGB(CImg<T> &img, unsigned char x, unsigned char y, float radio){
 			}
 		}
 	}
+    return img;
 }
 
-
-void ColorMaskHSI(CImg<float> &img, float h, float s, float radio){
+template <class T>
+CImg<T> ColorMaskHSI(CImg<T> img, unsigned mx, unsigned my, float radio){
+    img.RGBtoHSI();
+    T h=img(mx, my, 0, 0);//h
+    T s=img(mx, my, 0, 1);//s
+    T i=img(mx, my, 0, 2);//I
 	unsigned ww=img.width();
 	unsigned hh=img.height();
 	float dist;
@@ -762,12 +767,13 @@ void ColorMaskHSI(CImg<float> &img, float h, float s, float radio){
 		for(unsigned j=0; j<hh; j++){
 			dist=sqrt(powf(h-img(i,j,0,0),2)+powf(s-img(i,j,0,1),2));
 			if(dist>radio){
-				img(i,j,0,0)=0;
-				img(i,j,0,1)=0;
-				img(i,j,0,2)=0;
+                img(i,j,0,0)=0;//h
+                img(i,j,0,1)=0;//s
+                img(i,j,0,2)=0;//I
 			}
 		}
 	}
+    return img.HSItoRGB();
 }
 
 
