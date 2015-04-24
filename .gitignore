@@ -57,3 +57,5 @@ stamp-h1
 *.so*
 *.txt.user
 *.cbp
+*.autosave
+*.*~

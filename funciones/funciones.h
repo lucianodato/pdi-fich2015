@@ -597,7 +597,7 @@ CImg<T> promedio_histograma(CImgList<T> lista){
 
     for (int p=1;p<lista.size();p++){
         img = lista(p);
-        for (int i=0;i<promedio.width();i++){
+         for (int i=0;i<promedio.width();i++){
             promedio(i)+=img(i);
             promedio(i)*=0.5;
         }
@@ -666,6 +666,69 @@ void LocalHistoEq(CImg<T> &img, T windowSize){
         }
     }
     img=ret;
+}
+
+///la idea es girar el H 180 grados en todos sus puntos(como decia Rena)
+///  de la circunfencia del plato de color
+/// y e invertir la intensidad
+template <class T>
+CImg<T> complemento_color(CImg<T> img){
+    img.RGBtoHSI();
+    cimg_forXY(img,i,j){
+        img(i,j,0,0)+=180;
+        if(img(i,j,0,0) > 360)
+            img(i,j,0,0)=(img(i,j,0,0)-360);
+        /*cout<<img(x,y,0,0)<<" ";*/
+        img(i,j,0,2)=1-img(i,j,0,2);
+	}
+    img.HSItoRGB();
+    return img;
+}
+
+
+
+template <class T>
+CImg<T> ColorMaskRGB(CImg<T> img, unsigned char x, unsigned char y, float radio){
+	unsigned ww=img.width();
+	unsigned hh=img.height();   
+	T r0, g0, b0;
+	r0=img(x, y, 0, 0);
+	g0=img(x, y, 0, 1);
+	b0=img(x, y, 0, 2);
+	float dist;
+	for(unsigned i=0; i<ww; i++){
+		for(unsigned j=0; j<hh; j++){
+			dist=sqrt(powf(r0-img(i,j,0,0),2)+powf(g0-img(i,j,0,1),2)+powf(b0-img(i,j,0,2),2));
+			if(dist>radio){
+				img(i,j,0,0)=0;
+				img(i,j,0,1)=0;
+				img(i,j,0,2)=0;
+			}
+		}
+	}
+    return img;
+}
+
+template <class T>
+CImg<T> ColorMaskHSI(CImg<T> img, unsigned mx, unsigned my, float radio){
+    img.RGBtoHSI();
+    T h=img(mx, my, 0, 0);//h
+    T s=img(mx, my, 0, 1);//s
+    T i=img(mx, my, 0, 2);//I
+	unsigned ww=img.width();
+	unsigned hh=img.height();
+	float dist;
+	for(unsigned i=0; i<ww; i++){
+		for(unsigned j=0; j<hh; j++){
+			dist=sqrt(powf(h-img(i,j,0,0),2)+powf(s-img(i,j,0,1),2));
+			if(dist>radio){
+                img(i,j,0,0)=0;//h
+                img(i,j,0,1)=0;//s
+                img(i,j,0,2)=0;//I
+			}
+		}
+	}
+    return img.HSItoRGB();
 }
 
 
