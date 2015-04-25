@@ -67,7 +67,7 @@ int main()
 //    mask(2,0)=0;
 //    mask(2,1)=0;
 //    mask(2,2)=0;
-suma=sumaImg((A-1.0)*img,diferencia);
+suma=(A-1.0)*img+diferencia;
 
         CImgList<float> lista (img,pb.normalize(0,255),diferencia.normalize(0,255),suma.normalize(0,255));
         lista.display("Original ");

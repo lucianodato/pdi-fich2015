@@ -119,6 +119,7 @@ CImg <T> generar_curva(CImg<T> lut,vector<punto> puntos){
 
 //logaritmica: imagenes resultantes son mas claras
 //Caso que tengo todos los grises
+//trabaja con el rango normalizado a [0,255], para imagenes HSI, al pasar el canal I normalizar a este rango (el nala I original esta en rango 0,1)
 template<typename T>
 CImg<T> generar_lut_logb(T c){
     CImg<T> lut(1,256,1,1);
@@ -358,6 +359,7 @@ CImg<T> DifImg(CImg<T> img1, CImg<T> img2){
     }
     return resultado;
 }
+
 ///MULTIPLICACION
 template<typename T>
 CImg<T> multiplicacion(CImg<T> img, CImg<T> masc){
@@ -531,10 +533,10 @@ CImgList<T> bitlist(CImg<T> original)
 
 ///PROMEDIO KERNEL
 //Funcion que devuelve el kernel promediado en func. del tamaño
-template<typename T>
-CImg<T> mask(T tamanio){
+//template<typename T>
+CImg<double> mask(double tamanio){
 
-    CImg<T> mascara (tamanio,tamanio,1,1,1);
+    CImg<double> mascara (tamanio,tamanio,1,1,1);
 
     //Retorno el kernel.Tamaño
     return mascara/(tamanio*tamanio);
@@ -688,6 +690,35 @@ CImg<T> complemento_color(CImg<T> img){
 	}
     img.HSItoRGB();
     return img;
+}
+
+template <class T>
+void ComposeRGB(CImg<T> &img, CImg<T> &r, CImg<T> &g, CImg<T> &b){
+    unsigned ww=r.width(), hh=r.height(), i, j;
+    img.assign(ww, hh, 1, 3);
+    for(i=0; i<ww; i++){
+        for(j=0; j<hh; j++){
+            img(i,j,0,0)=r(i,j);
+            img(i,j,0,1)=g(i,j);
+            img(i,j,0,2)=b(i,j);
+        }
+    }
+}
+
+template <class T>
+CImg<T>  ComposeHSI(CImg<T> h, CImg<T> s, CImg<T> I){
+     CImg<T> img;
+    unsigned ww=h.width(), hh=h.height(), i, j;
+    img.assign(ww, hh, 1, 3);
+    img.RGBtoHSI();
+    for(i=0; i<ww; i++){
+        for(j=0; j<hh; j++){
+            img(i,j,0,0)=h(i,j);
+            img(i,j,0,1)=s(i,j);
+            img(i,j,0,2)=I(i,j);
+        }
+    }
+    img.HSItoRGB();
 }
 
 
