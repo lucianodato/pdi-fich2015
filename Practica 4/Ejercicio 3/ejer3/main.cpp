@@ -14,11 +14,12 @@ int main()
 
     //Creo una imagen resutado con los canales rgb iguales a la imagen original
     CImg<float> result(img.width(),img.height(),img.depth(),3);
-    result.channel(0) = img.get_channel(0);
-    result.channel(1) = img.get_channel(0);
-    result.channel(2) = img.get_channel(0);
 
-    result.get_channel(3).display();
+    cimg_forXYZ(img,i,j,k){
+        result(i,j,k,0) = img(i,j,k,0);
+        result(i,j,k,1) = img(i,j,k,0);
+        result(i,j,k,2) = img(i,j,k,0);
+    }
 
     //Recorro original la imagen y en funcion de la intesidad coloreo la imagen resultado
     cimg_forXYZ(img,i,j,k){
