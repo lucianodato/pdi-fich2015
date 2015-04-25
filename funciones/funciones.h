@@ -676,6 +676,7 @@ void LocalHistoEq(CImg<T> &img, T windowSize){
 ///la idea es girar el H 180 grados en todos sus puntos(como decia Rena)
 ///  de la circunfencia del plato de color
 /// y e invertir la intensidad
+
 template <class T>
 CImg<T> complemento_color(CImg<T> img){
     img.RGBtoHSI();
@@ -683,7 +684,6 @@ CImg<T> complemento_color(CImg<T> img){
         img(i,j,0,0)+=180;
         if(img(i,j,0,0) > 360)
             img(i,j,0,0)=(img(i,j,0,0)-360);
-        /*cout<<img(x,y,0,0)<<" ";*/
         img(i,j,0,2)=1-img(i,j,0,2);
 	}
     img.HSItoRGB();
