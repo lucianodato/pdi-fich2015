@@ -593,6 +593,29 @@ CImg<T> Sobel(CImg<T> img){
     return (img.get_convolve(Gx)+img.get_convolve(Gy)).abs().normalize(0,255);
 }
 
+///FILTRO DE ALTA POTENCIA 1 CANAL
+//Tiene el kernel pasabajo y la amplitud preseteada
+template<typename T>
+CImg<T> filtroAP(CImg<T> img){
+    //auxiliares
+    CImg<T> kernel(3,3),pb,dif,sum;
+
+    //Filtro pasa bajo
+    kernel.fill(mask(3.0));
+
+    //Aplico filtro
+    pb=img.get_convolve(kernel);
+
+    //Se lo resto a lo original para generar el pasa alto
+    dif=DifImg(img,pb);
+
+    //Lo sumo a la original para generar alta potencia
+    sum=sumaImg(img,dif);
+
+    return sum;
+
+}
+
 ///PROMEDIO HISTOGRAMA
 template<typename T>
 CImg<T> promedio_histograma(CImgList<T> lista){
@@ -734,6 +757,31 @@ CImg<T> ColorMaskHSI(CImg<T> img, unsigned mx, unsigned my, float radio){
 		}
 	}
     return img.HSItoRGB();
+}
+
+///FILTRO DE ALTA POTENCIA 3 CANALES
+//Tiene el kernel pasabajo y la amplitud preseteada
+template<typename T>
+CImg<T> filtroAP3(CImg<T> img){
+    //auxiliares
+    CImg<T> kernel(3,3),pb,dif,sum;
+
+    //Filtro pasa bajo
+    kernel.fill(mask(3.0));
+
+    //Aplico filtro por Canal
+    pb.channel(0) = img.channel(0).get_convolve(kernel);
+    pb.channel(1) = img.channel(1).get_convolve(kernel);
+    pb.channel(2) = img.channel(2).get_convolve(kernel);
+
+    //Se lo resto a lo original para generar el pasa alto
+    dif=DifImg(img,pb);
+
+    //Lo sumo a la original para generar alta potencia
+    sum=sumaImg(img,dif);
+
+    return sum;
+
 }
 
 

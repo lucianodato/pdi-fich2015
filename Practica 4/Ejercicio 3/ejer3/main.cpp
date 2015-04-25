@@ -10,7 +10,7 @@ int main()
 
     //Muestro el histograma
     hist = img.get_histogram(256,0,255);
-    //hist.display_graph();
+    hist.display_graph();
 
     //Creo una imagen resutado con los canales rgb iguales a la imagen original
     CImg<float> result(img.width(),img.height(),img.depth(),3);
