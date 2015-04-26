@@ -698,6 +698,8 @@ void LocalHistoEq(CImg<T> &img, T windowSize){
     img=ret;
 }
 
+///COMPLEMENTO COLOR
+///
 ///la idea es girar el H 180 grados en todos sus puntos(como decia Rena)
 ///  de la circunfencia del plato de color
 /// y e invertir la intensidad
