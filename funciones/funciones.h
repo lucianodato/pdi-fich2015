@@ -596,14 +596,11 @@ CImg<T> Sobel(CImg<T> img){
 }
 
 ///FILTRO DE ALTA POTENCIA 1 CANAL
-//Tiene el kernel pasabajo y la amplitud preseteada
+//Recibe la imagen el kernel pasa bajo y la amplificacion
 template<typename T>
-CImg<T> filtroAP(CImg<T> img){
+CImg<T> filtroAP(CImg<T> img,CImg<T> kernel,T amp){
     //auxiliares
-    CImg<T> kernel(3,3),pb,dif,sum;
-
-    //Filtro pasa bajo
-    kernel.fill(mask(3.0));
+    CImg<T> pb,dif,sum;
 
     //Aplico filtro
     pb=img.get_convolve(kernel);
@@ -612,10 +609,9 @@ CImg<T> filtroAP(CImg<T> img){
     dif=DifImg(img,pb);
 
     //Lo sumo a la original para generar alta potencia
-    sum=sumaImg(img,dif);
+    sum=sumaImg((1-amp)*img,dif);
 
     return sum;
-
 }
 
 ///PROMEDIO HISTOGRAMA
@@ -793,28 +789,19 @@ CImg<T> ColorMaskHSI(CImg<T> img, unsigned mx, unsigned my, float radio){
 }
 
 ///FILTRO DE ALTA POTENCIA 3 CANALES
-//Tiene el kernel pasabajo y la amplitud preseteada
+//Recibe la imagen el kernel pasa bajo y la amplificacion
 template<typename T>
-CImg<T> filtroAP3(CImg<T> img){
-    //auxiliares
-    CImg<T> kernel(3,3),pb,dif,sum;
+CImg<T> filtroAP3(CImg<T> img,CImg<T> kernel, T amp){
 
-    //Filtro pasa bajo
-    kernel.fill(mask(3.0));
+    CImg<T> c1,c2,c3;
 
-    //Aplico filtro por Canal
-    pb.channel(0) = img.channel(0).get_convolve(kernel);
-    pb.channel(1) = img.channel(1).get_convolve(kernel);
-    pb.channel(2) = img.channel(2).get_convolve(kernel);
+    //Aplico alta potencia a cada canal por separado
+    c1 = filtroAP(img.get_channel(0),kernel,amp);
+    c2 = filtroAP(img.get_channel(1),kernel,amp);
+    c3 = filtroAP(img.get_channel(2),kernel,amp);
 
-    //Se lo resto a lo original para generar el pasa alto
-    dif=DifImg(img,pb);
-
-    //Lo sumo a la original para generar alta potencia
-    sum=sumaImg(img,dif);
-
-    return sum;
-
+    //Devuelvo la suma de canales
+    return c1+c2+c3;
 }
 
 
