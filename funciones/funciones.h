@@ -143,7 +143,7 @@ CImg<T> generar_lut_expb(T c,T gamma){
     CImg<T> lut(1,256,1,1);
     T s;
     for (int i=0;i<256;i++){
-        s=floor(c*(pow(i,gamma)/255));
+        s=floor(c*(pow(i,gamma)/255.0));
         if (s>255) s=255;
         if (s<0) s=0;
         lut(i)=s;
@@ -561,17 +561,17 @@ CImg<double> mask(double tamanio){
  * g''= (\frac{x^2}{\sigma^2} - 1) \frac{1}{\sigma^2} g
  */
 template<typename T>
-CImg<T> gauss_filter (T sigma=1.0f, T deriv=0) {
+CImg<T> gauss_filter (T sigma=1, T deriv=0) {
     T width = 3*sigma;               // may be less width?
     T sigma2 = sigma*sigma;
     CImg<T> filter;
-    filter.assign(int(2*width)+1);
+    filter.assign(floor(2*width)+1);
 
-    T i=0;
+    int i=0;
     for (T x=-width; x<=width; x+=1.0f) {
         T g = exp(-0.5*x*x/sigma2) / sqrt(2*M_PI) / sigma;
         if (deriv==1) g *= -x/sigma2;
-        if (deriv==2) g *= (x*x/sigma2 - 1.0f)/sigma2;
+        if (deriv==2) g *= (x*x/sigma2 - 1)/sigma2;
         filter[i] = g ;
         //printf ("i=%f -> %f\n", x, filter[i]);
         i++;
