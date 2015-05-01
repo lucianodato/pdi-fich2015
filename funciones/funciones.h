@@ -9,6 +9,8 @@
 #include <string>
 #include <complex>
 #include "PDI_functions.h"
+#include <fstream>
+
 
 using namespace cimg_library;
 using namespace std;
@@ -55,7 +57,9 @@ const unsigned char red[] = { 255,0,0 },
 
 //------------------------------FUNCIONES AUXILIARES--------------------------------------------
 
+///****************************************
 ///FUNCION NEGATIVO - Devuelve el negativo de una imagen
+///****************************************
 template<typename T>
 CImg<T> negativo(CImg<T> imagen){
     cimg_forXY(imagen,i,j)
@@ -78,7 +82,7 @@ CImg<T> generar_lut(T a,T c,T ini,T fin){
     T s;
     for (int i=ini;i<abs(fin-ini)+1;i++){
         s=T(a*i+c);
-        if (s>255) s=255;
+    ///--------------------------    if (s>255) s=255;
         if (s<0) s=0;
         lut(i)=s;
     }
@@ -179,9 +183,9 @@ CImg<T> transformacion(CImg<T> img,CImg<T> lut){
     return img;
 }
 
-///--------------------------
-
+///****************************************
 /// FUNCION DETECTAR_MEDIOTONO - Devuelve una imagen 3x3 del mediotono correspondiente a la intensidad recibida
+///****************************************
 template<typename T>
 CImg<T> detectar_mediotono(T intensidad){
     
@@ -272,8 +276,9 @@ CImg<T> detectar_mediotono(T intensidad){
     }
 
 }
-
+///****************************************
 ///FUNCION MEDIOTONO - Recibe una imagen y la devuelve en binario con los medios tonos correspondientes
+///****************************************
 template<typename T>
 CImg<T> mediotono(CImg<T> original){
 
@@ -308,8 +313,9 @@ CImg<T> mediotono(CImg<T> original){
     return modificada;
 }
 
-
+///****************************************
 ///FUNCION BINARIO - Caso que recibe un umbral (En la libreria esta la funcion get_threshold tambien)
+///****************************************
 template<typename T>
 CImg<T> binario(CImg<T> imagen, T umbral){
 
@@ -332,8 +338,9 @@ CImg<T> binario(CImg<T> imagen, T umbral){
     return modificada;
 
 }
-
+///****************************************
 ///SUMA
+///****************************************
 //corrimiento=0 si quiero sumar sin corrimiento
 template<typename T>
 CImg<T> sumaImg(CImg<T> img1, CImg<T> img2, T corrimiento=0 ){
@@ -348,7 +355,9 @@ CImg<T> sumaImg(CImg<T> img1, CImg<T> img2, T corrimiento=0 ){
     }
     return resultado;
 }
+///****************************************
 ///DIFERENCIA
+///****************************************
 template<typename T>
 CImg<T> DifImg(CImg<T> img1, CImg<T> img2){
     CImg<T> resultado(img1.width(),img1.height(),1,1);
@@ -370,22 +379,27 @@ CImg<T> DifImg(CImg<T> img1, CImg<T> img2){
     }
     return resultado;
 }
-
+///****************************************
 ///MULTIPLICACION
+///****************************************
 template<typename T>
 CImg<T> multiplicacion(CImg<T> img, CImg<T> masc){
     CImg<T> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j) resultado(i,j)=img(i,j) * masc(i,j);
     return resultado;
 }
+///****************************************
 ///DIVISION
+///****************************************
 template<typename T>
 CImg<T> division(CImg<T> &img, CImg<T> &masc){
     cimg_forXY(masc,i,j) masc(i,j) = 255 * 1/masc(i,j);
     return multiplicacion(img,masc);
 
 }
+///****************************************
 ///REDUCIR RUIDO //pasar una imagen con ruido en "img",  //genera la suma de "n" imagenes con ruido
+///****************************************
 //pasar lista de imagenes con ruido
 template<typename T>
 CImg<T> reducRuido(CImgList<T>img){
@@ -394,15 +408,17 @@ CImg<T> reducRuido(CImgList<T>img){
         suma=sumaImg(suma,img[i],0); //sumo
     return suma;
 }
-
+///****************************************
 ///UMBRAL INVERTIDO
+///****************************************
 //recibe imagen en escala de gris
 template<typename T>
 CImg<T> umbral_invertido(CImg<T> &img, T p){
     return negativo(img.get_threshold(p));
 }
-
+///****************************************
 ///UMBRAL POR TRAMOS
+///****************************************
 //recibe imagen en escala de gris
 template<typename T>
 CImg<T> umbral_por_tramos(CImg<T> &img, T p1,T p2){
@@ -415,8 +431,9 @@ CImg<T> umbral_por_tramos(CImg<T> &img, T p1,T p2){
     }
     return resultado;
 }
-
+///****************************************
 ///OR
+///****************************************
 //Or entre imagen binaria y una mascara binaria
 template<typename T>
 CImg<T> ORimg(CImg<T> img, CImg<T> masc){
@@ -429,8 +446,9 @@ CImg<T> ORimg(CImg<T> img, CImg<T> masc){
     }
     return resultado;
 }
-
+///****************************************
 ///AND
+///****************************************
 //And entre imagen binaria y una mascara binaria
 template<typename T>
 CImg<T> ANDimg(CImg<T> &img, CImg<T> &masc){
@@ -439,8 +457,9 @@ CImg<T> ANDimg(CImg<T> &img, CImg<T> &masc){
             resultado(i,j)=(img(i,j)*masc(i,j));
     return resultado;
 }
-
+///****************************************
 ///MAYOR
+///****************************************
 // las imagenes en escala de griz
 template<typename T>
 CImg<T> MAYORimg(CImg<T> &img, CImg<T> &img2){
@@ -453,7 +472,9 @@ CImg<T> MAYORimg(CImg<T> &img, CImg<T> &img2){
 
     return resultado;
 }
+///****************************************
 ///MENOR
+///****************************************
 //imagenes en escala de griz
 template<typename T>
 CImg<T> MENORimg(CImg<T> &img, CImg<T> &img2){
@@ -466,8 +487,9 @@ CImg<T> MENORimg(CImg<T> &img, CImg<T> &img2){
 
     return resultado;
 }
-
+///****************************************
 ///BINARIO
+///****************************************
 //Pasar numero a binario
 template<typename T>
 vector<T> binario(T numero) {
@@ -482,8 +504,9 @@ vector<T> binario(T numero) {
 
     return bin;
 }
-
+///****************************************
 ///EMBOSS
+///****************************************
 //Filtro emboss
 template<typename T>
 CImg<T> emboss(CImg<T> img,int corrimiento){
@@ -491,8 +514,9 @@ CImg<T> emboss(CImg<T> img,int corrimiento){
     img_neg = negativo(img);
     return sumaImg(img, img_neg,corrimiento);//suma a img su negativo un poquito desplazado
 }
-
+///****************************************
 ///BLISTER
+///****************************************
 //Detector de faltantes de pastillas en bliter,
 //Recive:la imagen blister (es deseable que este umbralizada o con buen contraste)
 //Retorna: vector con coordenadas en las que faltan pastillas
@@ -508,8 +532,9 @@ vector<punto> blister(CImg<T> img)
             }
     return vectorcoord;
 }
-
+///****************************************
 ///BIT LIST
+///****************************************
 template<typename T>
 CImgList<T> bitlist(CImg<T> original)
 {
@@ -553,8 +578,9 @@ CImg<double> mask(double tamanio){
     return mascara/(tamanio*tamanio);
 
 }
-
+///****************************************
 ///GENERADOR DE KERNEL GAUSSIANO
+///****************************************
 /**
  * \file         gauss_filter.h
  * \author       Alain Lehmann <lehmann at vision.ee.ethz.ch>
@@ -568,7 +594,7 @@ CImg<double> mask(double tamanio){
  * the width of the filter is automatically determined from sigma.
  * g  = \frac{1}{\sqrt{2\pi}\sigma}   \exp(-0.5 \frac{x^2}{\sigma^2} )
  * g' = \frac{x}{\sqrt{2\pi}\sigma^3} \exp(-0.5 \frac{x^2}{\sigma^2} )
- *    = -\frac{x}{\sigma^2} g
+ * /   = -\frac{x}{\sigma^2} g
  * g''= (\frac{x^2}{\sigma^2} - 1) \frac{1}{\sigma^2} g
  */
 template<typename T>
@@ -589,8 +615,9 @@ CImg<T> gauss_filter (T sigma=1, T deriv=0) {
     }
     return filter;
 }
-
+///****************************************
 ///SOBEL
+///****************************************
 ///idea de gradiente en dos direcciones
 template<typename T>
 CImg<T> Sobel(CImg<T> img){
@@ -605,8 +632,9 @@ CImg<T> Sobel(CImg<T> img){
 
     return (img.get_convolve(Gx)+img.get_convolve(Gy)).abs().normalize(0,255);
 }
-
+///****************************************
 ///FILTRO DE ALTA POTENCIA 1 CANAL
+///****************************************
 //Recibe la imagen el kernel pasa bajo y la amplificacion
 template<typename T>
 CImg<T> filtroAP(CImg<T> img,CImg<T> kernel,T amp){
@@ -623,6 +651,24 @@ CImg<T> filtroAP(CImg<T> img,CImg<T> kernel,T amp){
     sum=sumaImg((1-amp)*img,dif);
 
     return sum;
+}
+
+///****************************************
+///FILTRO DE ALTA POTENCIA 3 CANALES
+///****************************************
+//Recibe la imagen el kernel pasa bajo y la amplificacion
+template<typename T>
+CImg<T> filtroAP3(CImg<T> img,CImg<T> kernel, T amp){
+
+    CImg<T> c1,c2,c3;
+
+    //Aplico alta potencia a cada canal por separado
+    c1 = filtroAP(img.get_channel(0),kernel,amp);
+    c2 = filtroAP(img.get_channel(1),kernel,amp);
+    c3 = filtroAP(img.get_channel(2),kernel,amp);
+
+    //Devuelvo la suma de canales
+    return c1+c2+c3;
 }
 
 ///PROMEDIO HISTOGRAMA
@@ -643,8 +689,9 @@ CImg<T> promedio_histograma(CImgList<T> lista){
     return promedio;
 
 }
-
+///****************************************
 ///HISTOGRAMA
+///****************************************
 /// Construye un histograma y lo devuelve en una imagen
 template <class T>
 CImg<T> draw_histogram(CImg<T> &img){
@@ -669,9 +716,10 @@ CImg<T> draw_histogram(CImg<T> &img){
     return histograma;
 }
 
-
+///****************************************
 ///ECUALIZACION LOCAL DE HISTOGRAMA
-// ecualizacion de histograma local para unsigned char descartando los bordes
+///****************************************
+// ecualizacion /de histograma local para unsigned char descartando los bordes
 template<typename T>
 void LocalHistoEq(CImg<T> &img, T windowSize){
     //CImg<T> histo=img.get_histogram(256, 0, 255);
@@ -705,12 +753,97 @@ void LocalHistoEq(CImg<T> &img, T windowSize){
     img=ret;
 }
 
+
+
+///****************************************
+/// CARGAR PALETA
+///****************************************
+//uso esta funcion como funcion auxiliar dentro de "Aplicar Paleta"
+//cargo paleta de color desde archivo del disco
+//paleta= se guardan los valores leidos desde archivo
+//nombre= ruta completa al archivo en disco de la paleta
+int cargar_paleta(vector< vector< float> > &paleta, string nombre) {
+    vector< float > plinea;
+    string cad, rS, gS, bS;
+    float r, g, b;
+    int pos, nval;
+
+    ifstream arch(nombre.c_str());
+    if (arch.fail()) {
+        cerr << "ERROR al abrir el archivo " << nombre << endl;
+        return 1;
+    } else {
+        paleta.clear();
+        // lee cuantos valores por fila
+        getline(arch,cad);
+        nval=0;
+        pos=cad.find_first_of(".");
+        while (pos>0) {
+            cad.erase(0,pos+1);
+            pos=cad.find_first_of(".");
+            nval++;
+        }
+        arch.close();
+        arch.open(nombre.c_str());
+        plinea.resize(nval);
+        while (getline(arch,cad)) {
+            pos=cad.find_first_not_of(" ");
+            cad.erase(0,pos);
+            pos=cad.find_first_of(" ");
+            rS=cad.substr(0,pos);
+            r=atof(rS.c_str());
+            plinea[0]=r;
+            cad.erase(0,pos);
+            pos=cad.find_first_not_of(" ");
+            cad.erase(0,pos);
+            pos=cad.find_first_of(" ");
+            gS=cad.substr(0,pos);
+            g=atof(gS.c_str());
+            plinea[1]=g;
+            cad.erase(0,pos);
+            pos=cad.find_first_not_of(" ");
+            cad.erase(0,pos);
+            pos=cad.find_first_of(" ");
+            bS=cad.substr(0,pos);
+            b=atof(bS.c_str());
+            plinea[2]=b;
+            paleta.push_back(plinea);
+        }
+        arch.close();
+        return 0;
+    }
+}
+
+///****************************************
+///APLICAR PALETA
+///****************************************
+// parametros:
+//Imagen a la que se la aplica la paleta,
+//Rruta completa de la ubicacion de archivo de paleta
+CImg<float> AplicarPaleta(CImg<float> img, string nomPaleta){
+    CImg<float> ret(img.width(), img.height(), 1, 3);
+
+    vector< vector<float> > paleta;
+    cargar_paleta(paleta, nomPaleta);
+
+    img.normalize(0, 255);
+    for(unsigned i=0; i<img.width(); i++){
+        for(unsigned j=0; j<img.height(); j++){
+            ret(i,j,0,0)=paleta[unsigned(img(i,j))][0];
+            ret(i,j,0,1)=paleta[unsigned(img(i,j))][1];
+            ret(i,j,0,2)=paleta[unsigned(img(i,j))][2];
+        }
+    }
+
+    return ret;
+}
+
+///****************************************
 ///COMPLEMENTO COLOR
-///
+///****************************************
 ///la idea es girar el H 180 grados en todos sus puntos(como decia Rena)
 ///  de la circunfencia del plato de color
 /// y e invertir la intensidad
-
 template <class T>
 CImg<T> complemento_color(CImg<T> img){
     img.RGBtoHSI();
@@ -754,7 +887,9 @@ CImg<T>  ComposeHSI(CImg<T> h, CImg<T> s, CImg<T> I){
 }
 
 
-
+///****************************************
+/// Color Slicing RGB
+///****************************************
 template <class T>
 CImg<T> ColorMaskRGB(CImg<T> img, unsigned char x, unsigned char y, float radio){
 	unsigned ww=img.width();
@@ -776,7 +911,9 @@ CImg<T> ColorMaskRGB(CImg<T> img, unsigned char x, unsigned char y, float radio)
 	}
     return img;
 }
-
+///****************************************
+/// Color Slicing HSI
+///****************************************
 template <class T>
 CImg<T> ColorMaskHSI(CImg<T> img, unsigned mx, unsigned my, float radio){
     img.RGBtoHSI();
@@ -799,21 +936,7 @@ CImg<T> ColorMaskHSI(CImg<T> img, unsigned mx, unsigned my, float radio){
     return img.HSItoRGB();
 }
 
-///FILTRO DE ALTA POTENCIA 3 CANALES
-//Recibe la imagen el kernel pasa bajo y la amplificacion
-template<typename T>
-CImg<T> filtroAP3(CImg<T> img,CImg<T> kernel, T amp){
 
-    CImg<T> c1,c2,c3;
-
-    //Aplico alta potencia a cada canal por separado
-    c1 = filtroAP(img.get_channel(0),kernel,amp);
-    c2 = filtroAP(img.get_channel(1),kernel,amp);
-    c3 = filtroAP(img.get_channel(2),kernel,amp);
-
-    //Devuelvo la suma de canales
-    return c1+c2+c3;
-}
 
 ///COPIA CANAL A CANAL
 //Sirve para no tener que escribir los ciclos en el main
