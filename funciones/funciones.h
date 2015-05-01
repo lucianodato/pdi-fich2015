@@ -2,13 +2,13 @@
 #define FUNCIONES
 
 #include <iostream>
-#include "CImg.h"
+#include <CImg.h>
 #include <vector>
 #include <algorithm>
 #include <math.h>
 #include <string>
 #include <complex>
-#include "PDI_functions.h"
+#include <PDI_functions.h>
 #include <fstream>
 
 

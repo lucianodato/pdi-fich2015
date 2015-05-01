@@ -4,7 +4,7 @@ using namespace std;
 
 int main()
 {
-    CImg<float> img,mag,pha;
+    CImg<float> img,mag;
     img.load("../../../../images/Deforestacion.png");
     img.display();
     CImgList<float> Lista(fourier(img));

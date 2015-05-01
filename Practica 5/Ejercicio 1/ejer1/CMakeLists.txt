@@ -22,7 +22,7 @@ file(GLOB MySources *.c *.h *.cpp)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 #Agrega el ejecutable
-add_executable(${PROJECT_NAME} ${SRC_LIST} ${MySources} ${cimg} ${functions} ${fPDI})
+add_executable(${PROJECT_NAME} ${SRC_LIST} ${MySources} ${cimg} ${functions} ${fPDI} ${FFTW_INCLUDE_DIR} ${FFTW_LIBRARY})
 
 #linkea las librerias en tiempo de ejecucion
 
@@ -35,3 +35,6 @@ target_link_libraries (${PROJECT_NAME} ${X11_LIBRARIES})
 endif (X11_FOUND)
 target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
 
+#added fftw3
+FIND_PATH(FFTW_INCLUDE_DIR fftw3.h  ${FFTW_INCLUDE_DIRS})
+FIND_LIBRARY(FFTW_LIBRARY fftw3 ${FFTW_LIBRARY_DIRS})
