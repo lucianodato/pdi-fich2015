@@ -991,21 +991,24 @@ CImgList<T> fourier(CImg<T> img){
 ///TRANSFORMADA DE FOURIER INVERSA
 //devuelve la magnitud la fase la magnitud con escala logaritmica con shift y la fase con escala logaritmica con shift
 template<typename T>
-CImg<T> fourier_inv(CImg<T> magnitud,CImg<T> fase){
+CImg<T> fourier_inv(CImg<T> img,CImg<T> magnitud,CImg<T> fase){
 
     CImg<T> realfft(magnitud.width(),magnitud.height(),1,1);
     CImg<T> imaginariafft(fase.width(),fase.height(),1,1);
 
     complex<T>I(0.0,1.0);
-    for (int i=0;i<magnitud.width();i++){
-        for (int j=0;j<magnitud.height();j++){
+    for (int i=0;i<img.width();i++){
+        for (int j=0;j<img.height();j++){
             realfft(i,j)=real(magnitud(i,j)*exp(I*fase(i,j)));
             imaginariafft(i,j)=imag(magnitud(i,j)*exp(I*fase(i,j)));
 
         }
     }
 
-    return realfft;
+    CImgList<T> orig(magnitud,fase);
+    orig[0] = realfft;
+    orig[1] = imaginariafft;
+    return orig.get_FFT(true)[0];
 }
 
 

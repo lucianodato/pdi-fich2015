@@ -12,7 +12,7 @@ int main()
     mag = Lista.at(2);
     mag.display();
 
-    CImg<float> imagen = fourier_inv(Lista.at(0),Lista.at(1));
+    CImg<float> imagen = fourier_inv(img,Lista.at(0),Lista.at(1));
     imagen.display();
 
     return 0;
