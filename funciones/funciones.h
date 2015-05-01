@@ -2,7 +2,7 @@
 #define FUNCIONES
 
 #include <iostream>
-#include <CImg.h>
+#include "CImg.h"
 #include <vector>
 #include <algorithm>
 #include <math.h>

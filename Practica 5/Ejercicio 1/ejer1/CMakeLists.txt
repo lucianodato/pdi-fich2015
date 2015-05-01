@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 2.8)
 aux_source_directory(. SRC_LIST)
 
 #banderas de compilacion
-set(CMAKE_C_FLAGS "-lfftw3")
-set(CMAKE_CXX_FLAGS "-lfftw3")
+set(CMAKE_C_FLAGS "-lfftw3_threads -lfftw3 -lm ")
+set(CMAKE_CXX_FLAGS "-lfftw3_threads -lfftw3 -lm ")
 
 #Paths
 set(FUNCTIONS_DIRECTORY ../../../funciones)
@@ -22,7 +22,7 @@ file(GLOB MySources *.c *.h *.cpp)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 #Agrega el ejecutable
-add_executable(${PROJECT_NAME} ${SRC_LIST} ${MySources} ${cimg} ${functions} ${fPDI} ${FFTW_INCLUDE_DIR} ${FFTW_LIBRARY})
+add_executable(${PROJECT_NAME} ${SRC_LIST} ${MySources} ${cimg} ${functions} ${fPDI})
 
 #linkea las librerias en tiempo de ejecucion
 
