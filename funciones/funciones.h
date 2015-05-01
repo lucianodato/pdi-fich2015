@@ -851,7 +851,7 @@ CImg<T> complemento_color(CImg<T> img){
         img(i,j,0,0)+=180;
         if(img(i,j,0,0) > 360)
             img(i,j,0,0)=(img(i,j,0,0)-360);
-        img(i,j,0,2)=1-img(i,j,0,2);
+        //img(i,j,0,2)=1-img(i,j,0,2);
 	}
     img.HSItoRGB();
     return img;
@@ -859,7 +859,7 @@ CImg<T> complemento_color(CImg<T> img){
 
 template <class T>
 void ComposeRGB(CImg<T> &img, CImg<T> &r, CImg<T> &g, CImg<T> &b){
-    unsigned ww=r.width(), hh=r.height(), i, j;
+    int ww=r.width(), hh=r.height(), i, j;
     img.assign(ww, hh, 1, 3);
     for(i=0; i<ww; i++){
         for(j=0; j<hh; j++){
@@ -873,7 +873,7 @@ void ComposeRGB(CImg<T> &img, CImg<T> &r, CImg<T> &g, CImg<T> &b){
 template <class T>
 CImg<T>  ComposeHSI(CImg<T> h, CImg<T> s, CImg<T> I){
      CImg<T> img;
-    unsigned ww=h.width(), hh=h.height(), i, j;
+    int ww=h.width(), hh=h.height(), i, j;
     img.assign(ww, hh, 1, 3);
     img.RGBtoHSI();
     for(i=0; i<ww; i++){
@@ -991,14 +991,14 @@ CImgList<T> fourier(CImg<T> img){
 ///TRANSFORMADA DE FOURIER INVERSA
 //devuelve la magnitud la fase la magnitud con escala logaritmica con shift y la fase con escala logaritmica con shift
 template<typename T>
-CImg<T> fourier_inv(CImg<T> img,CImg<T> magnitud,CImg<T> fase){
+CImg<T> fourier_inv(CImg<T> magnitud,CImg<T> fase){
 
     CImg<T> realfft(magnitud.width(),magnitud.height(),1,1);
     CImg<T> imaginariafft(fase.width(),fase.height(),1,1);
 
     complex<T>I(0.0,1.0);
-    for (int i=0;i<img.width();i++){
-        for (int j=0;j<img.height();j++){
+    for (int i=0;i<magnitud.width();i++){
+        for (int j=0;j<magnitud.height();j++){
             realfft(i,j)=real(magnitud(i,j)*exp(I*fase(i,j)));
             imaginariafft(i,j)=imag(magnitud(i,j)*exp(I*fase(i,j)));
 
