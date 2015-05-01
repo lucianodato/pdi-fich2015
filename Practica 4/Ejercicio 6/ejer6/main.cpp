@@ -7,7 +7,7 @@
 float areaPixel=(200/89)*(200/89);//area en metros cuadrados de cada pixel de imagen
 int main()
 {
-    CImg<float> img,img_hsi,img_hsi_p,maskRGB,maskHSI,resultado,resultado2,imgOrig,kernel,kernel2,eqGlobal,diferencia,hist;
+    CImg<float> img,img_hsi,img_hsi_p,maskRGB,maskHSI,resultado,resultado2,resultado0,resultado1,imgOrig,kernel,kernel2,eqGlobal,diferencia,hist;
     CImgDisplay displayImagen, displayMascaraRGB, displayMascaraHSI;
     float radioHSI=50, radioRGB=20;
     unsigned mx, my;
@@ -22,7 +22,7 @@ int main()
     //imagen auxiliar HSI
     img_hsi = img.get_RGBtoHSI();
 
-    //Muestra el histograma de la imagen hsi
+    //Muestra el histograma del canal I de la HSI
     hist = img_hsi.get_channel(2).get_normalize(0,255).get_histogram(256,0,255);
     hist.display_graph();
 
@@ -38,7 +38,7 @@ int main()
     resultado.display("Ecualizando");
 
     //Separo los grises medios claros de los grises medios oscuros
-    resultado = transformacion(resultado,generar_lut_expb(float(1.5),float(2)));
+    resultado = transformacion(resultado,generar_lut_logb(float(1),0));
     resultado.display("Aplicando una lut");
 
     //Aplicacion de mascaras de promediado
@@ -59,7 +59,7 @@ int main()
     hist.display_graph("Histograma Canal I Filtrado");
 
     //Aplico el umbralado
-    resultado = resultado.get_threshold(204);
+    resultado = resultado.get_threshold(170);
 
     //Muestro la mascara obtenida
     resultado.display("Mascara Final");

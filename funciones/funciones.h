@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <math.h>
 #include <string>
+#include <complex>
+#include "PDI_functions.h"
 
 using namespace cimg_library;
 using namespace std;
@@ -53,6 +55,13 @@ const unsigned char red[] = { 255,0,0 },
 
 //------------------------------FUNCIONES AUXILIARES--------------------------------------------
 
+///FUNCION NEGATIVO - Devuelve el negativo de una imagen
+template<typename T>
+CImg<T> negativo(CImg<T> imagen){
+    cimg_forXY(imagen,i,j)
+            imagen(i,j) = abs(((int)*imagen.data(i,j,0,0))-255);
+    return imagen.normalize(0,255);
+}
 
 ///--------FUNCIONES LUT----------
 
@@ -117,37 +126,48 @@ CImg <T> generar_curva(CImg<T> lut,vector<punto> puntos){
     return curva;
 }
 
-//logaritmica: imagenes resultantes son mas claras
-//Caso que tengo todos los grises
-//trabaja con el rango normalizado a [0,255], para imagenes HSI, al pasar el canal I normalizar a este rango (el nala I original esta en rango 0,1)
+///LUT LOGARITMICA
+// Si positiva es 1 Aclara la imagen
+// Si positiva es 0 Oscurece la imagen
 template<typename T>
-CImg<T> generar_lut_logb(T c){
+CImg<T> generar_lut_logb(T c,bool positiva){
     CImg<T> lut(1,256,1,1);
     T s;
     for (int i=0;i<256;i++){
         //Aca mapeamos el rango total resultante para que despues se traduzca en un nivel de gris
         s=floor(c*(255*((log(1+i)/log(1+255)))));// normalizo -.- mmmm
-        if (s>255) s=255;
-        if (s<0) s=0;
+//        if(positiva){
+//            s=c*log(1+i);
+//        }
+//        else
+//        {
+//            s=c*pow(10,1+i);//MAL!!!!
+//        }
+
         lut(i)=s;
     }
+    //lut.normalize(0,255);
+
     return lut;
+
 }
 
 
 
-//lut exponencial bis: REDUCE el rango de grises, las imagenes resultantes son mas oscuras
-//Caso que tengo todos los grises
+///LUT EXPONECIAL
+// gamma es positivo
+// 0 < gamma < 1 Aclara la imagen
+// gamma > 1 Oscurece la imagen
 template<typename T>
 CImg<T> generar_lut_expb(T c,T gamma){
     CImg<T> lut(1,256,1,1);
     T s;
     for (int i=0;i<256;i++){
-        s=floor(c*(pow(i,gamma)/255.0));
-        if (s>255) s=255;
-        if (s<0) s=0;
+        //s=floor(c*(pow(i,gamma))/255);
+        s=c*(pow(i,gamma));
         lut(i)=s;
     }
+    lut.normalize(0,255);
     return lut;
 }
 
@@ -286,15 +306,6 @@ CImg<T> mediotono(CImg<T> original){
 
     modificada.resize(original.width(),original.height(),-100,-100,3);
     return modificada;
-}
-
-
-///FUNCION NEGATIVO - Devuelve el negativo de una imagen
-template<typename T>
-CImg<T> negativo(CImg<T> imagen){
-    cimg_forXY(imagen,i,j)
-            imagen(i,j) = abs(((int)*imagen.data(i,j,0,0))-255);
-    return imagen.normalize(0,255);
 }
 
 
@@ -803,6 +814,77 @@ CImg<T> filtroAP3(CImg<T> img,CImg<T> kernel, T amp){
     //Devuelvo la suma de canales
     return c1+c2+c3;
 }
+
+///COPIA CANAL A CANAL
+//Sirve para no tener que escribir los ciclos en el main
+template<typename T>
+CImg<T> copia_canal(CImg<T> img_orig,int canal,CImg<T> img_a_copiar,int canal_a_copiar){
+    cimg_forXYZ(img_orig,i,j,k)
+            img_orig(i,j,k,canal) = img_a_copiar(i,j,k,canal_a_copiar);
+    return img_orig;
+}
+
+///TRANSFORMADA DE FOURIER
+//devuelve la magnitud la fase la magnitud con escala logaritmica con shift y la fase con escala logaritmica con shift
+template<typename T>
+CImgList<T> fourier(CImg<T> img){
+
+    CImgList<T>TDF_img=img.get_FFT();
+    CImg<T>TDF_real=TDF_img[0];
+    CImg<T>TDF_imaginaria=TDF_img[1];
+
+    complex<T>I(0.0,1.0);
+
+    CImg<T>magnitud(img.width(),img.height(),1,1);
+    CImg<T>fase(img.width(),img.height(),1,1);
+
+    CImg<T>magnitud_log(img.width(),img.height(),1,1);
+    CImg<T>fase_log(img.width(),img.height(),1,1);
+
+    for (int i=0;i<img.width();i++){
+        for (int j=0;j<img.height();j++){
+            magnitud(i,j)=sqrt(pow(TDF_real(i,j),2)+pow(TDF_imaginaria(i,j),2));
+            complex<T>complejo=TDF_real(i,j)+I*TDF_imaginaria(i,j);
+            fase(i,j)=arg(complejo);
+
+            //Calculo la magnitud y fase para mostrar en el display()
+            magnitud_log(i,j) = log(magnitud(i,j) + 1);
+            fase_log(i,j) = log(fase(i,j) + 1);
+
+        }
+    }
+
+
+    magnitud_log = magnitud_log.get_shift(img.width()/2,img.height()/2,0,0,2);
+    fase_log = fase_log.get_shift(img.width()/2,img.height()/2,0,0,2);
+
+
+    CImgList<T> lista(magnitud,fase,magnitud_log,fase_log);
+
+    return lista;
+}
+
+
+///TRANSFORMADA DE FOURIER INVERSA
+//devuelve la magnitud la fase la magnitud con escala logaritmica con shift y la fase con escala logaritmica con shift
+template<typename T>
+CImg<T> fourier_inv(CImg<T> magnitud,CImg<T> fase){
+
+    CImg<T> realfft(magnitud.width(),magnitud.height(),1,1);
+    CImg<T> imaginariafft(fase.width(),fase.height(),1,1);
+
+    complex<T>I(0.0,1.0);
+    for (int i=0;i<magnitud.width();i++){
+        for (int j=0;j<magnitud.height();j++){
+            realfft(i,j)=real(magnitud(i,j)*exp(I*fase(i,j)));
+            imaginariafft(i,j)=imag(magnitud(i,j)*exp(I*fase(i,j)));
+
+        }
+    }
+
+    return realfft;
+}
+
 
 
 #endif // FUNCIONES
