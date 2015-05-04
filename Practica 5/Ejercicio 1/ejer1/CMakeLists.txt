@@ -6,8 +6,8 @@ aux_source_directory(. SRC_LIST)
 #### Sobreesciribir la linea de add_executables ####
 
 #banderas de compilacion
-set(CMAKE_C_FLAGS "-lfftw3_threads -lfftw3 -lm ")
-set(CMAKE_CXX_FLAGS "-lfftw3_threads -lfftw3 -lm ")
+set(CMAKE_C_FLAGS "-lfftw3_threads -lpthread -lfftw3 -lm ")
+set(CMAKE_CXX_FLAGS "-lfftw3_threads -lpthread -lfftw3 -lm ")
 
 #Paths
 set(FUNCTIONS_DIRECTORY ../../../funciones)
