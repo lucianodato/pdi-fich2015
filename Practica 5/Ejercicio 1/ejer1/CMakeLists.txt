@@ -6,8 +6,8 @@ aux_source_directory(. SRC_LIST)
 #### Sobreesciribir la linea de add_executables ####
 
 #banderas de compilacion
-set(CMAKE_C_FLAGS "-lfftw3_threads -lpthread -lfftw3 -lm ")
-set(CMAKE_CXX_FLAGS "-lfftw3_threads -lpthread -lfftw3 -lm ")
+set(CMAKE_C_FLAGS "-lm -lpthread -lX11 -lfftw3 -lfftw3_threads")
+set(CMAKE_CXX_FLAGS "-lm -lpthread -lX11 -lfftw3 -lfftw3_threads")
 
 #Paths
 set(FUNCTIONS_DIRECTORY ../../../funciones)
@@ -30,14 +30,14 @@ add_executable(${PROJECT_NAME} ${SRC_LIST} ${MySources} ${cimg} ${functions} ${f
 #linkea las librerias en tiempo de ejecucion
 
 #added X11 config
-find_package(X11)
-find_package (Threads)
-if (X11_FOUND)
-include_directories(${X11_INCLUDE_DIRS})
-target_link_libraries (${PROJECT_NAME} ${X11_LIBRARIES})
-endif (X11_FOUND)
-target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
+#find_package(X11)
+#find_package (Threads)
+#if (X11_FOUND)
+#include_directories(${X11_INCLUDE_DIRS})
+#target_link_libraries (${PROJECT_NAME} ${X11_LIBRARIES})
+#endif (X11_FOUND)
+#target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
 
 #added fftw3
-FIND_PATH(FFTW_INCLUDE_DIR fftw3.h  ${FFTW_INCLUDE_DIRS})
-FIND_LIBRARY(FFTW_LIBRARY fftw3 ${FFTW_LIBRARY_DIRS})
+#FIND_PATH(FFTW_INCLUDE_DIR fftw3.h  ${FFTW_INCLUDE_DIRS})
+#FIND_LIBRARY(FFTW_LIBRARY fftw3 ${FFTW_LIBRARY_DIRS})
