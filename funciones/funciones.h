@@ -10,7 +10,8 @@
 #include <complex>
 #include <PDI_functions.h>
 #include <fstream>
-
+#include <cstdio>
+#include <ctime>
 
 using namespace cimg_library;
 using namespace std;
@@ -1010,8 +1011,6 @@ CImg<T> fourier_inv(CImg<T> magnitud,CImg<T> fase){
     orig[1] = imaginariafft;
     return orig.get_FFT(true)[0];
 }
-
-
 
 #endif // FUNCIONES
 
