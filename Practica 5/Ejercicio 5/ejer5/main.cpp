@@ -9,7 +9,8 @@ int main()
 
     float radio = img.width()/32;
 
-    CImg<float> pasaalto = pasaalto_ideal(radio,float(img.width()),float(img.height()));
+    CImg<float> pasaalto = ideal_mask(img,radio,true);
+    pasaalto.display();
     CImg<float> img_filt = filtrar(img,pasaalto);
 
     CImgList<float> lista(img,img_filt);

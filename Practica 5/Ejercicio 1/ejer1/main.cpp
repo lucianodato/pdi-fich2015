@@ -4,15 +4,11 @@ using namespace std;
 
 int main()
 {
-<<<<<<< HEAD
-    CImg<float> img,img_hsi,mag;
-    img.load("../../../../images/camerama.tif");
-=======
+
     CImg<float> img,img_fft,img_hsi,mag;
     img.load("../../../../images/FFT2_Patrones.png");
     img_fft.load("../../../../images/FFT2_Activacion.png");
 
->>>>>>> 87163bd9c4afad72741e6b2cfe82cbe979d3a853
     img.display();
 
     //Consigna 1

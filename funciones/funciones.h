@@ -1012,37 +1012,82 @@ CImg<T> fourier_inv(CImg<T> magnitud,CImg<T> fase){
     return orig.get_FFT(true)[0];
 }
 
-///PASABAJOS IDEAL
-// Genera una mascara pasabajos ideal a partir de un tamanio de imagen y un radio
-template<typename T>
-CImg<T> pasabajos_ideal(T radio,T ancho,T alto){
-    CImg<T> mascara(ancho,alto,1,1);
-    mascara.fill(0);
-
-    mascara.draw_circle(0,0,radio,white,1);
-    mascara.draw_circle(ancho,0,radio,white,1);
-    mascara.draw_circle(0,alto,radio,white,1);
-    mascara.draw_circle(ancho,alto,radio,white,1);
-
-    mascara.normalize(0,1);
-
-    return mascara;
-
-}
-
-///PASAALTOS IDEAL
-// Genera una mascara pasabajos ideal a partir de un tamanio de imagen y un radio
-template<typename T>
-CImg<T> pasaalto_ideal(T radio,T ancho,T alto){
-    return negativo(pasabajos_ideal(radio,ancho,alto));
-}
-
 ///FILTRADO EN FRECUENCIA
 //Filtra en frecuencia a partir de una imagen y un filtro
 template<typename T>
 CImg<T> filtrar(CImg<T> img,CImg<T> filt){
     CImgList<float> img_tr = fourier(img);
     return fourier_inv(multiplicacion(img_tr.at(0),filt),img_tr.at(1));
+}
+
+
+///FILTROS IDEALES
+template <class T>
+CImg<T> ideal_mask(CImg<T> &img,T d, bool highpass=false){
+    int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
+    CImg<T> mask(w, h, 1, 1);
+    d=d*d;
+
+    for(i=0; i<w; i++){
+        for(j=0; j<h; j++){
+            if((powf(i-w_2,2)+powf(j-h_2,2))<=d){
+                mask(i, j)=!highpass;
+            }else{
+                mask(i, j)=highpass;
+            }
+
+        }
+    }
+    return mask;
+}
+
+///FILTROS BUTTER
+template <class T>
+CImg<T> butterworth_mask(CImg<T> &img, T d, T o, bool highpass=false){
+    int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
+    CImg<T> mask(w, h, 1, 1);
+    float dist;
+
+    for(i=0; i<w; i++){
+        for(j=0; j<h; j++){
+            dist=sqrt(powf(i-w_2,2)+powf(j-h_2,2));
+            mask(i,j)=1/(1+powf(highpass?d/dist:dist/d,2*o));
+
+        }
+    }
+    return mask;
+}
+
+///FILTROS GAUSSIANOS
+template <class T>
+CImg<T> gaussian_mask(CImg<T> &img, T d, bool highpass=false){
+    int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
+    CImg<T> mask(w, h, 1, 1);
+    float dist;
+
+    for(i=0; i<w; i++){
+        for(j=0; j<h; j++){
+            dist=sqrt(powf(i-w_2,2)+powf(j-h_2,2));
+            mask(i,j)=exp(-powf(dist,2)/(2*powf(d,2)));
+            if(highpass) mask(i,j)=1-mask(i,j);
+        }
+    }
+    return mask;
+}
+
+
+///FILTROS LAPLACIANOS
+template <class T>
+CImg<T> laplacian_mask(CImg<T> &img){
+    int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
+    CImg<T> mask(w, h, 1, 1);
+
+    for(i=0; i<w; i++){
+        for(j=0; j<h; j++){
+            mask(i,j)=-(powf(i-w_2,2)+powf(j-h_2,2));
+        }
+    }
+    return mask;
 }
 
 #endif // FUNCIONES
