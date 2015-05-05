@@ -1090,6 +1090,106 @@ CImg<T> laplacian_mask(CImg<T> &img){
     return mask;
 }
 
+
+
+//@ Genera un filtro homomorfico
+CImgList<double> filtroHomomorfico(unsigned int w, unsigned int h, unsigned int frec_corte, float gamma_l, float gamma_h, float c) {
+    CImgList<double> img(2, w, h, 1, 1, 0);
+
+    unsigned int centro_x = w/2;
+    unsigned int centro_y = h/2;
+    unsigned int fcp = pow(frec_corte,2);
+
+    cimg_forXY(img[0],x,y) {
+        double distancia = ( (x - centro_x)*(x - centro_x) + (y - centro_y)*(y - centro_y));
+        double argumento = -c * distancia/fcp;
+
+        img[0](x,y) = (gamma_h - gamma_l) * (1 - exp (argumento)) + gamma_l;
+    }
+    //img[0].display();
+    img[0].shift(w/2, h/2,0,0,2);
+    img[0].display();
+    return img;
+}
+
+//@ Realiza el filtrado en frecuencia a partir de la especificacion de una imagen y el filtro en frecuencia
+CImg<double> filtradoFrecuencia(CImg<double> img, CImgList<double> filtro_frec) {
+
+    //Obtenemos las transformadas de Fourier de la imagen y el filtro
+    CImgList<double> fft_img = img.get_FFT();
+//	fft_img[0].get_log().display();
+    //Multiplicamos en frecuencia
+    CImgList<double> tempy(2, img.width(), img.height(), img.depth(), img.spectrum(), 0);
+
+    cimg_forXY(img,x,y) {
+        //Capturamos los valores
+        std::complex<double> factor1 (fft_img[0](x,y), fft_img[1](x,y)),
+            factor2 (filtro_frec[0](x,y), filtro_frec[1](x,y));
+
+        //Realizamos el producto de binomios
+        std::complex<double> prod = factor1*factor2;
+        //Asignamos en real e imaginario
+        tempy[0](x,y) = std::real(prod);
+        tempy[1](x,y) = std::imag(prod);
+    }
+    //Calculamos la inversa
+    return tempy.get_FFT(true)[0];
+}
+
+CImg<double> colorToBW(CImg<double> img) {
+    if (img.spectrum() == 1) return img;
+    else return img.get_RGBtoHSI().get_channel(2);
+}
+
+//DEFINICION DE FILTRO HOMOMORFICO
+//float gammaH=0.98,
+//	gammaL=0.9;
+//float D0=0.7;
+//float c=1;
+
+//_frec_corte = 150;
+// gamma_l = 0.9;
+//gamma_h = 1.1
+// c = 1.0
+
+CImg<double> filtradoHomomorficoCompleto(CImg<double> img, unsigned int frec_corte, float gamma_l, float gamma_h, float c) {
+    int w=img.width(), h=img.height();
+    CImgList<double> filtro_homomorfico = filtroHomomorfico(w, h,frec_corte,gamma_l,gamma_h,c);
+    //filtro_homomorfico[0].display();
+    //Calculamos el logaritmo de la imagen
+    CImg<double> log_img(w, h, 1, 1, 0);
+
+    cimg_forXY(img,x,y) {
+        if (img(x,y) < 1.0) //Si el logaritmo es menor a 1, explota por lo tanto controlo eso y asigno cero si se da el caso
+            log_img(x,y) = 0.0;
+        else
+            log_img(x,y) = log(img(x,y));
+    }
+//	log_img=img.get_log();
+//	log_img.display("log img");
+
+    //Filtramos (devuelve el resultado antitransformado)
+    CImg<double> resultado_filtrado = filtradoFrecuencia(log_img, filtro_homomorfico);
+
+    //Exponenciamos
+    CImg<double> resultado_exp = resultado_filtrado.get_normalize(0,1).get_exp().get_normalize(0,255);
+    //Ahora probaremos con ecualizacion:
+    //Imagen -> Ecualizacion -> Filtrado
+
+    //Aplicamos el filtro a la imagen ecualizada
+    CImg<double> equ = log_img;
+    equ.equalize(256);
+    CImg<double> resultado_equ_filtrado = filtradoFrecuencia(equ, filtro_homomorfico);
+    resultado_equ_filtrado.exp();
+
+    //Imagen -> Filtrado -> Ecualizacion
+    //Ecualizamos la imagen filtrada
+    CImg<double> resultado_filtrado_equ = resultado_exp.get_equalize(256);
+    return resultado_filtrado_equ;
+
+}
+
+
 #endif // FUNCIONES
 
 
