@@ -1026,8 +1026,6 @@ CImg<T> pasabajos_ideal(T radio,T ancho,T alto){
 
     mascara.normalize(0,1);
 
-    mascara.display();
-
     return mascara;
 
 }
