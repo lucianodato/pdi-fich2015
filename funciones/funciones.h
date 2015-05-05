@@ -1020,7 +1020,6 @@ CImg<T> filtrar(CImg<T> img,CImg<T> filt){
 
     //Acomodo la mascara
     filt.shift(filt.width()/2,filt.height()/2,0,0,2);
-    filt.display();
 
     return fourier_inv(multiplicacion(img_tr.at(0),filt),img_tr.at(1));
 }
@@ -1048,7 +1047,7 @@ CImg<T> ideal_mask(CImg<T> &img,T d, bool highpass=false){
 
 ///FILTROS BUTTER
 template <class T>
-CImg<T> butterworth_mask(CImg<T> &img, T d, T o, bool highpass=false){
+CImg<T> butterworth_mask(CImg<T> &img, T d,unsigned o, bool highpass=false){
     int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
     CImg<T> mask(w, h, 1, 1);
     float dist;
