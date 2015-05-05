@@ -1126,6 +1126,7 @@ CImg<double> filtradoFrecuencia(CImg<double> img, CImgList<double> filtro_frec) 
     return tempy.get_FFT(true)[0];
 }
 
+//Toma una imagen color retorna si imagen en gris
 CImg<double> colorToBW(CImg<double> img) {
     if (img.spectrum() == 1) return img;
     else return img.get_RGBtoHSI().get_channel(2);
