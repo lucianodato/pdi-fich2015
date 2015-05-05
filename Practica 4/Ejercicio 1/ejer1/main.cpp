@@ -84,7 +84,7 @@ int main()
         for(unsigned i=0; i<img.width(); i++){
             for(unsigned j=0; j<img.height(); j++){
                 img(i,j,0,1)=j/float(img.height()); //s
-            }
+            }}
 
 
 

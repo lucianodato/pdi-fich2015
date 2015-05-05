@@ -1,6 +1,3 @@
-#include <iostream>
-#include "CImg.h"
-#include <vector>
 #include "funciones.h"
 
 using namespace cimg_library;

@@ -135,24 +135,14 @@ CImg <T> generar_curva(CImg<T> lut,vector<punto> puntos){
 // Si positiva es 1 Aclara la imagen
 // Si positiva es 0 Oscurece la imagen
 template<typename T>
-CImg<T> generar_lut_logb(T c,bool positiva){
+CImg<T> generar_lut_logb(T c){
     CImg<T> lut(1,256,1,1);
     T s;
     for (int i=0;i<256;i++){
         //Aca mapeamos el rango total resultante para que despues se traduzca en un nivel de gris
-        s=floor(c*(255*((log(1+i)/log(1+255)))));// normalizo -.- mmmm
-//        if(positiva){
-//            s=c*log(1+i);
-//        }
-//        else
-//        {
-//            s=c*pow(10,1+i);//MAL!!!!
-//        }
-
+        s=floor(c*(255*((log(1+i)/log(1+255)))));
         lut(i)=s;
     }
-    //lut.normalize(0,255);
-
     return lut;
 
 }
@@ -852,7 +842,7 @@ CImg<T> complemento_color(CImg<T> img){
         img(i,j,0,0)+=180;
         if(img(i,j,0,0) > 360)
             img(i,j,0,0)=(img(i,j,0,0)-360);
-        //img(i,j,0,2)=1-img(i,j,0,2);
+        img(i,j,0,2)=1-img(i,j,0,2);
 	}
     img.HSItoRGB();
     return img;
