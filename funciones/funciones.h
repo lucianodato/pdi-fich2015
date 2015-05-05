@@ -1017,6 +1017,11 @@ CImg<T> fourier_inv(CImg<T> magnitud,CImg<T> fase){
 template<typename T>
 CImg<T> filtrar(CImg<T> img,CImg<T> filt){
     CImgList<float> img_tr = fourier(img);
+
+    //Acomodo la mascara
+    filt.shift(filt.width()/2,filt.height()/2,0,0,2);
+    filt.display();
+
     return fourier_inv(multiplicacion(img_tr.at(0),filt),img_tr.at(1));
 }
 
