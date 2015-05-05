@@ -1012,6 +1012,41 @@ CImg<T> fourier_inv(CImg<T> magnitud,CImg<T> fase){
     return orig.get_FFT(true)[0];
 }
 
+///PASABAJOS IDEAL
+// Genera una mascara pasabajos ideal a partir de un tamanio de imagen y un radio
+template<typename T>
+CImg<T> pasabajos_ideal(T radio,T ancho,T alto){
+    CImg<T> mascara(ancho,alto,1,1);
+    mascara.fill(0);
+
+    mascara.draw_circle(0,0,radio,white,1);
+    mascara.draw_circle(ancho,0,radio,white,1);
+    mascara.draw_circle(0,alto,radio,white,1);
+    mascara.draw_circle(ancho,alto,radio,white,1);
+
+    mascara.normalize(0,1);
+
+    mascara.display();
+
+    return mascara;
+
+}
+
+///PASAALTOS IDEAL
+// Genera una mascara pasabajos ideal a partir de un tamanio de imagen y un radio
+template<typename T>
+CImg<T> pasaalto_ideal(T radio,T ancho,T alto){
+    return negativo(pasabajos_ideal(radio,ancho,alto));
+}
+
+///FILTRADO EN FRECUENCIA
+//Filtra en frecuencia a partir de una imagen y un filtro
+template<typename T>
+CImg<T> filtrar(CImg<T> img,CImg<T> filt){
+    CImgList<float> img_tr = fourier(img);
+    return fourier_inv(multiplicacion(img_tr.at(0),filt),img_tr.at(1));
+}
+
 #endif // FUNCIONES
 
 
