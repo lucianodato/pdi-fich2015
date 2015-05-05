@@ -4,11 +4,9 @@ using namespace std;
 
 int main()
 {
-
     CImg<float> img,img_fft,img_hsi,mag;
     img.load("../../../../images/FFT2_Patrones.png");
     img_fft.load("../../../../images/FFT2_Activacion.png");
-
     img.display();
 
     //Consigna 1
