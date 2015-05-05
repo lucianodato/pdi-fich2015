@@ -5,8 +5,8 @@ using namespace std;
 int main()
 {
     CImg<float> img,img2,fase0,magnitud1;
-    img.load("../../../../images/carlock1.png");
-    img2.load("../../../../images/carlock2.png");
+    img.load("../../../../images/cameraman.tif");
+    img2.load("../../../../images/clown.jpg");
 
 
     magnitud1.assign(img);
