@@ -5,7 +5,7 @@ using namespace std;
 int main()
 {
     CImg<float> img,img_hsi,mag;
-    img.load("../../../../images/Deforestacion.png");
+    img.load("../../../../images/camerama.tif");
     img.display();
     img_hsi = img.get_RGBtoHSI();
 
