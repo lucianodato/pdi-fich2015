@@ -1002,7 +1002,7 @@ CImg<T> fourier_inv(CImg<T> magnitud,CImg<T> fase){
     return orig.get_FFT(true)[0];
 }
 
-///FILTRADO EN FRECUENCIA
+///FILTRADO EN FRECUENCIA 1
 //Filtra en frecuencia a partir de una imagen y un filtro
 template<typename T>
 CImg<T> filtrar(CImg<T> img,CImg<T> filt){
@@ -1011,8 +1011,32 @@ CImg<T> filtrar(CImg<T> img,CImg<T> filt){
     //Acomodo la mascara
     filt.shift(filt.width()/2,filt.height()/2,0,0,2);
 
-    return fourier_inv(multiplicacion(img_tr.at(0),filt),img_tr.at(1));
+    return fourier_inv(multiplicacion(img_tr.at(0),filt),img_tr.at(1)); // aca supone fase filtro cero??
 }
+
+//@ Realiza el filtrado en frecuencia a partir de la especificacion de una imagen y el filtro en frecuencia
+CImg<double> filtradoFrecuencia(CImg<double> img, CImgList<double> filtro_frec) {
+
+    //Obtenemos las transformadas de Fourier de la imagen y el filtro
+    CImgList<double> fft_img = img.get_FFT();
+    //Multiplicamos en frecuencia
+    CImgList<double> tempy(2, img.width(), img.height(), img.depth(), img.spectrum(), 0);
+
+    cimg_forXY(img,x,y) {
+        //Capturamos los valores
+        std::complex<double> factor1 (fft_img[0](x,y), fft_img[1](x,y)),
+            factor2 (filtro_frec[0](x,y), filtro_frec[1](x,y));
+
+        //Realizamos el producto de binomios
+        std::complex<double> prod = factor1*factor2;
+        //Asignamos en real e imaginario
+        tempy[0](x,y) = std::real(prod);
+        tempy[1](x,y) = std::imag(prod);
+    }
+    //Calculamos la inversa
+    return tempy.get_FFT(true)[0];
+}
+
 
 
 ///FILTROS IDEALES
@@ -1106,29 +1130,7 @@ CImgList<double> filtroHomomorfico(unsigned int w, unsigned int h, unsigned int 
     return img;
 }
 
-//@ Realiza el filtrado en frecuencia a partir de la especificacion de una imagen y el filtro en frecuencia
-CImg<double> filtradoFrecuencia(CImg<double> img, CImgList<double> filtro_frec) {
 
-    //Obtenemos las transformadas de Fourier de la imagen y el filtro
-    CImgList<double> fft_img = img.get_FFT();
-//	fft_img[0].get_log().display();
-    //Multiplicamos en frecuencia
-    CImgList<double> tempy(2, img.width(), img.height(), img.depth(), img.spectrum(), 0);
-
-    cimg_forXY(img,x,y) {
-        //Capturamos los valores
-        std::complex<double> factor1 (fft_img[0](x,y), fft_img[1](x,y)),
-            factor2 (filtro_frec[0](x,y), filtro_frec[1](x,y));
-
-        //Realizamos el producto de binomios
-        std::complex<double> prod = factor1*factor2;
-        //Asignamos en real e imaginario
-        tempy[0](x,y) = std::real(prod);
-        tempy[1](x,y) = std::imag(prod);
-    }
-    //Calculamos la inversa
-    return tempy.get_FFT(true)[0];
-}
 
 //Toma una imagen color retorna si imagen en gris
 CImg<double> colorToBW(CImg<double> img) {
