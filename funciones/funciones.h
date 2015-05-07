@@ -842,7 +842,7 @@ CImg<T> complemento_color(CImg<T> img){
         img(i,j,0,0)+=180;
         if(img(i,j,0,0) > 360)
             img(i,j,0,0)=(img(i,j,0,0)-360);
-        img(i,j,0,2)=1-img(i,j,0,2);
+        img(i,j,0,2)=1-img(i,j,0,2);//Hace el negativo de la intensidad
 	}
     img.HSItoRGB();
     return img;
