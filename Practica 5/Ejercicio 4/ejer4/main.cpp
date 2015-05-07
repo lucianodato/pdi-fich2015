@@ -2,11 +2,13 @@
 
 using namespace std;
 
+float orden=2.0;
+
 int main()
 {
 //item 1,2,4 del ejercicio 4
 
-    float orden=2.0;
+
     CImg<float> img1,img2,img3,img4, mask,mask2,mask3;
     CImgDisplay d, m,m2,m3,o,r,t;
     CImgList<float> fft;
