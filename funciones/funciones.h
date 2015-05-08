@@ -1006,7 +1006,7 @@ CImg<T> fourier_inv(CImg<T> magnitud,CImg<T> fase){
 //Filtra en frecuencia a partir de una imagen y un filtro
 template<typename T>
 CImg<T> filtrar(CImg<T> img,CImg<T> filt){
-    CImgList<float> img_tr = fourier(img);
+    CImgList<T> img_tr = fourier(img);
 
     //Acomodo la mascara
     filt.shift(filt.width()/2,filt.height()/2,0,0,2);
@@ -1184,7 +1184,33 @@ CImg<double> filtradoHomomorficoCompleto(CImg<double> img, unsigned int frec_cor
 
 }
 
+///****************************************
+///FILTRO DE ENFASIS DE ALTA POTENCIA (FREC.)
+///****************************************
+//Recibe los parametros a = (A-1) y b. 
+// Si b = 1 el resultado es un filtro de alta potencia.
+// si b> 1 con b>a, entonces obtengo como resultado el filtro de enfasis en alta potencia. 
+
+CImg<double> filtroAP_frecuencia(CImg<double> img,double alpha,double b) {
+
+    //img, frecuencia de corte (D0) y bandera = true [Highpass filter]
+    //En este caso uso el gaussiano pero puede ser tambien ideal o butter
+    double frec_corte = img.width()/4;
+    CImg<double>  filtro_PA= gaussian_mask(img,frec_corte,true);
+
+    CImg<double> Resultado,filtro_frec;
+
+    //Calculo el filtro AP o EAF en funcion de los parametros alpha y b
+
+    filtro_frec = alpha + b*filtro_PA;
+
+    //Filtro y obtengo el resultado
+    Resultado = filtrar(img,filtro_frec);
+
+    return Resultado;
+
+}
+
 
 #endif // FUNCIONES
-
 
