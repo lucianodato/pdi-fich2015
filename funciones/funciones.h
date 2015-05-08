@@ -1171,6 +1171,25 @@ CImg<double> filtradoHomomorficoCompleto(CImg<double> img, unsigned int frec_cor
 //Recibe los parametros a = (A-1) y b. 
 // Si b = 1 el resultado es un filtro de alta potencia.
 // si b> 1 con b>a, entonces obtengo como resultado el filtro de enfasis en alta potencia. 
+CImg<double> filtroAP_frecuencia(CImg<double> img,double alpha,double b) {
+
+    //img, frecuencia de corte (D0) y bandera = true [Highpass filter]
+    //En este caso uso el gaussiano pero puede ser tambien ideal, butter o laplaciano
+    double frec_corte = img.width()/4; //nyquest / 2---> (w/2)/2
+
+    CImg<double>  filtro_PA= gaussian_mask(img,frec_corte,true);
+
+    CImg<double> Resultado,filtro_frec;
+
+    //Calculo el filtro AP o EAF en funcion de los parametros alpha y b
+    filtro_frec = alpha + b*filtro_PA;
+
+    //Filtro y obtengo el resultado
+    Resultado = filtrar(img,filtro_frec);
+
+    return Resultado;
+
+}
 
 //media geometrica
 template <class T>
@@ -1316,27 +1335,6 @@ CImg<T> filter(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     imgout.crop(medio,medio,M-medio-1,N-medio-1);
     imgout.resize(M,N);
     return imgout;
-}
-
-
-CImg<double> filtroAP_frecuencia(CImg<double> img,double alpha,double b) {
-
-    //img, frecuencia de corte (D0) y bandera = true [Highpass filter]
-    //En este caso uso el gaussiano pero puede ser tambien ideal, butter o laplaciano
-    double frec_corte = img.width()/4; //nyquest / 2---> (w/2)/2
-
-    CImg<double>  filtro_PA= gaussian_mask(img,frec_corte,true);
-
-    CImg<double> Resultado,filtro_frec;
-
-    //Calculo el filtro AP o EAF en funcion de los parametros alpha y b
-    filtro_frec = alpha + b*filtro_PA;
-
-    //Filtro y obtengo el resultado
-    Resultado = filtrar(img,filtro_frec);
-
-    return Resultado;
-
 }
 
 
