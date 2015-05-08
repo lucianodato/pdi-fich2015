@@ -928,8 +928,9 @@ CImg<T> ColorMaskHSI(CImg<T> img, unsigned mx, unsigned my, float radio){
 }
 
 
-
+///****************************************
 ///COPIA CANAL A CANAL
+///****************************************
 //Sirve para no tener que escribir los ciclos en el main
 template<typename T>
 CImg<T> copia_canal(CImg<T> img_orig,int canal,CImg<T> img_a_copiar,int canal_a_copiar){
@@ -938,7 +939,9 @@ CImg<T> copia_canal(CImg<T> img_orig,int canal,CImg<T> img_a_copiar,int canal_a_
     return img_orig;
 }
 
+///****************************************
 ///TRANSFORMADA DE FOURIER
+///****************************************
 //devuelve la magnitud la fase la magnitud con escala logaritmica con shift y la fase con escala logaritmica con shift
 template<typename T>
 CImgList<T> fourier(CImg<T> img){
@@ -978,8 +981,9 @@ CImgList<T> fourier(CImg<T> img){
     return lista;
 }
 
-
+///****************************************
 ///TRANSFORMADA DE FOURIER INVERSA
+///****************************************
 //devuelve la magnitud la fase la magnitud con escala logaritmica con shift y la fase con escala logaritmica con shift
 template<typename T>
 CImg<T> fourier_inv(CImg<T> magnitud,CImg<T> fase){
@@ -1002,44 +1006,23 @@ CImg<T> fourier_inv(CImg<T> magnitud,CImg<T> fase){
     return orig.get_FFT(true)[0];
 }
 
-///FILTRADO EN FRECUENCIA 1
+///****************************************
+///FILTRADO EN FRECUENCIA
+///****************************************
 //Filtra en frecuencia a partir de una imagen y un filtro
 template<typename T>
 CImg<T> filtrar(CImg<T> img,CImg<T> filt){
     CImgList<float> img_tr = fourier(img);
 
-    //Acomodo la mascara
+    //Acomodo la mascara--> SHIFT de respuesta en frecuencia del filtro antes de multiplicar con la FFT de la img
     filt.shift(filt.width()/2,filt.height()/2,0,0,2);
 
-    return fourier_inv(multiplicacion(img_tr.at(0),filt),img_tr.at(1)); // aca supone fase filtro cero??
+    return fourier_inv(img_tr.at(0).mul(filt),img_tr.at(1));
 }
 
-//@ Realiza el filtrado en frecuencia a partir de la especificacion de una imagen y el filtro en frecuencia
-CImg<double> filtradoFrecuencia(CImg<double> img, CImgList<double> filtro_frec) {
-
-    //Obtenemos las transformadas de Fourier de la imagen y el filtro
-    CImgList<double> fft_img = img.get_FFT();
-    //Multiplicamos en frecuencia
-    CImgList<double> tempy(2, img.width(), img.height(), img.depth(), img.spectrum(), 0);
-
-    cimg_forXY(img,x,y) {
-        //Capturamos los valores
-        std::complex<double> factor1 (fft_img[0](x,y), fft_img[1](x,y)),
-            factor2 (filtro_frec[0](x,y), filtro_frec[1](x,y));
-
-        //Realizamos el producto de binomios
-        std::complex<double> prod = factor1*factor2;
-        //Asignamos en real e imaginario
-        tempy[0](x,y) = std::real(prod);
-        tempy[1](x,y) = std::imag(prod);
-    }
-    //Calculamos la inversa
-    return tempy.get_FFT(true)[0];
-}
-
-
-
-///FILTROS IDEALES
+///****************************************
+///FILTRO IDEAL
+///****************************************
 template <class T>
 CImg<T> ideal_mask(CImg<T> &img,T d, bool highpass=false){
     int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
@@ -1059,7 +1042,9 @@ CImg<T> ideal_mask(CImg<T> &img,T d, bool highpass=false){
     return mask;
 }
 
+///****************************************
 ///FILTROS BUTTER
+///****************************************
 template <class T>
 CImg<T> butterworth_mask(CImg<T> &img, T d,unsigned o, bool highpass=false){
     int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
@@ -1076,7 +1061,9 @@ CImg<T> butterworth_mask(CImg<T> &img, T d,unsigned o, bool highpass=false){
     return mask;
 }
 
+///****************************************
 ///FILTROS GAUSSIANOS
+///****************************************
 template <class T>
 CImg<T> gaussian_mask(CImg<T> &img, T d, bool highpass=false){
     int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
@@ -1093,8 +1080,9 @@ CImg<T> gaussian_mask(CImg<T> &img, T d, bool highpass=false){
     return mask;
 }
 
-
+///****************************************
 ///FILTROS LAPLACIANOS
+///****************************************
 template <class T>
 CImg<T> laplacian_mask(CImg<T> &img){
     int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
@@ -1109,10 +1097,13 @@ CImg<T> laplacian_mask(CImg<T> &img){
 }
 
 
-
+///****************************************
+/// FILTRO HOMOMORFICO
 //@ Genera un filtro homomorfico
-CImgList<double> filtroHomomorfico(unsigned int w, unsigned int h, unsigned int frec_corte, float gamma_l, float gamma_h, float c) {
-    CImgList<double> img(2, w, h, 1, 1, 0);
+///****************************************
+template <class T>
+CImgList<T> filtroHomomorfico(unsigned int w, unsigned int h, unsigned int frec_corte, T gamma_l, T gamma_h, T c) {
+    CImgList<T> img(2, w, h, 1, 1, 0);
 
     unsigned int centro_x = w/2;
     unsigned int centro_y = h/2;
@@ -1124,9 +1115,7 @@ CImgList<double> filtroHomomorfico(unsigned int w, unsigned int h, unsigned int 
 
         img[0](x,y) = (gamma_h - gamma_l) * (1 - exp (argumento)) + gamma_l;
     }
-    //img[0].display();
-    img[0].shift(w/2, h/2,0,0,2);
-    img[0].display();
+    img[0].display(); //display para ver H
     return img;
 }
 
@@ -1148,7 +1137,11 @@ CImg<double> colorToBW(CImg<double> img) {
 // gamma_l = 0.9;
 //gamma_h = 1.1
 // c = 1.0
-
+///****************************************
+/// WRAPPER FILTRO HOMOMORFICO
+//est wrapper aplica los pasos nesesarios en el filtrado homomorfico , ademas de la definicion del filtro
+//que se define en la funcion anterior
+///****************************************
 CImg<double> filtradoHomomorficoCompleto(CImg<double> img, unsigned int frec_corte, float gamma_l, float gamma_h, float c) {
     int w=img.width(), h=img.height();
     CImgList<double> filtro_homomorfico = filtroHomomorfico(w, h,frec_corte,gamma_l,gamma_h,c);
@@ -1162,28 +1155,161 @@ CImg<double> filtradoHomomorficoCompleto(CImg<double> img, unsigned int frec_cor
         else
             log_img(x,y) = log(img(x,y));
     }
-//	log_img=img.get_log();
-//	log_img.display("log img");
-
     //Filtramos (devuelve el resultado antitransformado)
-    CImg<double> resultado_filtrado = filtradoFrecuencia(log_img, filtro_homomorfico);
-
+    CImg<float> resultado_filtrado = filtrar(log_img,filtro_homomorfico.at(0));
     //Exponenciamos
     CImg<double> resultado_exp = resultado_filtrado.get_normalize(0,1).get_exp().get_normalize(0,255);
-    //Ahora probaremos con ecualizacion:
-    //Imagen -> Ecualizacion -> Filtrado
-
-    //Aplicamos el filtro a la imagen ecualizada
-    CImg<double> equ = log_img;
-    equ.equalize(256);
-    CImg<double> resultado_equ_filtrado = filtradoFrecuencia(equ, filtro_homomorfico);
-    resultado_equ_filtrado.exp();
-
-    //Imagen -> Filtrado -> Ecualizacion
-    //Ecualizamos la imagen filtrada
+    //equlize
     CImg<double> resultado_filtrado_equ = resultado_exp.get_equalize(256);
     return resultado_filtrado_equ;
 
+}
+
+
+//media geometrica
+template <class T>
+T media_geometrica(CImg<T> window){
+    T val=1.0;
+    cimg_forXY(window,x,y){
+        val*=window(x,y);
+    }
+    val=pow(val,1.0/(T)(window.width()*window.height()));
+    return val;
+}
+
+
+
+//mediacontraarmonica
+template <class T>
+T media_carmonica(CImg<T> window,int Q){
+    T val1=0.0;
+    T val2=0.0;
+    cimg_forXY(window,x,y){
+        val1+=pow(window(x,y),Q+1);
+        val2+=pow(window(x,y),Q);
+    }
+
+    return val1*1.0/(val2*1.0);
+}
+
+
+template <class T>
+T mediana(CImg<T> window){
+
+    vector<T> v;
+    cimg_forXY(window,x,y)
+        v.push_back(window(x,y));
+    sort(v.begin(),v.end());//ordeno
+    if(v.size()%2!=0) // si el numero de elementos  de la ventana es impar
+        return v.at((v.size()+1)/2);
+    else //si el numero de elementos de la ventana es par...
+        //es nesesario este caso o la ventana sera siempre de cantidad impar???
+        return v.at(v.size()/2);
+}
+
+
+template <class T>
+T maximo(CImg<T> window){
+    return window.max();
+}
+
+template <class T>
+T minimo(CImg<T> window){
+    return window.min();
+}
+
+template <class T>
+T punto_medio(CImg<T> window){
+    return 	(window.min()+window.max())/2;
+}
+
+template <class T>
+T media_alfarecortado(CImg<T> window,int d){
+    vector<T> v;
+    cimg_forXY(window,x,y){
+        v.push_back(window(x,y));
+    }
+    sort(v.begin(),v.end());
+    for (int i=0;i<d/2;i++){
+        v.erase(v.begin());
+        v.pop_back();
+    }
+
+    T val=0.0;
+    for(int i=0;i<v.size();i++){
+        val+=v[i];
+    }
+
+    return val/(T)v.size();
+
+}
+
+
+template <class T>
+T equalize_local(CImg<T> window){
+    int N=window.width(),M=window.height();
+    window.equalize(256);
+    return window(N/2,M/2);
+
+}
+
+
+//int tipofiltro : 1 MEDIA GEOMETRICA , 2 MEDIA CONTRAARMONICA
+//                 3 MEDIANA, 4 PUNTO MEDIO ,5 PUNTO MEDIO RECORTADO,6 MAX, 7 MIN
+//el parametro Q para MEDIA CONTRAARMONICA:
+//Q=-1 media armonica
+//Q=0 media aritmetica
+//Q>0 = elimina pimienta
+//Q<0 =elimina sal
+
+///media armonica= para ruido sal (malo para pimienta), bueno para gaussiano
+///1.media geometrica= bueno ruido gaussiano
+///2. Q=0 -> media aritmetica= para ruido por desenfoque
+///3.mediana= ruido impulsivo (sin desenfoque)
+///moda = ruido impulsivo (malo para otro tipo de ruido)
+///4.punto medio = ruido gaussiano o uniforme
+///5.media alfa recortado= Comportamiento situado entre la media aritmética y la mediana,dependiendo del valor de d
+///6.max = ruido sal
+///7.minimo = ruido pimienta
+template <class T>
+CImg<T> filter(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
+
+    int N=img.height(),
+        M=img.width();
+    int medio=sizew/2;//posicion del medio de la ventana
+
+    CImg<T> imgout(M,N),window(sizew,sizew);
+
+
+    for (int x=medio;x<M-medio;x++){
+        for(int y=medio;y<N-medio;y++){
+            //asigno datos a mi ventana
+            window=img.get_crop(x-medio,y-medio,x+medio,y+medio);
+            switch(tipofiltro){
+            case 1: imgout(x,y)=media_geometrica(window);
+                break;
+            case 2: imgout(x,y)=media_carmonica(window,Q);
+                break;
+            case 3: imgout(x,y)=mediana(window);
+                break;
+            case 4: imgout(x,y)=punto_medio(window);
+                break;
+            case 5: imgout(x,y)=media_alfarecortado(window,d);
+                break;
+            case 6: imgout(x,y)=maximo(window);
+                break;
+            case 7: imgout(x,y)=minimo(window);
+                break;
+            case 8: imgout(x,y)=equalize_local(window);
+                break;
+            }
+
+        }
+    }
+
+    imgout.crop(medio,medio,M-medio-1,N-medio-1);
+    imgout.resize(M,N);
+    return imgout;
 }
 
 
