@@ -38,7 +38,7 @@ int main()
     resultado.display("Ecualizando");
 
     //Separo los grises medios claros de los grises medios oscuros
-    resultado = transformacion(resultado,generar_lut_logb(float(1),0));
+    resultado = transformacion(resultado,(generar_lut_logb(float(1),0)));
     resultado.display("Aplicando una lut");
 
     //Aplicacion de mascaras de promediado

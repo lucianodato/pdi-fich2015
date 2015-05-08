@@ -5,7 +5,7 @@ using namespace std;
 int main()
 {
     CImg<float> img,img_fft,img_hsi,mag;
-    img.load("../../../../images/FFT2_Patrones.png");
+    img.load("../../../../images/FFT2_Activacion.png");
     img_fft.load("../../../../images/FFT2_Activacion.png");
     img.display();
 
@@ -29,8 +29,6 @@ int main()
     //La segunda con la primera
     //La tercera con la cuarta
     //La cuarta con la tercera
-
-
 
     return 0;
 }
