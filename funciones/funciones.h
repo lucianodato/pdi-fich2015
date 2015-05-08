@@ -1175,8 +1175,9 @@ CImg<double> filtradoHomomorficoCompleto(CImg<double> img, unsigned int frec_cor
 CImg<double> filtroAP_frecuencia(CImg<double> img,double alpha,double b) {
 
     //img, frecuencia de corte (D0) y bandera = true [Highpass filter]
-    //En este caso uso el gaussiano pero puede ser tambien ideal o butter
-    double frec_corte = img.width()/4;
+    //En este caso uso el gaussiano pero puede ser tambien ideal, butter o laplaciano
+    double frec_corte = img.width()/4; //nyquest / 2---> (w/2)/2
+
     CImg<double>  filtro_PA= gaussian_mask(img,frec_corte,true);
 
     CImg<double> Resultado,filtro_frec;
