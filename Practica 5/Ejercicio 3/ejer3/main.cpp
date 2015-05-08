@@ -5,6 +5,7 @@ using namespace std;
 
 int main()
 {
+   /*
     clock_t start1,start2;
     double duration;
 
@@ -55,6 +56,85 @@ int main()
     //Muestro
     CImgList<float> lista(img,fil_esp,fil_frec);
     lista.display("Original - Filtrado espacial - Filtrado Frecuencial");
+
+
+
+
+
+    //APUNTE DEFINICION DE FILTRO--> crear H
+    //DEFINICION Y CARGA DE IMAGEN
+    CImg<double>img(kj);
+    M=img.width();
+    N=img.height();
+    img.resize(M,N);
+
+
+    //DEFINICION DEL H  a PATA
+    bool pasabajo=1;
+    int n=5;
+    double D0=0.1;//frec de corte
+    int P=M+N-1;
+    int Q=M+N-1;
+    CImg<double>U(P,Q,1,1),V(P,Q,1,1);
+    CImg<double>D(P,Q,1,1),H(P,Q,1,1);
+    for (int i=0;i<P;i++){
+        for (int j=0;j<Q;j++){
+            //Variables de frecuencia U y V:
+            U(i,j)=-1.+i*2./P;
+            V(i,j)=-1.+j*2./Q;
+            D(i,j)=sqrt(pow(U(i,j),2)+pow(V(i,j),2));
+            //Definicion de la magn. de rta. en frec. de H en funcion de D:
+            H(i,j)=1/(1+pow(D(i,j)/D0,2*n)); //butter
+        }
+    }
+
+*/
+int e=21;
+    CImg<float> img,kernel(mask(e)),espacial;
+    img.load("../../../../images/cameraman.tif");
+    //filtrado espacial
+    espacial=img.get_convolve(kernel);
+    (img,espacial).display("fil espacial");
+
+    //filtrado frec
+    //directamente como dice la teoria, si agregar cero--> el resultado sera la conv circular
+
+        int M=img.width(),N=img.height(),T=kernel.width(),L=kernel.height();
+        int P = (M + T - 1);
+        int Q = (N + L - 1);
+
+        kernel.resize(P, Q, -100, -100, 0);
+        CImg<float> aux_img=img.get_resize(P, Q, -100, -100, 0);
+
+//    CImg<float> frec=filtrar(aux_img,kernel);
+
+        CImgList<double> filtro_frec;
+        filtro_frec=kernel.get_FFT();
+
+    //Obtenemos las transformadas de Fourier de la imagen y el filtro
+    CImgList<double> fft_img = aux_img.get_FFT();
+    //Multiplicamos en frecuencia
+    CImgList<double> tempy(2, img.width(), img.height(), img.depth(), img.spectrum(), 0);
+
+    cimg_forXY(img,x,y) {
+        //Capturamos los valores
+        std::complex<double> factor1 (fft_img[0](x,y), fft_img[1](x,y)),
+            factor2 (filtro_frec[0](x,y), filtro_frec[1](x,y));
+
+        //Realizamos el producto de binomios
+        std::complex<double> prod = factor1*factor2;
+        //Asignamos en real e imaginario
+        tempy[0](x,y) = std::real(prod);
+        tempy[1](x,y) = std::imag(prod);
+    }
+    //Calculamos la inversa
+   CImg<float> frec= tempy.get_FFT(true)[0];
+
+
+
+   //falta recortar
+
+    (img,frec).display();
 
 
 
