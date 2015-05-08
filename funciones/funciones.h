@@ -1021,7 +1021,7 @@ CImg<T> filtrar(CImg<T> img,CImg<T> filt){
 }
 
 ///****************************************
-///FILTROS IDEAL
+///FILTRO IDEAL
 ///****************************************
 template <class T>
 CImg<T> ideal_mask(CImg<T> &img,T d, bool highpass=false){
@@ -1163,6 +1163,153 @@ CImg<double> filtradoHomomorficoCompleto(CImg<double> img, unsigned int frec_cor
     CImg<double> resultado_filtrado_equ = resultado_exp.get_equalize(256);
     return resultado_filtrado_equ;
 
+}
+
+
+//media geometrica
+template <class T>
+T media_geometrica(CImg<T> window){
+    T val=1.0;
+    cimg_forXY(window,x,y){
+        val*=window(x,y);
+    }
+    val=pow(val,1.0/(T)(window.width()*window.height()));
+    return val;
+}
+
+
+
+//mediacontraarmonica
+template <class T>
+T media_carmonica(CImg<T> window,int Q){
+    T val1=0.0;
+    T val2=0.0;
+    cimg_forXY(window,x,y){
+        val1+=pow(window(x,y),Q+1);
+        val2+=pow(window(x,y),Q);
+    }
+
+    return val1*1.0/(val2*1.0);
+}
+
+
+template <class T>
+T mediana(CImg<T> window){
+
+    vector<T> v;
+    cimg_forXY(window,x,y)
+        v.push_back(window(x,y));
+    sort(v.begin(),v.end());//ordeno
+    if(v.size()%2!=0) // si el numero de elementos  de la ventana es impar
+        return v.at((v.size()+1)/2);
+    else //si el numero de elementos de la ventana es par...
+        //es nesesario este caso o la ventana sera siempre de cantidad impar???
+        return v.at(v.size()/2);
+}
+
+
+template <class T>
+T maximo(CImg<T> window){
+    return window.max();
+}
+
+template <class T>
+T minimo(CImg<T> window){
+    return window.min();
+}
+
+template <class T>
+T punto_medio(CImg<T> window){
+    return 	(window.min()+window.max())/2;
+}
+
+template <class T>
+T media_alfarecortado(CImg<T> window,int d){
+    vector<T> v;
+    cimg_forXY(window,x,y){
+        v.push_back(window(x,y));
+    }
+    sort(v.begin(),v.end());
+    for (int i=0;i<d/2;i++){
+        v.erase(v.begin());
+        v.pop_back();
+    }
+
+    T val=0.0;
+    for(int i=0;i<v.size();i++){
+        val+=v[i];
+    }
+
+    return val/(T)v.size();
+
+}
+
+
+template <class T>
+T equalize_local(CImg<T> window){
+    int N=window.width(),M=window.height();
+    window.equalize(256);
+    return window(N/2,M/2);
+
+}
+
+
+//int tipofiltro : 1 MEDIA GEOMETRICA , 2 MEDIA CONTRAARMONICA
+//                 3 MEDIANA, 4 PUNTO MEDIO ,5 PUNTO MEDIO RECORTADO,6 MAX, 7 MIN
+//el parametro Q para MEDIA CONTRAARMONICA:
+//Q=-1 media armonica
+//Q=0 media aritmetica
+//Q>0 = elimina pimienta
+//Q<0 =elimina sal
+
+///media armonica= para ruido sal (malo para pimienta), bueno para gaussiano
+///1.media geometrica= bueno ruido gaussiano
+///2. Q=0 -> media aritmetica= para ruido por desenfoque
+///3.mediana= ruido impulsivo (sin desenfoque)
+///moda = ruido impulsivo (malo para otro tipo de ruido)
+///4.punto medio = ruido gaussiano o uniforme
+///5.media alfa recortado= Comportamiento situado entre la media aritmética y la mediana,dependiendo del valor de d
+///6.max = ruido sal
+///7.minimo = ruido pimienta
+template <class T>
+CImg<T> filter(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
+
+    int N=img.height(),
+        M=img.width();
+    int medio=sizew/2;//posicion del medio de la ventana
+
+    CImg<T> imgout(M,N),window(sizew,sizew);
+
+
+    for (int x=medio;x<M-medio;x++){
+        for(int y=medio;y<N-medio;y++){
+            //asigno datos a mi ventana
+            window=img.get_crop(x-medio,y-medio,x+medio,y+medio);
+            switch(tipofiltro){
+            case 1: imgout(x,y)=media_geometrica(window);
+                break;
+            case 2: imgout(x,y)=media_carmonica(window,Q);
+                break;
+            case 3: imgout(x,y)=mediana(window);
+                break;
+            case 4: imgout(x,y)=punto_medio(window);
+                break;
+            case 5: imgout(x,y)=media_alfarecortado(window,d);
+                break;
+            case 6: imgout(x,y)=maximo(window);
+                break;
+            case 7: imgout(x,y)=minimo(window);
+                break;
+            case 8: imgout(x,y)=equalize_local(window);
+                break;
+            }
+
+        }
+    }
+
+    imgout.crop(medio,medio,M-medio-1,N-medio-1);
+    imgout.resize(M,N);
+    return imgout;
 }
 
 
