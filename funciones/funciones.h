@@ -1232,6 +1232,41 @@ T mediana(CImg<T> window){
         return v.at(v.size()/2);
 }
 
+template <class T>
+T most_appeared(vector<T> v){
+    int contador = 1;
+    int max = 0;
+    int valor;
+    for (i = 1; i = v.size()-1;i++){
+        if(v[i] == v[i-1]){
+            contador+=1;//Si el numero actual es igual al anterior aumento el contador
+        }
+        else
+        {
+            contador = 1;//Si el numero actual es otro reseteo el contador
+        }
+
+        if(contador > max){
+            max = contador;
+            valor = v[i];
+        }
+    }
+
+    return valor;
+}
+
+template <class T>
+T moda(CImg<T> window){
+
+    vector<T> v;
+    cimg_forXY(window,x,y)
+        v.push_back(window(x,y));
+    sort(v.begin(),v.end());//ordeno
+    //Cuento cual es el valor que mas aparece
+    return most_appeared(v);
+
+}
+
 
 template <class T>
 T maximo(CImg<T> window){
@@ -1296,6 +1331,7 @@ T equalize_local(CImg<T> window){
 ///5.media alfa recortado= Comportamiento situado entre la media aritmética y la mediana,dependiendo del valor de d
 ///6.max = ruido sal
 ///7.minimo = ruido pimienta
+///9.moda = ruido impulsivo
 template <class T>
 CImg<T> filter(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
 
@@ -1326,6 +1362,8 @@ CImg<T> filter(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
             case 7: imgout(x,y)=minimo(window);
                 break;
             case 8: imgout(x,y)=equalize_local(window);
+                break;
+            case 9: imgout(x,y)=moda(window);
                 break;
             }
 
