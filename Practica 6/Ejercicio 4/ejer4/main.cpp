@@ -13,8 +13,12 @@
 
 int main()
 {
+    CImg<float> img;
+    img.load("../../../../images/img_degradada.tif");
+    //CImgList<float> img_fft = fourier(img);
+    //(img,img_fft[2]).display();
 
-
+    (gaussian_notch(img,float(20),float(50),float(50),true)).display();
 
     return 0;
 }

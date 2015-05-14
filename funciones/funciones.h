@@ -560,7 +560,11 @@ CImgList<T> bitlist(CImg<T> original)
     return lista;
 }
 
-///PROMEDIO KERNEL
+///-------------FILTRADO ESPACIAL-------------------------
+
+///****************************************
+///KERNEL PROMEDIO
+///****************************************
 //Funcion que devuelve el kernel promediado en func. del tamaño
 //template<typename T>
 CImg<double> mask(double tamanio){
@@ -941,6 +945,9 @@ CImg<T> copia_canal(CImg<T> img_orig,int canal,CImg<T> img_a_copiar,int canal_a_
     return img_orig;
 }
 
+
+///----------------FILTRADO FRECUENCIAL------------------------
+
 ///****************************************
 ///TRANSFORMADA DE FOURIER
 ///****************************************
@@ -1081,6 +1088,117 @@ CImg<T> gaussian_mask(CImg<T> &img, T d, bool highpass=false){
     }
     return mask;
 }
+
+///****************************************
+///FILTROS PASABANDA IDEAL
+///****************************************
+template <class T>
+CImg<T> ideal_band(CImg<T> &img,T d,T W,bool pass=false){
+    //Preproceso d para que la frecuencia sea la centrada en W/2
+    d=d-W/2;
+
+    if(pass){
+        return multiplicacion(ideal_mask(img,d+W),ideal_mask(img,d,true));//pasabanda
+    }
+    else{
+        return sumaImg(ideal_mask(img,d),ideal_mask(img,d+W,true));//rechazabanda
+    }
+}
+
+///****************************************
+///FILTROS PASABANDA BUTTER
+///****************************************
+template <class T>
+CImg<T> butter_band(CImg<T> &img,T d,T W,unsigned o,bool pass=false){
+    //corro de para que este en un borde y no en el centro de la frecuencia del filtro
+    d=d-W/2;
+
+    if(pass){
+        return multiplicacion(butterworth_mask(img,d+W,o),butterworth_mask(img,d,o,true));//pasabanda
+    }
+    else{
+        return sumaImg(butterworth_mask(img,d,o),butterworth_mask(img,d+W,o,true));//rechazabanda
+    }
+}
+
+///****************************************
+///FILTROS PASABANDA GAUSSIANOS
+///****************************************
+template <class T>
+CImg<T> gaussian_band(CImg<T> &img,T d,T W,bool pass=false){
+    //corro de para que este en un borde y no en el centro de la frecuencia del filtro
+    d=d-W/2;
+
+    if(pass){
+        return multiplicacion(gaussian_mask(img,d+W),gaussian_mask(img,d,true));//pasabanda
+    }
+    else{
+        return sumaImg(gaussian_mask(img,d),gaussian_mask(img,d+W,true));//rechazabanda
+    }
+}
+
+///****************************************
+///FILTROS NOTCH IDEAL
+///****************************************
+template <class T>
+CImg<T> ideal_notch(CImg<T> &img,T d,T u0,T v0,bool notch=false){
+    int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
+    CImg<T> mask(w, h, 1, 1);
+    d=d*d;
+
+    for(i=0; i<w; i++){
+        for(j=0; j<h; j++){
+            if(sqrt(powf(i-w_2-u0,2)+powf(j-h_2-v0,2))<=d || sqrt(powf(i-w_2+u0,2)+powf(j-h_2+v0,2))<=d){
+                mask(i, j)=!notch;
+            }else{
+                mask(i, j)=notch;
+            }
+
+        }
+    }
+    return mask;
+}
+
+///****************************************
+///FILTROS NOTCH BUTTER
+///****************************************
+template <class T>
+CImg<T> butter_notch(CImg<T> &img,T d,unsigned o,T u0,T v0,bool notch=false){
+    int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
+    CImg<T> mask(w, h, 1, 1);
+    float dist1,dist2;
+
+    for(i=0; i<w; i++){
+        for(j=0; j<h; j++){
+            dist1=sqrt(powf(i-w_2-u0,2)+powf(j-h_2-v0,2));
+            dist2=sqrt(powf(i-w_2+u0,2)+powf(j-h_2+v0,2));
+            mask(i,j)=1/(1+powf(notch?(powf(d,2)/(dist1*dist2)):((dist1*dist2)/powf(d,2)),o));
+
+        }
+    }
+    return mask;
+}
+
+///****************************************
+///FILTROS NOTCH GAUSSIANOS
+///****************************************
+template <class T>
+CImg<T> gaussian_notch(CImg<T> &img,T d,T u0,T v0,bool notch=false){
+    int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
+    CImg<T> mask(w, h, 1, 1);
+    float dist1,dist2;
+
+    for(i=0; i<w; i++){
+        for(j=0; j<h; j++){
+            dist1=sqrt(powf(i-w_2-u0,2)+powf(j-h_2-v0,2));
+            dist2=sqrt(powf(i-w_2+u0,2)+powf(j-h_2+v0,2));
+            mask(i,j)=exp(-(dist1*dist2)/(2*powf(d,2)));
+            if(notch) mask(i,j)=1-mask(i,j);
+        }
+    }
+    return mask;
+}
+
 
 ///****************************************
 ///FILTROS LAPLACIANOS

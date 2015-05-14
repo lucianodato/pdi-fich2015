@@ -5,7 +5,7 @@ int main()
     CImg<float> img,img_noisy,img_denoised,img_denoised2;
     img.load("../../../../images/sangre.jpg");
 
-    img_noisy = img.get_noise(10,0).get_noise(10,2);//Cuando sigma es menor a 0 indica un porcentaje de ruido - 0 es gausseano 2 es impulsivo
+    img_noisy = img.get_noise(10,0).get_noise(10,2);//0=gaussian, 1=uniform, 2=Salt and Pepper, 3=Poisson or 4=Rician
     (img,img_noisy).display();
 
     img_denoised = denoiseRGB(img_noisy,3,1);//Media Geometrica
