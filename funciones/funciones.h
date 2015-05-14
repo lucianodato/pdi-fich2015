@@ -1205,7 +1205,6 @@ T media_geometrica(CImg<T> window){
     cimg_forXY(window,x,y){
         val*=window(x,y);
     }
-    cout<<val<<endl;
     val=pow(val,T(1)/(window.width()*window.height()));
     return val;
 }
