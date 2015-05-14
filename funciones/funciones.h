@@ -1193,6 +1193,11 @@ CImg<double> filtroAP_frecuencia(CImg<double> img,double alpha,double b) {
 
 }
 
+
+///****************************************
+///FILTRO DE FILTRADO DE RUIDO (DENOISE)
+///****************************************
+
 //media geometrica
 template <class T>
 T media_geometrica(CImg<T> window){
@@ -1200,13 +1205,12 @@ T media_geometrica(CImg<T> window){
     cimg_forXY(window,x,y){
         val*=window(x,y);
     }
-    val=pow(val,1.0/(T)(window.width()*window.height()));
+    cout<<val<<endl;
+    val=pow(val,T(1)/(window.width()*window.height()));
     return val;
 }
 
-
-
-//mediacontraarmonica
+//media contraarmonica
 template <class T>
 T media_carmonica(CImg<T> window,int Q){
     T val1=0.0;
@@ -1219,7 +1223,7 @@ T media_carmonica(CImg<T> window,int Q){
     return val1*1.0/(val2*1.0);
 }
 
-
+//mediana
 template <class T>
 T mediana(CImg<T> window){
 
@@ -1234,6 +1238,7 @@ T mediana(CImg<T> window){
         return v.at(v.size()/2);
 }
 
+//auxiliar para moda
 template <class T>
 T most_appeared(vector<T> v){
     int contador = 1;
@@ -1257,6 +1262,7 @@ T most_appeared(vector<T> v){
     return valor;
 }
 
+//moda
 template <class T>
 T moda(CImg<T> window){
 
@@ -1269,22 +1275,25 @@ T moda(CImg<T> window){
 
 }
 
-
+//maximo
 template <class T>
 T maximo(CImg<T> window){
     return window.max();
 }
 
+//minimo
 template <class T>
 T minimo(CImg<T> window){
     return window.min();
 }
 
+//punto medio
 template <class T>
 T punto_medio(CImg<T> window){
     return 	(window.min()+window.max())/2;
 }
 
+//media alfarecortado
 template <class T>
 T media_alfarecortado(CImg<T> window,int d){
     vector<T> v;
@@ -1306,7 +1315,7 @@ T media_alfarecortado(CImg<T> window,int d){
 
 }
 
-
+//ecualizacion local
 template <class T>
 T equalize_local(CImg<T> window){
     int N=window.width(),M=window.height();
@@ -1320,8 +1329,6 @@ double distancia(double v1,double v2){
 }
 
 double filtro_distancias(CImg<double> window){
-
-
     double Rij=0,Rijviejo=99999;//,pivot=0;
     cimg_forXY(window,x,y){
         Rij=0;
@@ -1339,14 +1346,15 @@ double filtro_distancias(CImg<double> window){
 //int tipofiltro : 1 MEDIA GEOMETRICA , 2 MEDIA CONTRAARMONICA
 //                 3 MEDIANA, 4 PUNTO MEDIO ,5 PUNTO MEDIO RECORTADO,6 MAX, 7 MIN
 //el parametro Q para MEDIA CONTRAARMONICA:
-//Q=-1 media armonica
-//Q=0 media aritmetica
-//Q>0 = elimina pimienta
-//Q<0 =elimina sal
+
 
 ///media armonica= para ruido sal (malo para pimienta), bueno para gaussiano
 ///1.media geometrica= bueno ruido gaussiano
-///2. Q=0 -> media aritmetica= para ruido por desenfoque
+///2.media contra armonica
+    //Q=-1 media armonica
+    //Q=0 media aritmetica
+    //Q>0 = elimina pimienta
+    //Q<0 =elimina sal
 ///3.mediana= ruido impulsivo (sin desenfoque)
 ///moda = ruido impulsivo (malo para otro tipo de ruido)
 ///4.punto medio = ruido gaussiano o uniforme
@@ -1354,8 +1362,9 @@ double filtro_distancias(CImg<double> window){
 ///6.max = ruido sal
 ///7.minimo = ruido pimienta
 ///9.moda = ruido impulsivo
+
 template <class T>
-CImg<T> filter(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
+CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
 
     int N=img.height(),
         M=img.width();
@@ -1369,25 +1378,35 @@ CImg<T> filter(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
             //asigno datos a mi ventana
             window=img.get_crop(x-medio,y-medio,x+medio,y+medio);
             switch(tipofiltro){
-            case 1: imgout(x,y)=media_geometrica(window);
+            case 1:
+                imgout(x,y)=media_geometrica(window);
                 break;
-            case 2: imgout(x,y)=media_carmonica(window,Q);
+            case 2:
+                imgout(x,y)=media_carmonica(window,Q);
                 break;
-            case 3: imgout(x,y)=mediana(window);
+            case 3:
+                imgout(x,y)=mediana(window);
                 break;
-            case 4: imgout(x,y)=punto_medio(window);
+            case 4:
+                imgout(x,y)=punto_medio(window);
                 break;
-            case 5: imgout(x,y)=media_alfarecortado(window,d);
+            case 5:
+                imgout(x,y)=media_alfarecortado(window,d);
                 break;
-            case 6: imgout(x,y)=maximo(window);
+            case 6:
+                imgout(x,y)=maximo(window);
                 break;
-            case 7: imgout(x,y)=minimo(window);
+            case 7:
+                imgout(x,y)=minimo(window);
                 break;
-            case 8: imgout(x,y)=equalize_local(window);
+            case 8:
+                imgout(x,y)=equalize_local(window);
                 break;
-            case 9: imgout(x,y)=moda(window);
+            case 9:
+                imgout(x,y)=moda(window);
                 break;
-            case 10: imgout(x,y)=filtro_distancias(window);
+            case 10:
+                imgout(x,y)=filtro_distancias(window);
                 break;
             }
 
@@ -1399,8 +1418,18 @@ CImg<T> filter(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     return imgout;
 }
 
+//Wrapper para 3 canales RGB
+template <class T>
+CImg<T> denoiseRGB(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
+    CImg<double> imgR=denoise(img.get_channel(0),sizew,tipofiltro,Q,d);
+    CImg<double> imgB=denoise(img.get_channel(1),sizew,tipofiltro,Q,d);
+    CImg<double> imgG=denoise(img.get_channel(2),sizew,tipofiltro,Q,d);
 
+    CImg<double> imgFiltrada;
+    ComposeRGB(imgFiltrada,imgR,imgG,imgB);
 
+    return imgFiltrada;
+}
 
 #endif // FUNCIONES
 

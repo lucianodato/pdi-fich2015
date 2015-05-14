@@ -6,9 +6,9 @@ int main()
     CImg<double> img=image.get_noise(25,0);
     img.noise(20,2);
     CImg<double> img_noisy=img;
-    CImg<double> imgR=filter(img.get_channel(0),4,10);
-    CImg<double> imgB=filter(img.get_channel(1),4,10);
-    CImg<double> imgG=filter(img.get_channel(2),4,10);
+    CImg<double> imgR=denoise(img.get_channel(0),4,10);
+    CImg<double> imgB=denoise(img.get_channel(1),4,10);
+    CImg<double> imgG=denoise(img.get_channel(2),4,10);
 
     CImg<double> imgFiltrada;
     ComposeRGB(imgFiltrada,imgR,imgG,imgB);
