@@ -16,6 +16,8 @@
 using namespace cimg_library;
 using namespace std;
 
+#define EPS 0.00001
+
 /// STRUCTS Y VARIABLES AUXILIARES
 
 //Punto
@@ -1007,7 +1009,7 @@ CImg<T> fourier_inv(CImg<T> magnitud,CImg<T> fase){
 }
 
 ///****************************************
-///FILTRADO EN FRECUENCIA
+///FILTRADO EN FRECUENCIA - APLICAR FILTRO
 ///****************************************
 //Filtra en frecuencia a partir de una imagen y un filtro
 template<typename T>
@@ -1237,7 +1239,7 @@ T most_appeared(vector<T> v){
     int contador = 1;
     int max = 0;
     int valor;
-    for (i = 1; i = v.size()-1;i++){
+    for (int i = 1; i = v.size()-1;i++){
         if(v[i] == v[i-1]){
             contador+=1;//Si el numero actual es igual al anterior aumento el contador
         }
@@ -1313,6 +1315,26 @@ T equalize_local(CImg<T> window){
 
 }
 
+double distancia(double v1,double v2){
+    return abs(v1-v2);
+}
+
+double filtro_distancias(CImg<double> window){
+
+
+    double Rij=0,Rijviejo=99999;//,pivot=0;
+    cimg_forXY(window,x,y){
+        Rij=0;
+        cimg_forXY(window,z,w){
+            Rij+=abs(window(x,y,0,0)-window(z,w,0,0))+abs(window(x,y,0,1)-window(z,w,0,1))+abs(window(x,y,0,2)-window(z,w,0,2));
+        }
+        if  (Rij<Rijviejo)
+            Rijviejo=Rij;
+
+    }
+    return Rijviejo;
+}
+
 
 //int tipofiltro : 1 MEDIA GEOMETRICA , 2 MEDIA CONTRAARMONICA
 //                 3 MEDIANA, 4 PUNTO MEDIO ,5 PUNTO MEDIO RECORTADO,6 MAX, 7 MIN
@@ -1365,6 +1387,8 @@ CImg<T> filter(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
                 break;
             case 9: imgout(x,y)=moda(window);
                 break;
+            case 10: imgout(x,y)=filtro_distancias(window);
+                break;
             }
 
         }
@@ -1374,6 +1398,8 @@ CImg<T> filter(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     imgout.resize(M,N);
     return imgout;
 }
+
+
 
 
 #endif // FUNCIONES
