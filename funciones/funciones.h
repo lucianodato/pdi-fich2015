@@ -1144,7 +1144,6 @@ template <class T>
 CImg<T> ideal_notch(CImg<T> &img,T d,T u0,T v0,bool notch=false){
     int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
     CImg<T> mask(w, h, 1, 1);
-    d=d*d;
 
     for(i=0; i<w; i++){
         for(j=0; j<h; j++){
