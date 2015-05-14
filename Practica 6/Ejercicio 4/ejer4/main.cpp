@@ -13,51 +13,39 @@
 
 int main()
 {
-   // CImg<float> img1;
-    //img1.load("../../../../images/camino.tif");
+//        CImg<float> img1, img2,img1b,img2b, copia_fase;
+//        CImgList<float> fft1, fft2,fft1b,fft2b;
+//        // cargamos 1 imagen
+//        img1.load("../../../../images/img_degradada.tif");
+//        // le calculamos la FFT
+//        fft1=fourier(img1);
+//filtro_notch2(CImg<double> img,bool pasabajo=1,int n=4,double D0=0.12,double U0=0.2,double V0=0)
+//        //CImg<double>img_fil=filtro_notch2(img1,1,4,0.12,0.2,0);
 
-   // cout <<"EL MAXIMO ES: "<<img1.median()<<endl; ---> median me hace la MEDIA NO LA MEDIANA!! programar mediana
-CImg<double> img;
-    CImgList<double> da,db;
-    img.load("../../../../images/camino.tif");
-    img.normalize(0,1);
-    CImg<double> ruido=img.get_noise(0.2,0);// 0 = gaussian, 1 =inform, 2=salt and pepper, 3 =possion
-    CImg<double> imgR=filter(img.get_channel(0),4,1,0);
+//        (img1, fft1[2],img_fil).display("imagen original -- transformada");
 
-//http://stackoverflow.com/questions/9683488/repeated-elements-in-a-stdvector
-    // Test data.
-       std::vector<std::string> v;
-       v.push_back("a");
-       v.push_back("b");
-       v.push_back("c");
-       v.push_back("a");
-       v.push_back("c");
-       v.push_back("d");
-       v.push_back("a");
 
-       // Hash function for the hashtable.
-       auto h = [](const std::string* s) {
-           return std::hash<std::string>()(*s);
-       };
 
-       // Equality comparer for the hashtable.
-       auto eq = [](const std::string* s1, const std::string* s2) {
-           return s1->compare(*s2) == 0;
-       };
 
-       // The hashtable:
-       //      Key: Pointer to element of 'v'.
-       //      Value: Occurrence count.
-       std::unordered_map<const std::string*, size_t, decltype(h), decltype(eq)> m(v.size(), h, eq);
 
-       // Count occurances.
-       for (auto v_i = v.cbegin(); v_i != v.cend(); ++v_i)
-           ++m[&(*v_i)];
 
-       // Print strings that occur more than once:
-       for (auto m_i = m.begin(); m_i != m.end(); ++m_i)
-           if (m_i->second > 1)
-               std::cout << *m_i->first << ": " << m_i->second << std::endl;
+    CImg<double> img1;
+        img1.load("../../../../images/noisy_moon.jpg");
+    //    img1.load("../../../../images/img_degradada.tif");
+        CImgList<double> l=fourier(img1);
+        l[2].display("magnitud");
+            int x[3]={256*2,246*2,216*2};
+            int y[3]={236*2,256*2,216*2};
+            int w[3]={70,70,70};
+    //	int x[2]={84*2,167*2};
+    //	int y[2]={167*2,84*2};
+    //	int w[2]={20,20};
+        CImg<double> filtrada=filtro_notch(img1,x,y,w,2,3,false,20 );
+        filtrada.normalize(0,255);
+        (img1,filtrada).display("original -- filtrada");
+        l=fourier(filtrada);
+        l[2].display("magnitud");
+        filtrada.display();
 
 
     return 0;
