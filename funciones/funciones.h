@@ -607,22 +607,133 @@ CImg<T> gauss_filter (T sigma=1, T deriv=0) {
     return filter;
 }
 ///****************************************
+///ROBERTS
+///****************************************
+///idea de gradiente en dos direcciones
+template<typename T>
+CImg<T> roberts(CImg<T> img){
+    CImg<T> Gx(3, 3), Gy(3,3);
+    Gx(0,0)=0; Gx(0,1)=0; Gx(0,2)=0;
+    Gx(1,0)=0; Gx(1,1)=-1; Gx(1,2)=0;
+    Gx(2,0)=0; Gx(2,1)=0; Gx(2,2)=1;
+
+    Gy(0,0)=0; Gy(1,0)=0; Gy(2,0)=0;
+    Gy(0,1)=0; Gy(1,1)=0; Gy(2,1)=-1;
+    Gy(0,2)=0; Gy(1,2)=1; Gy(2,2)=0;
+
+    return (img.get_convolve(Gx)+img.get_convolve(Gy)).abs().normalize(0,255);
+}
+///****************************************
 ///SOBEL
 ///****************************************
 ///idea de gradiente en dos direcciones
 template<typename T>
-CImg<T> Sobel(CImg<T> img){
-    CImg<T> Gx(3, 3), Gy(3,3);
-    Gx(0,0)=-1; Gx(0,1)=-2; Gx(0,2)=-1;
-    Gx(1,0)=0; Gx(1,1)=0; Gx(1,2)=0;
-    Gx(2,0)=1; Gx(2,1)=2; Gx(2,2)=1;
+CImg<T> Sobel(CImg<T> img,int tipo = 0){
 
-    Gy(0,0)=-1; Gy(1,0)=0; Gy(2,0)=1;
-    Gy(0,1)=-2; Gy(1,1)=0; Gy(2,1)=2;
-    Gy(0,2)=-1; Gy(1,2)=0; Gy(2,2)=1;
+    //Sobel con valor de entrada 0 con tendencia vertical y horizontal
+    //Cuando el valor de entrada es 1 tiene tendencia diagonal
+    CImg<T> Gx(3, 3),Gy(3, 3);
+
+    if(tipo ==0){
+        Gx(0,0)=-1; Gx(0,1)=-2; Gx(0,2)=-1;
+        Gx(1,0)=0; Gx(1,1)=0; Gx(1,2)=0;
+        Gx(2,0)=1; Gx(2,1)=2; Gx(2,2)=1;
+
+        Gy(0,0)=-1; Gy(1,0)=0; Gy(2,0)=1;
+        Gy(0,1)=-2; Gy(1,1)=0; Gy(2,1)=2;
+        Gy(0,2)=-1; Gy(1,2)=0; Gy(2,2)=1;
+
+        else{
+
+            Gx(0,0)=0; Gx(0,1)=1; Gx(0,2)=2;
+            Gx(1,0)=-1; Gx(1,1)=0; Gx(1,2)=1;
+            Gx(2,0)=-2; Gx(2,1)=-1; Gx(2,2)=0;
+
+            Gy(0,0)=-2; Gy(1,0)=-1; Gy(2,0)=0;
+            Gy(0,1)=-1; Gy(1,1)=0; Gy(2,1)=1;
+            Gy(0,2)=0; Gy(1,2)=1; Gy(2,2)=2;
+        }
+    }
 
     return (img.get_convolve(Gx)+img.get_convolve(Gy)).abs().normalize(0,255);
 }
+///****************************************
+///PREWITT
+///****************************************
+///idea de gradiente en dos direcciones
+template<typename T>
+CImg<T> prewitt(CImg<T> img,int tipo=0){
+    //Prewitt con valor de entrada 0 con tendencia vertical y horizontal
+    //Prewitt el valor de entrada es 1 tiene tendencia diagonal
+    CImg<T> Gx(3, 3),Gy(3, 3);
+
+    if(tipo ==0){
+        Gx(0,0)=-1; Gx(0,1)=-1; Gx(0,2)=-1;
+        Gx(1,0)=0; Gx(1,1)=0; Gx(1,2)=0;
+        Gx(2,0)=1; Gx(2,1)=1; Gx(2,2)=1;
+
+        Gy(0,0)=-1; Gy(1,0)=0; Gy(2,0)=1;
+        Gy(0,1)=-1; Gy(1,1)=0; Gy(2,1)=1;
+        Gy(0,2)=-1; Gy(1,2)=0; Gy(2,2)=1;
+
+        else{
+
+            Gx(0,0)=0; Gx(0,1)=1; Gx(0,2)=1;
+            Gx(1,0)=-1; Gx(1,1)=0; Gx(1,2)=1;
+            Gx(2,0)=-1; Gx(2,1)=-1; Gx(2,2)=0;
+
+            Gy(0,0)=-1; Gy(1,0)=-1; Gy(2,0)=0;
+            Gy(0,1)=-1; Gy(1,1)=0; Gy(2,1)=1;
+            Gy(0,2)=0; Gy(1,2)=1; Gy(2,2)=1;
+        }
+    }
+
+    return (img.get_convolve(Gx)+img.get_convolve(Gy)).abs().normalize(0,255);
+}
+
+///****************************************
+///LAPLACIANO
+///****************************************
+///idea de gradiente en dos direcciones
+template<typename T>
+CImg<T> laplaciano(CImg<T> img,int tipo =0){
+    //LAPLACIANO con valor de entrada 0 valido para aproximación con N4 --> G = 4z5-(z2+z4+z6+z8)
+    //LAPLACIANO el valor de entrada 1, valido para aproximación con N8 --> G = 8z5-(z1+z2+z3+z4+z6+z7+z8+z9)
+    CImg<T> G(5,5);
+
+    if(tipo ==0){
+        G(0,0)=0; G(0,1)=-1; G(0,2)=0;
+        G(1,0)=-1; G(1,1)=4; G(1,2)=-1;
+        G(2,0)=0; G(2,1)=-1; G(2,2)=0;
+
+        else{
+
+            G(0,0)=-1; G(0,1)=-1; G(0,2)=-1;
+            G(1,0)=-1; G(1,1)=8; G(1,2)=-1;
+            G(2,0)=-1; G(2,1)=-1; G(2,2)=-1;
+            }
+    }
+
+    return img.get_convolve(G).abs().normalize(0,255);
+}
+
+///****************************************
+///LoG
+///****************************************
+///idea de gradiente en dos direcciones
+
+CImg<T> LoG(CImg<T> img){
+    CImg<T> G(5,5);
+
+        G(0,0)=0; G(0,1)=-1; G(0,2)=0;G(0,3)=-1; G(0,4)=0;G(0,5)=-1;
+        G(0,0)=0; G(0,1)=-1; G(0,2)=0;G(0,3)=-1; G(0,4)=0;G(0,5)=-1;
+        G(0,0)=0; G(0,1)=-1; G(0,2)=0;G(0,3)=-1; G(0,4)=0;G(0,5)=-1;
+        G(0,0)=0; G(0,1)=-1; G(0,2)=0;G(0,3)=-1; G(0,4)=0;G(0,5)=-1;
+        G(0,0)=0; G(0,1)=-1; G(0,2)=0;G(0,3)=-1; G(0,4)=0;G(0,5)=-1;
+
+    return img.get_convolve(G).abs().normalize(0,255);
+}
+
 ///****************************************
 ///FILTRO DE ALTA POTENCIA 1 CANAL
 ///****************************************
@@ -1237,7 +1348,7 @@ T most_appeared(vector<T> v){
     int contador = 1;
     int max = 0;
     int valor;
-    for (i = 1; i = v.size()-1;i++){
+    for (int i = 1; i = v.size()-1;i++){
         if(v[i] == v[i-1]){
             contador+=1;//Si el numero actual es igual al anterior aumento el contador
         }
