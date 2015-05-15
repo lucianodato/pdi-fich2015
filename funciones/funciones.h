@@ -16,6 +16,8 @@
 using namespace cimg_library;
 using namespace std;
 
+#define EPS 0.00001
+
 /// STRUCTS Y VARIABLES AUXILIARES
 
 //Punto
@@ -558,7 +560,11 @@ CImgList<T> bitlist(CImg<T> original)
     return lista;
 }
 
-///PROMEDIO KERNEL
+///-------------FILTRADO ESPACIAL-------------------------
+
+///****************************************
+///KERNEL PROMEDIO
+///****************************************
 //Funcion que devuelve el kernel promediado en func. del tamaño
 //template<typename T>
 CImg<double> mask(double tamanio){
@@ -1050,6 +1056,9 @@ CImg<T> copia_canal(CImg<T> img_orig,int canal,CImg<T> img_a_copiar,int canal_a_
     return img_orig;
 }
 
+
+///----------------FILTRADO FRECUENCIAL------------------------
+
 ///****************************************
 ///TRANSFORMADA DE FOURIER
 ///****************************************
@@ -1118,7 +1127,7 @@ CImg<T> fourier_inv(CImg<T> magnitud,CImg<T> fase){
 }
 
 ///****************************************
-///FILTRADO EN FRECUENCIA
+///FILTRADO EN FRECUENCIA - APLICAR FILTRO
 ///****************************************
 //Filtra en frecuencia a partir de una imagen y un filtro
 template<typename T>
@@ -1190,6 +1199,116 @@ CImg<T> gaussian_mask(CImg<T> &img, T d, bool highpass=false){
     }
     return mask;
 }
+
+///****************************************
+///FILTROS PASABANDA IDEAL
+///****************************************
+template <class T>
+CImg<T> ideal_band(CImg<T> &img,T d,T W,bool pass=false){
+    //Preproceso d para que la frecuencia sea la centrada en W/2
+    d=d-W/2;
+
+    if(pass){
+        return multiplicacion(ideal_mask(img,d+W),ideal_mask(img,d,true));//pasabanda
+    }
+    else{
+        return sumaImg(ideal_mask(img,d),ideal_mask(img,d+W,true));//rechazabanda
+    }
+}
+
+///****************************************
+///FILTROS PASABANDA BUTTER
+///****************************************
+template <class T>
+CImg<T> butter_band(CImg<T> &img,T d,T W,unsigned o,bool pass=false){
+    //corro de para que este en un borde y no en el centro de la frecuencia del filtro
+    d=d-W/2;
+
+    if(pass){
+        return multiplicacion(butterworth_mask(img,d+W,o),butterworth_mask(img,d,o,true));//pasabanda
+    }
+    else{
+        return sumaImg(butterworth_mask(img,d,o),butterworth_mask(img,d+W,o,true));//rechazabanda
+    }
+}
+
+///****************************************
+///FILTROS PASABANDA GAUSSIANOS
+///****************************************
+template <class T>
+CImg<T> gaussian_band(CImg<T> &img,T d,T W,bool pass=false){
+    //corro de para que este en un borde y no en el centro de la frecuencia del filtro
+    d=d-W/2;
+
+    if(pass){
+        return multiplicacion(gaussian_mask(img,d+W),gaussian_mask(img,d,true));//pasabanda
+    }
+    else{
+        return sumaImg(gaussian_mask(img,d),gaussian_mask(img,d+W,true));//rechazabanda
+    }
+}
+
+///****************************************
+///FILTROS NOTCH IDEAL
+///****************************************
+template <class T>
+CImg<T> ideal_notch(CImg<T> &img,T d,T u0,T v0,bool notch=false){
+    int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
+    CImg<T> mask(w, h, 1, 1);
+
+    for(i=0; i<w; i++){
+        for(j=0; j<h; j++){
+            if(sqrt(powf(i-w_2-u0,2)+powf(j-h_2-v0,2))<=d || sqrt(powf(i-w_2+u0,2)+powf(j-h_2+v0,2))<=d){
+                mask(i, j)=!notch;
+            }else{
+                mask(i, j)=notch;
+            }
+
+        }
+    }
+    return mask;
+}
+
+///****************************************
+///FILTROS NOTCH BUTTER
+///****************************************
+template <class T>
+CImg<T> butter_notch(CImg<T> &img,T d,unsigned o,T u0,T v0,bool notch=false){
+    int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
+    CImg<T> mask(w, h, 1, 1);
+    float dist1,dist2;
+
+    for(i=0; i<w; i++){
+        for(j=0; j<h; j++){
+            dist1=sqrt(powf(i-w_2-u0,2)+powf(j-h_2-v0,2));
+            dist2=sqrt(powf(i-w_2+u0,2)+powf(j-h_2+v0,2));
+            mask(i,j)=1/(1+powf(notch?(powf(d,2)/(dist1*dist2)):((dist1*dist2)/powf(d,2)),o));
+
+        }
+    }
+    return mask;
+}
+
+///****************************************
+///FILTROS NOTCH GAUSSIANOS
+///****************************************
+template <class T>
+CImg<T> gaussian_notch(CImg<T> &img,T d,T u0,T v0,bool notch=false){
+    int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
+    CImg<T> mask(w, h, 1, 1);
+    float dist1,dist2;
+
+    for(i=0; i<w; i++){
+        for(j=0; j<h; j++){
+            dist1=sqrt(powf(i-w_2-u0,2)+powf(j-h_2-v0,2));
+            dist2=sqrt(powf(i-w_2+u0,2)+powf(j-h_2+v0,2));
+            mask(i,j)=exp(-(dist1*dist2)/(2*powf(d,2)));
+            if(notch) mask(i,j)=1-mask(i,j);
+        }
+    }
+    return mask;
+}
+
 
 ///****************************************
 ///FILTROS LAPLACIANOS
@@ -1302,6 +1421,11 @@ CImg<double> filtroAP_frecuencia(CImg<double> img,double alpha,double b) {
 
 }
 
+
+///****************************************
+///FILTRO DE FILTRADO DE RUIDO (DENOISE)
+///****************************************
+
 //media geometrica
 template <class T>
 T media_geometrica(CImg<T> window){
@@ -1309,13 +1433,11 @@ T media_geometrica(CImg<T> window){
     cimg_forXY(window,x,y){
         val*=window(x,y);
     }
-    val=pow(val,1.0/(T)(window.width()*window.height()));
+    val=pow(val,T(1)/(window.width()*window.height()));
     return val;
 }
 
-
-
-//mediacontraarmonica
+//media contraarmonica
 template <class T>
 T media_carmonica(CImg<T> window,int Q){
     T val1=0.0;
@@ -1328,7 +1450,7 @@ T media_carmonica(CImg<T> window,int Q){
     return val1*1.0/(val2*1.0);
 }
 
-
+//mediana
 template <class T>
 T mediana(CImg<T> window){
 
@@ -1343,6 +1465,7 @@ T mediana(CImg<T> window){
         return v.at(v.size()/2);
 }
 
+//auxiliar para moda
 template <class T>
 T most_appeared(vector<T> v){
     int contador = 1;
@@ -1366,6 +1489,7 @@ T most_appeared(vector<T> v){
     return valor;
 }
 
+//moda
 template <class T>
 T moda(CImg<T> window){
 
@@ -1378,22 +1502,25 @@ T moda(CImg<T> window){
 
 }
 
-
+//maximo
 template <class T>
 T maximo(CImg<T> window){
     return window.max();
 }
 
+//minimo
 template <class T>
 T minimo(CImg<T> window){
     return window.min();
 }
 
+//punto medio
 template <class T>
 T punto_medio(CImg<T> window){
     return 	(window.min()+window.max())/2;
 }
 
+//media alfarecortado
 template <class T>
 T media_alfarecortado(CImg<T> window,int d){
     vector<T> v;
@@ -1415,7 +1542,7 @@ T media_alfarecortado(CImg<T> window,int d){
 
 }
 
-
+//ecualizacion local
 template <class T>
 T equalize_local(CImg<T> window){
     int N=window.width(),M=window.height();
@@ -1424,18 +1551,37 @@ T equalize_local(CImg<T> window){
 
 }
 
+double distancia(double v1,double v2){
+    return abs(v1-v2);
+}
+
+double filtro_distancias(CImg<double> window){
+    double Rij=0,Rijviejo=99999;//,pivot=0;
+    cimg_forXY(window,x,y){
+        Rij=0;
+        cimg_forXY(window,z,w){
+            Rij+=abs(window(x,y,0,0)-window(z,w,0,0))+abs(window(x,y,0,1)-window(z,w,0,1))+abs(window(x,y,0,2)-window(z,w,0,2));
+        }
+        if  (Rij<Rijviejo)
+            Rijviejo=Rij;
+
+    }
+    return Rijviejo;
+}
+
 
 //int tipofiltro : 1 MEDIA GEOMETRICA , 2 MEDIA CONTRAARMONICA
 //                 3 MEDIANA, 4 PUNTO MEDIO ,5 PUNTO MEDIO RECORTADO,6 MAX, 7 MIN
 //el parametro Q para MEDIA CONTRAARMONICA:
-//Q=-1 media armonica
-//Q=0 media aritmetica
-//Q>0 = elimina pimienta
-//Q<0 =elimina sal
+
 
 ///media armonica= para ruido sal (malo para pimienta), bueno para gaussiano
 ///1.media geometrica= bueno ruido gaussiano
-///2. Q=0 -> media aritmetica= para ruido por desenfoque
+///2.media contra armonica
+    //Q=-1 media armonica
+    //Q=0 media aritmetica
+    //Q>0 = elimina pimienta
+    //Q<0 =elimina sal
 ///3.mediana= ruido impulsivo (sin desenfoque)
 ///moda = ruido impulsivo (malo para otro tipo de ruido)
 ///4.punto medio = ruido gaussiano o uniforme
@@ -1443,8 +1589,9 @@ T equalize_local(CImg<T> window){
 ///6.max = ruido sal
 ///7.minimo = ruido pimienta
 ///9.moda = ruido impulsivo
+
 template <class T>
-CImg<T> filter(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
+CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
 
     int N=img.height(),
         M=img.width();
@@ -1458,23 +1605,35 @@ CImg<T> filter(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
             //asigno datos a mi ventana
             window=img.get_crop(x-medio,y-medio,x+medio,y+medio);
             switch(tipofiltro){
-            case 1: imgout(x,y)=media_geometrica(window);
+            case 1:
+                imgout(x,y)=media_geometrica(window);
                 break;
-            case 2: imgout(x,y)=media_carmonica(window,Q);
+            case 2:
+                imgout(x,y)=media_carmonica(window,Q);
                 break;
-            case 3: imgout(x,y)=mediana(window);
+            case 3:
+                imgout(x,y)=mediana(window);
                 break;
-            case 4: imgout(x,y)=punto_medio(window);
+            case 4:
+                imgout(x,y)=punto_medio(window);
                 break;
-            case 5: imgout(x,y)=media_alfarecortado(window,d);
+            case 5:
+                imgout(x,y)=media_alfarecortado(window,d);
                 break;
-            case 6: imgout(x,y)=maximo(window);
+            case 6:
+                imgout(x,y)=maximo(window);
                 break;
-            case 7: imgout(x,y)=minimo(window);
+            case 7:
+                imgout(x,y)=minimo(window);
                 break;
-            case 8: imgout(x,y)=equalize_local(window);
+            case 8:
+                imgout(x,y)=equalize_local(window);
                 break;
-            case 9: imgout(x,y)=moda(window);
+            case 9:
+                imgout(x,y)=moda(window);
+                break;
+            case 10:
+                imgout(x,y)=filtro_distancias(window);
                 break;
             }
 
@@ -1486,6 +1645,18 @@ CImg<T> filter(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     return imgout;
 }
 
+//Wrapper para 3 canales RGB
+template <class T>
+CImg<T> denoiseRGB(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
+    CImg<double> imgR=denoise(img.get_channel(0),sizew,tipofiltro,Q,d);
+    CImg<double> imgB=denoise(img.get_channel(1),sizew,tipofiltro,Q,d);
+    CImg<double> imgG=denoise(img.get_channel(2),sizew,tipofiltro,Q,d);
+
+    CImg<double> imgFiltrada;
+    ComposeRGB(imgFiltrada,imgR,imgG,imgB);
+
+    return imgFiltrada;
+}
 
 #endif // FUNCIONES
 

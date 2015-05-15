@@ -13,52 +13,42 @@
 
 int main()
 {
-   // CImg<float> img1;
-    //img1.load("../../../../images/camino.tif");
+    CImg<float> img,img_original,aux1,aux2;
+    img_original.load("../../../../images/img.tif");
+    img.load("../../../../images/img_degradada.tif");
 
-   // cout <<"EL MAXIMO ES: "<<img1.median()<<endl; ---> median me hace la MEDIA NO LA MEDIANA!! programar mediana
-CImg<double> img;
-    CImgList<double> da,db;
-    img.load("../../../../images/camino.tif");
-    img.normalize(0,1);
-    CImg<double> ruido=img.get_noise(0.2,0);// 0 = gaussian, 1 =inform, 2=salt and pepper, 3 =possion
-    CImg<double> imgR=filter(img.get_channel(0),4,1,0);
+    //img.load("../../../../images/noisy_moon.tif");
+    //img.load("../../../../images/HeadCT_degradada.tif");
+    CImgList<float> img_fft = fourier(img);
+    (img,log(img_fft[0])).display();
 
-//http://stackoverflow.com/questions/9683488/repeated-elements-in-a-stdvector
-    // Test data.
-       std::vector<std::string> v;
-       v.push_back("a");
-       v.push_back("b");
-       v.push_back("c");
-       v.push_back("a");
-       v.push_back("c");
-       v.push_back("d");
-       v.push_back("a");
+    float c_x,c_y,rad;
 
-       // Hash function for the hashtable.
-       auto h = [](const std::string* s) {
-           return std::hash<std::string>()(*s);
-       };
+    //La posta para localizar los picos es ver el espectro sin hacer shift y localizar las coordenadas donde se centra el ruido en el primer cuadrante
 
-       // Equality comparer for the hashtable.
-       auto eq = [](const std::string* s1, const std::string* s2) {
-           return s1->compare(*s2) == 0;
-       };
+    //Centrando el notch en la frecuencia de ruido (Es mejor se elimina el ruido y no todas las altas frecuencias)
+    c_x=70;
+    c_y=90;
+    rad=40;
+    aux1 = filtrar(img,ideal_notch(img,rad,c_x,c_y,true));
+    (img,aux1).display();
 
-       // The hashtable:
-       //      Key: Pointer to element of 'v'.
-       //      Value: Occurrence count.
-       std::unordered_map<const std::string*, size_t, decltype(h), decltype(eq)> m(v.size(), h, eq);
+    //Centrando el anti-notch en la frecuencia de la imagen (Se pierde mucha definicion)
+    c_x=2;
+    c_y=2;
+    rad=40;
+    aux2 = filtrar(img,butter_notch(img,rad,3,c_x,c_y,false));
+    (img,aux2).display();
 
-       // Count occurances.
-       for (auto v_i = v.cbegin(); v_i != v.cend(); ++v_i)
-           ++m[&(*v_i)];
+    //Solo el ruido
+    c_x=70;
+    c_y=90;
+    rad=40;
+    (img,filtrar(img,ideal_notch(img,rad,c_x,c_y,false))).display();
 
-       // Print strings that occur more than once:
-       for (auto m_i = m.begin(); m_i != m.end(); ++m_i)
-           if (m_i->second > 1)
-               std::cout << *m_i->first << ": " << m_i->second << std::endl;
-
+    cout<<"Error cuadratico medio entre la original y la ruidosa: "<<img_original.MSE(img)<<endl;
+    cout<<"Error cuadratico medio entre la original y filtrada por notch: "<<img_original.MSE(aux1)<<endl;
+    cout<<"Error cuadratico medio entre la original y filtrada por anti-notch: "<<img_original.MSE(aux2)<<endl;
 
     return 0;
 }
