@@ -1547,5 +1547,15 @@ CImg<T> denoiseRGB(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     return imgFiltrada;
 }
 
+template <class T>
+CImg<T> non_local_means(CImg<T> img,int h){
+    CImg<T> aux,w,Z;
+    vector<T> v,NLv,Ni,Nj;
+
+
+    return aux;
+}
+
+
 #endif // FUNCIONES
 
