@@ -1664,55 +1664,5 @@ CImg<T> denoiseRGB(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     return imgFiltrada;
 }
 
-
-template <class T>
-T suma_vecindad(CImg<T> vent){
-    T suma=0;
-    cimg_forXY(vent,i,j)
-            suma+=vent(i,j);
-    return (1/(vent.width()*vent.height())) * suma;
-}
-
-template <class T>
-T pesado_gausseano(T r_vent1,T r_vent2,float h){
-    return exp(powf(abs(r_vent1-r_vent2)/powf(h,2),2));
-}
-
-
-template <class T>
-CImg<T> medias_no_locales(CImg<T> img,int tam_vec,float h){
-    int c=0;
-    CImg<T> omega;
-    vector<T> C,u,v;
-    vector<vector<T>> f;
-
-    cimg_forXY(img,i,j){
-        v(c)=img(i,j);
-        c++;
-    }
-
-    c=0;
-
-    for(int p = 0; p<img.width()*img.height(); p++){
-
-        v = suma_vecindad();
-
-        for(int q = 0; q<img.width()*img.height(); q++){
-            ventana;
-            C(p) += pesado_gausseano(suma_vecindad(omega),,h);
-        }
-
-        for(int q = 0; q<img.height(); q++){
-            f[p][q]=
-            u(p) +=  v(q)*f(p,q);
-        }
-
-        u(p)*= (1/C(p));
-    }
-
-    return aux;
-}
-
-
 #endif // FUNCIONES
 
