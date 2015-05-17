@@ -31,20 +31,20 @@ int main()
     c_y=90;
     rad=40;
     aux1 = filtrar(img,ideal_notch(img,rad,c_x,c_y,true));
-    (img,aux1).display();
+    (img,aux1).display("notch");
 
     //Centrando el anti-notch en la frecuencia de la imagen (Se pierde mucha definicion)
     c_x=2;
     c_y=2;
     rad=40;
     aux2 = filtrar(img,butter_notch(img,rad,3,c_x,c_y,false));
-    (img,aux2).display();
+    (img,aux2).display("butternoche(anti notch)");
 
     //Solo el ruido
     c_x=70;
     c_y=90;
     rad=40;
-    (img,filtrar(img,ideal_notch(img,rad,c_x,c_y,false))).display();
+    (img,filtrar(img,ideal_notch(img,rad,c_x,c_y,false))).display("solo ruido");
 
     cout<<"Error cuadratico medio entre la original y la ruidosa: "<<img_original.MSE(img)<<endl;
     cout<<"Error cuadratico medio entre la original y filtrada por notch: "<<img_original.MSE(aux1)<<endl;
