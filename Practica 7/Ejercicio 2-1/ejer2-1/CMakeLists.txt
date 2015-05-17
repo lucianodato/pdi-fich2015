@@ -1,5 +1,5 @@
 project(ejer2-1)
-ccmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8)
 aux_source_directory(. SRC_LIST)
 
 ##########    COPIAR A PARTIR DE ACA  #################
