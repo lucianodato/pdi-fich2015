@@ -1664,5 +1664,25 @@ CImg<T> denoiseRGB(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     return imgFiltrada;
 }
 
+////para detectar circulos
+CImg<double> HoughCirculos(CImg<double> &img, int r) {
+    int M = img.width(), N = img.height();
+    CImg<double> iHough(M, N, 1, 1, 0.0);
+    cimg_forXY(img, i, j){
+        if (img(i, j)) {
+            for (int a=0; a<M; ++a){
+                double det = r*r-(i-a)*(i-a);
+                if (det>0){
+                    double b=round(j-sqrt(det));
+                    if (b>0 && b<N)
+                        iHough(a,b)++;
+                }
+            }
+        }
+    }
+    return iHough;
+}
+
+
 #endif // FUNCIONES
 
