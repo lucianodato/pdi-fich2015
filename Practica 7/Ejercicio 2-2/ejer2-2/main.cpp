@@ -4,6 +4,7 @@ int var_rho=sqrt(2),var_angulo=90;
 int main()
 {
 <<<<<<< HEAD
+<<<<<<< HEAD
     CImg<double> img, sobel,houghh;
     CImgList<double> lista;
     //hough(CImg<double> img, double angulo,int nLineasX=0,int nLineasY=0,bool inverse=false, bool activeAngle=false) {
@@ -41,6 +42,8 @@ int main()
     lista.push_back(houghh);
     lista.display("img -- sobel --- houghh  sobel   -----sobel hough umbral   ------ sobel hough inversaa");
 =======
+=======
+>>>>>>> fa5707e9a01065279bf312ec0c5f30621c2526e6
     CImg<double> img, sobel,th,th_i,split,split_th_i;
         CImgList<double> lista;
         img.load("../../../../images/cameraman.tif");
@@ -64,7 +67,10 @@ int main()
 
 
         lista.display("img-img filtrada(con filtro de bordes)-- th--split hough --hough umbral --hough inversaa -- inversa de la recortada");
+<<<<<<< HEAD
 >>>>>>> solo un detalle:no me segmenta en color ejer3, ver funcion ComposeHSI, ejercicio 2.2: si empiezo de cero ?
+=======
+>>>>>>> fa5707e9a01065279bf312ec0c5f30621c2526e6
 
     return 0;
 }
