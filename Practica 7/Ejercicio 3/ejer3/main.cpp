@@ -11,38 +11,40 @@ int max_segm=3;
 int main()
 {
     unsigned mx, my;
-    CImg<unsigned char> img,imgnueva;
+    CImg<float> img,imgnueva;
     const char* path = "../../../../images/bone.tif";
     img.load(path);
 
-        CImgDisplay v1,v2,v3;
-        v1.assign(img);
-        v1.set_title("click");
-        v2.assign(img);
-        v2.set_title("original");
-        v3.assign(img);
-        v3.set_title("nueva");
+//    CImgDisplay v1,v2,v3;
+//    v1.assign(img);
+//    v1.set_title("click");
+//    v2.assign(img);
+//    v2.set_title("original");
+//    v3.assign(img);
+//    v3.set_title("nueva");
 
-            while(!v1.is_closed() && !v2.is_closed() && !v3.is_closed()  ){
-                v1.wait();
-                if(v1.button()==1){
-                    //MODO DE SELECCION MANUAL DE LA SEMILLA
-                    mx=v1.mouse_x();
-                    my=v1.mouse_y();
-                    imgnueva= region_growing(img,mx,my,delta,etiqueta);
-                    v3.render(imgnueva);
-                    v3.paint();
-                }
+//    while(!v1.is_closed() && !v2.is_closed() && !v3.is_closed()  ){
+//        v1.wait();
+//        if(v1.button()==1){
+//            //MODO DE SELECCION MANUAL DE LA SEMILLA
+//            mx=v1.mouse_x();
+//            my=v1.mouse_y();
+//            imgnueva= region_growing(img,mx,my,delta,etiqueta);
 
-            }
+//            v3.render(imgnueva);
+//            v3.paint();
+//        }
+//        if (v1.is_key()){
 
-//MODO SELECCION AUTOMATICA DE SEMILLA
-(img, autom_seg_region_growed(img, delta, etiqueta, max_segm)).display("Imagen Original, segmentacion automatica");
-        // orig: imagen a procesar
-        // x,y: posición de la semilla
-        // delta: define el rango de pertenencia como [semilla-delta/2, semilla+delta/2]
-        // etiqueta: nro de la etiqueta, no debe pertenecer al rango
+            //MODO SELECCION AUTOMATICA DE SEMILLA
+            imgnueva = autom_seg_region_growed(img, delta, etiqueta, max_segm);
+            //v3.render(imgnueva);
+            //v3.paint();
+            (img,imgnueva).display();
 
+        //}
+
+    //}
 
     return 0;
 }
