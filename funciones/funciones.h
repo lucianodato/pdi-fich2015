@@ -1665,7 +1665,8 @@ CImg<T> denoiseRGB(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
 }
 
 ////para detectar circulos
-CImg<double> HoughCirculos(CImg<double> &img, int r) {
+template <class T>
+CImg<T> HoughCirculos(CImg<T> &img, int r) {
     int M = img.width(), N = img.height();
     CImg<double> iHough(M, N, 1, 1, 0.0);
     cimg_forXY(img, i, j){
@@ -1681,6 +1682,90 @@ CImg<double> HoughCirculos(CImg<double> &img, int r) {
         }
     }
     return iHough;
+}
+
+//longitud:- sqrt(2) +sqrt(2)
+template <class T>
+CImg<T> splitHough(CImg<T> Hough, T angulo,T rho,int ang_tol = 0,int tolerancia_rho = 0, bool solo_max = false) {
+    T columna_hough = (angulo + 90) / 180 * Hough.width(),fila_hough = (rho + sqrt(2)) * sqrt(2) / 4 * Hough.height(),maximo_valor = 0,x_maximo_valor = 0,y_maximo_valor = 0;
+    CImg<T> auxiliar(Hough.width(), Hough.height(), 1, 1, 0);
+    for (int i = -tolerancia_rho ; i <= tolerancia_rho ; i++)
+        for (int j = -ang_tol ; j <= ang_tol ; j++)
+            if (columna_hough + i < Hough.width() && columna_hough + i >= 0 && fila_hough + j < Hough.height()&& fila_hough + j >= 0) {
+                x_maximo_valor = columna_hough + i;
+                y_maximo_valor = fila_hough + j;
+                if (solo_max) {
+                    if (Hough(columna_hough + i, fila_hough + j) > maximo_valor) {
+                        maximo_valor = Hough(x_maximo_valor, y_maximo_valor); // saco el maximo
+                    }
+                } else  // si tengo mas saco todos los que hay
+                    auxiliar(x_maximo_valor, y_maximo_valor) = Hough(x_maximo_valor, y_maximo_valor);
+
+            }
+
+
+    if (solo_max)
+        auxiliar(x_maximo_valor, y_maximo_valor) = Hough(x_maximo_valor, y_maximo_valor);
+    else //umbral
+        auxiliar.threshold(0.4 * auxiliar.mean() + 0.6 * auxiliar.max());
+
+    return auxiliar;
+}
+
+
+///unsigned char la hice en unsigned char por que la funcion que dieron los profesores esta asi
+/// supongo que es suficiente??
+///
+/// podria ponerla dentro de   autom_seg_region_growed y listo .
+CImg<unsigned char> wrapper_region_growed(CImg<unsigned char> img,int x,int y,int delta,int etiqueta,CImg<double>&flood_zones, CImg<double>& segmentacion, bool display = false) {
+    cout<<"x_rand:"<<x<<"y_rand:"<<y<<endl;
+    flood_zones = img - region_growing(img, x, y, delta, etiqueta);
+    flood_zones.display();
+    CImg<double>aux_flood_zones=flood_zones;
+    aux_flood_zones.RGBtoHSI();
+    int color;
+            //color=rand() % 360;
+    color=60;
+    for(int i=0; i<flood_zones.width(); i++){
+        for(int j=0; j<flood_zones.height(); j++){
+            aux_flood_zones(i,j,0,0)=color;
+            aux_flood_zones(i,j,0,1)=1;
+            //Taux_flood_zones(i,j,0,2)=I(i,j);
+        }
+    }
+    aux_flood_zones.HSItoRGB();
+    //esta mierda de COMPOSE no se que tiene me tira error y por ende no me pinta l region de colores distintos para que pueda elegir despues
+   //        region_color= ComposeHSI(aux_flood_zones.get_fill(rand()%360), aux_flood_zones.get_fill(1), aux_flood_zones.get_normalize(0, 1));
+    segmentacion += aux_flood_zones;
+    if (display) {
+        (img, flood_zones, segmentacion).display("img, region_growed, Segmentada");
+    }
+    img = img -flood_zones;
+    return img;
+}
+
+
+/// segmentacion automatica con region_growed
+CImg<unsigned char> autom_seg_region_growed(CImg<unsigned char> img, int delta, int etiqueta, const int max_segm) {
+    CImg<double> img_auto(img);
+    CImg<double> flood_zones;
+    CImg<double> segmentacion(img.width(), img.height(), 1, 3, 0);
+    int x_rand, y_rand;
+    int segmentaciones = 0;
+
+    while (img_auto.max() > 0 && segmentaciones < max_segm) {
+        x_rand = rand() % img_auto.width();
+        y_rand = rand() % img_auto.height();
+        //cout<< "img_auto.max(): "<< img_auto.max()<<"max_seg: "<<max_segm<<"x_rand:"<<x_rand<<"y_rand:"<<y_rand<<endl;
+         //cout<<"x_rand:"<<x_rand<<"y_rand:"<<y_rand;
+        if (img_auto(x_rand, y_rand) != 0) {    //semilla en x,y distinto de cero:si es cero salta, elijo otro
+            img_auto = wrapper_region_growed(img_auto, x_rand, y_rand, delta, etiqueta, flood_zones, segmentacion,true);
+            segmentaciones++;
+            //cout << "max [" <<img_auto.max()<<"] "<<endl;
+            //cout << "siguiente region"<<endl;
+        }
+    }
+    return segmentacion;
 }
 
 
