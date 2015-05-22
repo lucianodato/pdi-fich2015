@@ -307,6 +307,23 @@ CImg<T> mediotono(CImg<T> original){
 }
 
 ///****************************************
+///CONTAR CANTIDAD DE GRISES DISTINTOS (SIN NEGRO Y BLANCO)
+///****************************************
+template<typename T>
+int cant_grises(CImg<T> imagen){
+    CImg<T> hist = imagen.get_histogram(256,0,255);
+    int contador=0;
+
+    for(int g=1;g<254;g++){//no contar el negro y tampoco el blanco
+        if(hist(g)!=0){
+            contador+=1;
+        }
+    }
+
+    return contador;
+}
+
+///****************************************
 ///FUNCION BINARIO - Caso que recibe un umbral (En la libreria esta la funcion get_threshold tambien)
 ///****************************************
 template<typename T>
@@ -444,7 +461,7 @@ CImg<T> ORimg(CImg<T> img, CImg<T> masc){
 ///****************************************
 //And entre imagen binaria y una mascara binaria
 template<typename T>
-CImg<T> ANDimg(CImg<T> &img, CImg<T> &masc){
+CImg<T> ANDimg(CImg<T> img, CImg<T> masc){
     CImg<T> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j)
             resultado(i,j)=(img(i,j)*masc(i,j));
@@ -1805,7 +1822,6 @@ CImg<T> relleno_automatico(CImg<T> img,int ventana){
     //Hago la interseccion
     return multiplicacion(f,negativo(img));
 }
-
 
 #endif // FUNCIONES
 
