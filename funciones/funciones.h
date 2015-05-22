@@ -1770,6 +1770,42 @@ CImg<T> autom_seg_region_growed(CImg<T> img, int delta, int etiqueta, const int 
     return segmentacion;
 }
 
+///****************************************
+///MORFOLOGIA
+///****************************************
+
+template <class T>
+void apertura(CImg<T> &img,int ventana){
+    img.erode(ventana);//Erosionamos
+    img.dilate(ventana);//Dilatamos
+}
+
+template <class T>
+CImg<T> extraccion_de_regiones(CImg<T> img,int ventana){
+    return DifImg(img.get_dilate(ventana),img.get_erode(ventana));
+}
+
+template <class T>
+CImg<T> relleno_automatico(CImg<T> img,int ventana){
+    CImg<T> f(img.width(),img.height());
+    CImg<T> bordes = extraccion_de_regiones(img,ventana);//son los bordes de la mascara
+
+    cimg_forXY(img,i,j){
+        if(img(i,j)== bordes(i,j)){
+            f(i,j)=1.0-img(i,j);//si esta en el borde de la mascara
+        }
+        else
+        {
+            f(i,j)=0;
+        }
+    }
+    //Dilato la f
+    f.dilate(ventana);
+
+    //Hago la interseccion
+    return multiplicacion(f,negativo(img));
+}
+
 
 #endif // FUNCIONES
 
