@@ -7,11 +7,11 @@
 ///
 int delta=50;
 int etiqueta=256;
-int max_segm=3;
+int max_segm=5;
 int main()
 {
     unsigned mx, my;
-    CImg<float> img,imgnueva;
+    CImg<double> img,imgnueva;
     const char* path = "../../../../images/bone.tif";
     img.load(path);
 
@@ -40,7 +40,7 @@ int main()
             imgnueva = autom_seg_region_growed(img, delta, etiqueta, max_segm);
             //v3.render(imgnueva);
             //v3.paint();
-            (img,imgnueva).display();
+            (img,imgnueva,imgnueva.get_RGBtoHSI().get_channel(2)).display("Resultado Final");
 
         //}
 

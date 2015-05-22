@@ -12,6 +12,7 @@
 #include <fstream>
 #include <cstdio>
 #include <ctime>
+#include <time.h>       /* time */
 
 using namespace cimg_library;
 using namespace std;
@@ -1729,43 +1730,57 @@ CImg<T> splitHough(CImg<T> Hough, T angulo,T rho,int ang_tol = 0,int tolerancia_
 ///
 /// podria ponerla dentro de   autom_seg_region_growed y listo.
 template <class T>
-CImg<T> wrapper_region_growed(CImg<T> img,int x,int y,int delta,int etiqueta,CImg<T>flood_zones, CImg<T>& segmentacion) {
+CImg<T> wrapper_region_growed(CImg<T> img,int x,int y,int delta,int etiqueta,CImg<T>&flood_zones, CImg<T>& segmentacion) {
     cout<<"x_rand:"<<x<<"y_rand:"<<y<<endl;
     CImg<T> aux;
-    aux = region_growing(img, x, y, delta, etiqueta);
-    flood_zones = DifImg(img,aux);
-    //flood_zones.display();
+    aux = region_growing(img, x, y, delta, etiqueta); //aux 3 channel
 
-    CImg<T>aux_flood_zones=flood_zones;
-    aux_flood_zones.RGBtoHSI(); ////ACA HAY UN PROBLEMA FALCEPALM! CORREGIR
-    cout<<"Hola 1"<<endl;
-    //esta mierda de COMPOSE no se que tiene me tira error y por ende no me pinta l region de colores distintos para que pueda elegir despues
-    aux_flood_zones = ComposeHSI(aux_flood_zones.get_channel(0).get_fill(rand()%360), aux_flood_zones.get_channel(1).get_fill(1), aux_flood_zones.get_channel(2));
-    segmentacion += aux_flood_zones;
+    flood_zones = img - aux;
+    CImg<double> compuesta(img.width(),img.height(),1,3,0);
+    CImg<double> aux_flood=flood_zones.get_channel(0).normalize(0,1);
+   // flood_zones.get_channel(0).display("flooddddddddd");
+    //aca tengo que pintar cada nueva zona de un color distinto.
+    compuesta.RGBtoHSI();
+    int color=rand()%360;
+    cimg_forXY(compuesta,i,j){
+        if(flood_zones(i,j)!=0)
+            compuesta(i,j,0,0)=color;//h
+            compuesta(i,j,0,1)=1;//s
+            compuesta(i,j,0,2)=aux_flood(i,j);//I
 
-    img = DifImg(img,flood_zones);
-    return img;
+    }
+    compuesta.HSItoRGB();
+    segmentacion= compuesta+segmentacion;
+           // (img, flood_zones, segmentacion).display("imagen, Region fooldd, Seleccion", 0);
+
+
+        img -= flood_zones;
+
+        return img;
 }
 
 
 /// segmentacion automatica con region_growed
 template <class T>
 CImg<T> autom_seg_region_growed(CImg<T> img, int delta, int etiqueta, const int max_segm) {
+    //if(img.spectrum()!=1) img=img.get_RGBtoHSI().get_channel(2);
     CImg<T> img_auto(img);
-    CImg<T> flood_zones(img.width(), img.height(), 1, 3);
-    CImg<T> segmentacion(img.width(), img.height(), 1, 3);
-    segmentacion.fill(0);
-    flood_zones.fill(0);
+    CImg<T> flood_zones;//(img.width(), img.height(), 1, 3,0);
+    CImg<T> segmentacion(img.width(), img.height(), 1, 3,0);
+    //segmentacion.fill(0);
+    //flood_zones.fill(0);
     int x_rand, y_rand;
     int segmentaciones = 0;
-
+    /* initialize ransegmentacionesdom seed: */
+    srand(time(0));
     while (img_auto.max() > 0 && segmentaciones < max_segm) {
         x_rand = rand() % img_auto.width();
         y_rand = rand() % img_auto.height();
-        //if (img_auto(x_rand,y_rand) != 0) {    //semilla en x,y distinto de cero:si es cero salta, elijo otro
+        if (img_auto(x_rand,y_rand) != 0) {    //semilla en x,y en cada pasada Tiene que ser distinta de cero tiene que ser distinto de cero
             img_auto = wrapper_region_growed(img_auto, x_rand, y_rand, delta, etiqueta, flood_zones, segmentacion);
             segmentaciones++;
-        //}
+            cout<<segmentaciones<<endl;
+        }
     }
     return segmentacion;
 }
