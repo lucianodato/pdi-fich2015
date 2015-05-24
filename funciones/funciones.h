@@ -13,6 +13,7 @@
 #include <cstdio>
 #include <ctime>
 #include <time.h>       /* time */
+#include <set>
 
 using namespace cimg_library;
 using namespace std;
@@ -57,7 +58,25 @@ const unsigned char red[] = { 255,0,0 },
                     black[] = { 0,0,0 },
                     yellow[] = { 255,255,0 };
 
+struct Pixel {
+    int x;
+    int y;
+    CImg<double>* img;
 
+    Pixel() : x(0), y(0), img(NULL) {};
+    Pixel(const Pixel& p) : x(p.x), y(p.y), img(p.img) {};
+    Pixel(int x, int y, CImg<double>* img) : x(x), y(y), img(img) {};
+
+    bool operator<( const Pixel& p ) const {
+        return this->value() < p.value();
+    }
+    double value() const {
+        return img->operator()(x,y);
+    }
+    bool AdentroImagen( ) {
+        return x>=0 && y>=0 && x<img->width() && y<img->height();
+    }
+};
 
 //------------------------------FUNCIONES AUXILIARES--------------------------------------------
 
@@ -154,7 +173,7 @@ CImg<T> generar_lut_logb(T c){
 
 ///LUT EXPONECIAL
 // gamma es positivo
-// 0 < gamma < 1 Aclara la imagen
+// 0 < gamma < 1 Aclara la imagenimgnueva
 // gamma > 1 Oscurece la imagen
 template<typename T>
 CImg<T> generar_lut_expb(T c,T gamma){
@@ -1658,7 +1677,6 @@ CImg<T> denoiseRGB(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     CImg<double> imgR=denoise(img.get_channel(0),sizew,tipofiltro,Q,d);
     CImg<double> imgB=denoise(img.get_channel(1),sizew,tipofiltro,Q,d);
     CImg<double> imgG=denoise(img.get_channel(2),sizew,tipofiltro,Q,d);
-
     CImg<double> imgFiltrada;
     ComposeRGB(imgFiltrada,imgR,imgG,imgB);
 
@@ -1669,7 +1687,58 @@ CImg<T> denoiseRGB(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
 ///****************************************
 ///TRANSFORMADA DE HOUGH
 ///****************************************
-
+Pixel MaximoP( CImg<double>& img ) {
+    int xmax=0, ymax=0;
+    double maximo = img(0,0);
+    cimg_forXY(img, i, j) {
+        if( img(i,j) > maximo ) {
+            maximo = img(i,j);
+            xmax = i;
+            ymax = j;
+        }
+    }
+    return Pixel(xmax, ymax, &img);
+}
+Pixel MinimoP( CImg<double>& img ) {
+    int xmin=0, ymin=0;
+    double minimo = img(0,0);
+    cimg_forXY(img, i, j) {
+        if( img(i,j) < minimo ) {
+            minimo = img(i,j);
+            xmin = i;
+            ymin = j;
+        }
+    }
+    return Pixel(xmin, ymin, &img);
+}
+///INVERSA (modificada)
+///se pasa una transformada y numero de lineas acumulado maximo
+CImg<double> InversaHough(CImg<double> img, int nLineas) {
+    const unsigned M = img.width(),N = img.height();
+    CImg<double> iHough(M, N, 1, 1, 0.0);
+    double maxRho = sqrt(float(pow(N-1,2)+pow(M-1,2))), stepRho = 2.*maxRho/(N-1), stepTheta = M_PI/(M-1), rho, theta;
+    const double blanco[1] = {255.f};
+    float x0, x1, y0, y1;
+    for( int nl=0; nl < nLineas; nl++ ) {
+        Pixel p = MaximoP( img );
+        int t = p.x, r = p.y;
+        theta=t*stepTheta-M_PI/2;
+        rho=r*stepRho-maxRho;
+        if (theta>-M_PI/2 && theta<M_PI/2){
+            y0=0; y1=M-1;
+            x0=rho/cos(theta);
+            x1=rho/cos(theta)-(M-1)*tan(theta);
+        }
+        else {
+            x0=0; x1=N-1;
+            y0=rho/sin(theta);
+            y1=rho/sin(theta)-(N-1)/tan(theta);
+        }
+        iHough.draw_line(y0,x0,y1,x1,blanco);
+        img(t,r) = 0;
+    }
+    return iHough;
+}
 ////para detectar circulos
 template <class T>
 CImg<T> HoughCirculos(CImg<T> &img, int r) {
@@ -1690,36 +1759,74 @@ CImg<T> HoughCirculos(CImg<T> &img, int r) {
     return iHough;
 }
 
-//longitud:- sqrt(2) +sqrt(2)
-template <class T>
-CImg<T> splitHough(CImg<T> Hough, T angulo,T rho,int ang_tol = 0,int tolerancia_rho = 0, bool solo_max = false) {
-    T columna_hough = (angulo + 90) / 180 * Hough.width(),
-            fila_hough = (rho + sqrt(2)) * sqrt(2) / 4 * Hough.height(),maximo_valor = 0,
-            x_maximo_valor = 0,
-            y_maximo_valor = 0;
-    CImg<T> auxiliar(Hough.width(), Hough.height(), 1, 1, 0);
-    for (int i = -tolerancia_rho ; i <= tolerancia_rho ; i++)
-        for (int j = -ang_tol ; j <= ang_tol ; j++)
-            if (columna_hough + i < Hough.width() && columna_hough + i >= 0 && fila_hough + j < Hough.height()&& fila_hough + j >= 0) {
-                x_maximo_valor = columna_hough + i;
-                y_maximo_valor = fila_hough + j;
-                if (solo_max) {
-                    if (Hough(columna_hough + i, fila_hough + j) > maximo_valor) {
-                        maximo_valor = Hough(x_maximo_valor, y_maximo_valor); // saco el maximo
+
+
+template <typename T>
+CImg<T> splitHough(CImg<T> Hough,double angulo = -180, double row_hough = -1,int ang_tol = 0,int rho_tol = 0,bool just_max = false) {
+    // Si le pasamos -180 (por defecto), me devuelve toda la columna (sin importar ang_tol)
+    if (angulo == -180) {
+        angulo = 0;
+        // si es menor o igual a 0, no tiene sentido guardarlo
+        ang_tol = Hough.width() / 2;
+    }
+    double col_hough = (angulo + 90) / 180 * Hough.width();
+    if (row_hough == -1) {
+        row_hough = Hough.height() / 2;
+        rho_tol = Hough.height() / 2;
+    }
+    // Guardo el maximo pico
+    double max_pico = 0;
+    double x_max_pico = 0;
+    double y_max_pico = 0;
+    CImg<double> auxiliar(Hough.width(), Hough.height(), 1, 1, 0);
+    for (int i = -ang_tol ; i <= ang_tol ; i++) {
+        for (int j = -rho_tol ; j <= rho_tol ; j++) {
+            if (col_hough + i < Hough.width() && col_hough + i >= 0 &&
+                    row_hough + j < Hough.height()&& row_hough + j >= 0) {
+                x_max_pico = col_hough + i;
+                y_max_pico = row_hough + j;
+                if (just_max) {
+                    if (Hough(col_hough + i, row_hough + j) > max_pico) {
+                        max_pico = Hough(x_max_pico, y_max_pico);
                     }
-                } else  // si tengo mas saco todos los que hay
-                    auxiliar(x_maximo_valor, y_maximo_valor) = Hough(x_maximo_valor, y_maximo_valor);
-
+                } else {
+                    if (Hough(x_max_pico, y_max_pico) > 0) {
+                        auxiliar(x_max_pico, y_max_pico) = Hough(x_max_pico, y_max_pico);
+                        std::cout << auxiliar(x_max_pico, y_max_pico) << "(" << x_max_pico << "," << y_max_pico << ")"<< std::endl;
+                    }
+                }
             }
-
-
-    if (solo_max)
-        auxiliar(x_maximo_valor, y_maximo_valor) = Hough(x_maximo_valor, y_maximo_valor);
-    else //umbral
-        auxiliar.threshold(0.4 * auxiliar.mean() + 0.6 * auxiliar.max());
-
+        }
+    }
+    if (just_max) {
+        auxiliar(x_max_pico, y_max_pico) = Hough(x_max_pico, y_max_pico);
+    } else { // Aplico un umbral
+        auxiliar.threshold(0.3 * auxiliar.mean() + 0.7 * auxiliar.max());
+    }
     return auxiliar;
 }
+
+
+///  coordenada y al eje, me retorna el valor que correspende la transformada Hough en tita y rho
+// en grados para tita (t) entre [-90 ; 90] y entre [-sqrt(2)M;sqrt(2)M] el rho (p)
+template <typename T>
+double coordenadaXY_a_rho_tita(CImg<T> hough, int coord, unsigned char axis) {
+    unsigned int M = hough.width();
+    unsigned int N = hough.height();
+    // Maximos valores absolutos de theta y de rho
+    double max_theta = 90;
+    double max_rho = pow(pow(M, 2.0) + pow(N, 2.0), 0.5);
+    double valor;
+    if (axis == 't') { // tita
+        valor = (2.0 * coord / M - 1.0) * max_theta;
+    } else if (axis == 'p') { //rho
+        valor = (2.0 * coord / N - 1.0) * max_rho;
+    }
+    return valor;
+}
+
+
+
 
 ///****************************************
 ///CRECIMIENTO DE REGIONES
@@ -1730,20 +1837,20 @@ CImg<T> splitHough(CImg<T> Hough, T angulo,T rho,int ang_tol = 0,int tolerancia_
 ///
 /// podria ponerla dentro de   autom_seg_region_growed y listo.
 template <class T>
-CImg<T> wrapper_region_growed(CImg<T> img,int x,int y,int delta,int etiqueta,CImg<T>&flood_zones, CImg<T>& segmentacion) {
+CImg<T> wrapper_region_growed(CImg<T> img,int x,int y,int delta,int etiqueta,CImg<T>&region_crecida, CImg<T>& segmentacion) {
     cout<<"x_rand:"<<x<<"y_rand:"<<y<<endl;
     CImg<T> aux;
     aux = region_growing(img, x, y, delta, etiqueta); //aux 3 channel
 
-    flood_zones = img - aux;
+    region_crecida = img - aux;
     CImg<double> compuesta(img.width(),img.height(),1,3,0);
-    CImg<double> aux_flood=flood_zones.get_channel(0).normalize(0,1);
-   // flood_zones.get_channel(0).display("flooddddddddd");
+    CImg<double> aux_flood=region_crecida.get_channel(0).normalize(0,1);
+   // region_crecida.get_channel(0).display("flooddddddddd");
     //aca tengo que pintar cada nueva zona de un color distinto.
     compuesta.RGBtoHSI();
     int color=rand()%360;
     cimg_forXY(compuesta,i,j){
-        if(flood_zones(i,j)!=0)
+        if(region_crecida(i,j)!=0)
             compuesta(i,j,0,0)=color;//h
             compuesta(i,j,0,1)=1;//s
             compuesta(i,j,0,2)=aux_flood(i,j);//I
@@ -1751,10 +1858,10 @@ CImg<T> wrapper_region_growed(CImg<T> img,int x,int y,int delta,int etiqueta,CIm
     }
     compuesta.HSItoRGB();
     segmentacion= compuesta+segmentacion;
-           // (img, flood_zones, segmentacion).display("imagen, Region fooldd, Seleccion", 0);
+           // (img, region_crecida, segmentacion).display("imagen, Region fooldd, Seleccion", 0);
 
 
-        img -= flood_zones;
+        img -= region_crecida;
 
         return img;
 }
@@ -1765,10 +1872,10 @@ template <class T>
 CImg<T> autom_seg_region_growed(CImg<T> img, int delta, int etiqueta, const int max_segm) {
     //if(img.spectrum()!=1) img=img.get_RGBtoHSI().get_channel(2);
     CImg<T> img_auto(img);
-    CImg<T> flood_zones;//(img.width(), img.height(), 1, 3,0);
+    CImg<T> region_crecida;//(img.width(), img.height(), 1, 3,0);
     CImg<T> segmentacion(img.width(), img.height(), 1, 3,0);
     //segmentacion.fill(0);
-    //flood_zones.fill(0);
+    //region_crecida.fill(0);
     int x_rand, y_rand;
     int segmentaciones = 0;
     /* initialize ransegmentacionesdom seed: */
@@ -1777,13 +1884,14 @@ CImg<T> autom_seg_region_growed(CImg<T> img, int delta, int etiqueta, const int 
         x_rand = rand() % img_auto.width();
         y_rand = rand() % img_auto.height();
         if (img_auto(x_rand,y_rand) != 0) {    //semilla en x,y en cada pasada Tiene que ser distinta de cero tiene que ser distinto de cero
-            img_auto = wrapper_region_growed(img_auto, x_rand, y_rand, delta, etiqueta, flood_zones, segmentacion);
+            img_auto = wrapper_region_growed(img_auto, x_rand, y_rand, delta, etiqueta, region_crecida, segmentacion);
             segmentaciones++;
             cout<<segmentaciones<<endl;
         }
     }
     return segmentacion;
 }
+
 
 ///****************************************
 ///MORFOLOGIA
