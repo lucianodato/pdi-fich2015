@@ -1,32 +1,37 @@
 #include "funciones.h"
-double angulo=0, rho=0.0;
-int var_rho=sqrt(2),var_angulo=90;
 int main()
 {
-    CImg<double> img, sobel,th,th_i,split,split_th_i;
-    CImgList<double> lista;
-    img.load("../../../../images/cameraman.tif");
-    //img.load("../../../../images/fourier/f8.jpg");
-    //img.load("../../../../images/fourier/f3.jpg");
-    if (img.spectrum()!=1)
-        img=img.RGBtoHSI().get_channel(2);
-    sobel=Sobel(img);
-    th=hough(sobel,false); //transf hough
-    split=splitHough(th, angulo,rho,var_angulo,var_rho,false);//transf hough recortada
-    th.normalize(0,255); // esto es indiferente me supongo, lo hago por la dudas
-    split.normalize(0,255);
-    lista.push_back(img);lista.push_back(sobel);lista.push_back(th);lista.push_back(split);
-    th.threshold(245);
-    lista.push_back(th);lista.push_back(split);
-    th_i=hough(th,true);
-    split_th_i=hough(th_i,true);
-    lista.push_back(th_i);
-    lista.push_back(split_th_i);
+    CImg<double> img,img_denoised,img_nueva;
+    img.load("../../../../images/snowman.png");
+    //img.load("../../../../images/letras1.tif");
+    //img.load("../../../../images/letras2.tif");
+    img_denoised = denoiseRGB(img,3,5,0,4);
+    img_denoised=Sobel(img_denoised,0);
+    img_nueva=img_denoised.get_threshold(16).get_RGBtoHSI().get_channel(2).get_normalize(0,1);
+    CImg<double> Hough = hough( img_nueva );
+    Pixel coordenadas;
+    double valor_tita;
+    int numeroMaximos=30;
 
-
-
-    lista.display("img-img filtrada(con filtro de bordes)-- th--split hough --hough umbral --hough inversaa -- inversa de la recortada");
-
-    return 0;
+    // Busco donde esta su maxima colinearidad
+    coordenadas= MaximoP(Hough);
+    valor_tita = coordenadaXY_a_rho_tita(Hough, coordenadas.x, 't'); //tita
+    //splitHough(CImg<T> Hough, T angulo,T rho,int ang_tol = 0,int tolerancia_rho = 0, bool solo_max = false)
+    CImg<double>acumulada(hough(splitHough(Hough, valor_tita, (double) coordenadas.y, 1, 1), true));
+    acumulada.threshold(100).normalize(0,255);
+    Hough(coordenadas.x,coordenadas.y)=0;//voy quedandome con los segundos maximos
+    for(int i=1;i<numeroMaximos;i++){
+    // Busco donde esta su maxima colinearidad
+    coordenadas= MaximoP(Hough);
+    valor_tita = coordenadaXY_a_rho_tita(Hough, coordenadas.x, 't'); //tita
+    //splitHough(CImg<T> Hough, T angulo,T rho,int ang_tol = 0,int tolerancia_rho = 0, bool solo_max = false)
+    CImg<double> linea(hough(splitHough(Hough, valor_tita, (double) coordenadas.y, 1, 1), true));
+    linea.threshold(100).normalize(0,255);
+    acumulada=(acumulada+linea)/2;
+    acumulada.threshold(100).normalize(0,255);
+    Hough(coordenadas.x,coordenadas.y)=0;//voy quedandome con los segundos maximos
+    }
+    (img,acumulada).display("acumulada");
+return 0;
 }
 
