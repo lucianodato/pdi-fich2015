@@ -21,6 +21,7 @@ int main()
     (img,img_res1,img_res2).display("Ruidosa - Restaurada(AlfaRecort) - Restaurada(MedianayPunMedio)");
 
     //Paso 2 - Enfasis de alta frecuencia
+    img_aux = filtroAP_frecuencia(img_res1,1,2);
 
     //Paso 3 - Segmentacion (Sobel) y transformada de hough
 
