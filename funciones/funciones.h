@@ -1947,9 +1947,9 @@ CImg<bool> Thinning(CImg<bool> A,CImg<bool> D,CImg<bool> W){
 //Retorna el convexhull rectangular de una imagen binaria
 //Para hacer el convexhull circular habria que cambiar el B
 CImg<bool> Rectangular_ConvexHull(CImg<bool> A){
-    vector<CImg<bool>> X;
+    vector<CImg<bool> X;
     CImg<bool> W,D,CHull(A.height(),A.width());
-    vector<CImg<bool>> B,C;
+    vector<CImg<bool> B,C;
     CImg<bool> b_aux(3,3);
     b_aux(0,1)=b_aux(0,2)=b_aux(1,1)=b_aux(1,2)=b_aux(2,1)=b_aux(2,2)=0;
     b_aux(0,0)=b_aux(1,0)=b_aux(2,0)=1;
