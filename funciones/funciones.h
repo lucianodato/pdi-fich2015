@@ -1914,10 +1914,34 @@ CImg<T> autom_seg_region_growed(CImg<T> img, int delta, int etiqueta, const int 
 ///MORFOLOGIA
 ///****************************************
 
-template <class T>
-void apertura(CImg<T> &img,int ventana){
+//esta funcion siempe van a recibir img binarias
+CImg<bool> apertura(CImg<bool> img,CImg<bool> ventana){
     img.erode(ventana);//Erosionamos
     img.dilate(ventana);//Dilatamos
+    return img;
+}
+
+//esta funcion siempe van a recibir img binarias
+CImg<bool> cierre(CImg<bool> img,CImg<bool> ventana){
+    img.dilate(ventana);//Dilatamos
+    img.erode(ventana);//Erosionamos
+    return img;
+}
+
+//esta funcion siempe van a recibir img binarias
+CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> D,CImg<bool> W){
+   // A ⊛ B = (A ⊖ D) ∩ [A c ⊖ (W − D)]
+    CImg<bool> p1=A.erode(D);
+    CImg<bool> p2=negativo(A).erode(W-D);
+    return p1 & p2 ;
+}
+
+//esta funcion siempe van a recibir img binarias
+CImg<bool> Thinning(CImg<bool> A,CImg<bool> D,CImg<bool> W){
+    //A ⊗ B = A − (A ⊛ B) = A ∩ (A ⊛ B) c
+    CImg<bool> p1=A.erode(D);
+    CImg<bool> p2=negativo(A).erode(W-D);
+    return p1 & p2 ;
 }
 
 template <class T>
