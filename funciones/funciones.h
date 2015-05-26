@@ -1914,10 +1914,67 @@ CImg<T> autom_seg_region_growed(CImg<T> img, int delta, int etiqueta, const int 
 ///MORFOLOGIA
 ///****************************************
 
-template <class T>
-void apertura(CImg<T> &img,int ventana){
+//esta funcion siempe van a recibir img binarias
+CImg<bool> apertura(CImg<bool> img,CImg<bool> ventana){
     img.erode(ventana);//Erosionamos
     img.dilate(ventana);//Dilatamos
+    return img;
+}
+
+//esta funcion siempe van a recibir img binarias
+CImg<bool> cierre(CImg<bool> img,CImg<bool> ventana){
+    img.dilate(ventana);//Dilatamos
+    img.erode(ventana);//Erosionamos
+    return img;
+}
+
+//esta funcion siempe van a recibir img binarias
+CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> D,CImg<bool> W){
+   // A ⊛ B = (A ⊖ D) ∩ [A c ⊖ (W − D)]
+    CImg<bool> p1=A.erode(D);
+    CImg<bool> p2=negativo(A).erode(W-D);
+    return p1 & p2 ;
+}
+
+//esta funcion siempe van a recibir img binarias
+CImg<bool> Thinning(CImg<bool> A,CImg<bool> D,CImg<bool> W){
+    //A ⊗ B = A − (A ⊛ B) = A ∩ (A ⊛ B) c
+    CImg<bool> p1=A.erode(D);
+    CImg<bool> p2=negativo(A).erode(W-D);
+    return p1 & p2 ;
+}
+
+//Retorna el convexhull rectangular de una imagen binaria
+//Para hacer el convexhull circular habria que cambiar el B
+CImg<bool> Rectangular_ConvexHull(CImg<bool> A){
+    vector<CImg<bool> X;
+    CImg<bool> W,D,CHull(A.height(),A.width());
+    vector<CImg<bool> B,C;
+    CImg<bool> b_aux(3,3);
+    b_aux(0,1)=b_aux(0,2)=b_aux(1,1)=b_aux(1,2)=b_aux(2,1)=b_aux(2,2)=0;
+    b_aux(0,0)=b_aux(1,0)=b_aux(2,0)=1;
+    B.push_back(b_aux);B.push_back(b_aux.rotate(90));B.push_back(b_aux.rotate(90));B.push_back(b_aux.rotate(90));
+    int i = 1;
+    for(int j = 0;j<B.size();j++){//Avanza sobre los B
+        //Inicializo el vector X para hacer los calculos del B actual
+        X.clear();
+        X.push_back(A);
+        //Tengo que armar el W y el D a partir del B?
+
+        X[i]=HitorMiss(X[i-1],W,D)+A;
+        while(X[i+1]!=X[i]){
+            i++;
+            X[i]=HitorMiss(X[i-1],W,D)+A;
+        }
+        C.push_back(X);//almaceno el resultado para B(j) en C
+        i=1;//reinicio el contador
+    }
+    //Ahora hay que unir todas las C
+    for(int i=0;i<C.size();i++){
+        CHull+=C[i];
+    }
+
+    return CHull;
 }
 
 template <class T>
