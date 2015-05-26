@@ -1947,33 +1947,27 @@ CImg<bool> Thinning(CImg<bool> A,CImg<bool> D,CImg<bool> W){
 //Retorna el convexhull rectangular de una imagen binaria
 //Para hacer el convexhull circular habria que cambiar el B
 CImg<bool> Rectangular_ConvexHull(CImg<bool> A){
-    vector< CImg<bool> > X;
-    CImg<bool> W,D,CHull(A.height(),A.width());
-    vector< CImg<bool> > B,C;
-    CImg<bool> b_aux(3,3);
-    b_aux(0,1)=b_aux(0,2)=b_aux(1,1)=b_aux(1,2)=b_aux(2,1)=b_aux(2,2)=0;
-    b_aux(0,0)=b_aux(1,0)=b_aux(2,0)=1;
-    B.push_back(b_aux);B.push_back(b_aux.rotate(90));B.push_back(b_aux.rotate(90));B.push_back(b_aux.rotate(90));
+    CImg<bool> X,X_Ant,B(3,3),W,D,CHull(A.height(),A.width());
+    B(0,1)=B(0,2)=B(1,1)=B(1,2)=B(2,1)=B(2,2)=0;
+    B(0,0)=B(1,0)=B(2,0)=1;
+
     int i = 1;
     for(int j = 0;j<B.size();j++){//Avanza sobre los B
         //Inicializo el vector X para hacer los calculos del B actual
         X.clear();
-        X.push_back(A);
+        X=A;
         //Tengo que armar el W y el D a partir del B?
-
-        X[i]=HitorMiss(X[i-1],W,D)+A;
-        while(X[i+1]!=X[i]){
+        X_Ant=X;
+        X=sumaImg(HitorMiss(X,W,D),A);
+        while(X != X_Ant){
             i++;
-            X[i]=HitorMiss(X[i-1],W,D)+A;
+            X_Ant=X;
+            X=sumaImg(HitorMiss(X,W,D),A);
         }
-        C.push_back(X);//almaceno el resultado para B(j) en C
+        CHull=sumaImg(CHull,X);//voy sumando el resultado del procesamiento de cada B en CHull
         i=1;//reinicio el contador
+        B.rotate(90);//roto B
     }
-    //Ahora hay que unir todas las C
-    for(int i=0;i<C.size();i++){
-        CHull+=C[i];
-    }
-
     return CHull;
 }
 
