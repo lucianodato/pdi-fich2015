@@ -11,7 +11,7 @@ int main()
     img.load(path);
 
     //Media Alfa Recortada d = la cantidad de pixeles de la ventana que puede recortar
-    img_res1 = denoise(img,3,5,0,5);
+    img_res1 = denoise(img,3,5,0,3);
     //Mediana y dsp punto medio. Bueno para mezcla de ruido impulsivo y gaussiano
     img_aux = denoise(img,3,3);//Mediana
     img_res2 = denoise(img_aux,3,4);//Media Punto Medio
@@ -20,9 +20,12 @@ int main()
     original.display("Original");
     (img,img_res1,img_res2).display("Ruidosa - Restaurada(AlfaRecort) - Restaurada(MedianayPunMedio)");
 
-    //Paso 2 - Enfasis de alta frecuencia
-    img_aux = filtroAP_frecuencia(img_res1,1,2);
+    float A=2.25;
+    float alpha = A-1;
+    float b=4;
+    //img_aux = filtroAP_frecuencia(img_res1,alpha,b);
 
+    //img_aux.display("Enfasis");
     //Paso 3 - Segmentacion (Sobel) y transformada de hough
 
     //Paso 4 -
