@@ -327,23 +327,6 @@ CImg<T> mediotono(CImg<T> original){
 }
 
 ///****************************************
-///CONTAR CANTIDAD DE GRISES DISTINTOS (SIN NEGRO Y BLANCO)
-///****************************************
-template<typename T>
-int cant_grises(CImg<T> imagen){
-    CImg<T> hist = imagen.get_histogram(256,0,255);
-    int contador=0;
-
-    for(int g=1;g<254;g++){//no contar el negro y tampoco el blanco
-        if(hist(g)>0){
-            contador++;
-        }
-    }
-
-    return contador;
-}
-
-///****************************************
 ///FUNCION BINARIO - Caso que recibe un umbral (En la libreria esta la funcion get_threshold tambien)
 ///****************************************
 template<typename T>
@@ -451,7 +434,7 @@ CImg<T> umbral_invertido(CImg<T> &img, T p){
 ///****************************************
 //recibe imagen en escala de gris
 template<typename T>
-CImg<T> umbral_por_tramos(CImg<T> &img, T p1,T p2){
+CImg<T> umbral_por_tramos(CImg<T> img, T p1,T p2){
     CImg<T> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j){
         if (img(i,j)<=p1 || img(i,j)>=p2)
@@ -461,6 +444,51 @@ CImg<T> umbral_por_tramos(CImg<T> &img, T p1,T p2){
     }
     return resultado;
 }
+///****************************************
+///CONTAR CANTIDAD DE GRISES DISTINTOS (SIN NEGRO Y BLANCO)
+///****************************************
+template<typename T>
+int cant_grises(CImg<T> imagen){
+    CImg<T> hist = imagen.get_histogram(256,0,255);
+    int contador=0;
+
+    for(int g=1;g<254;g++){//no contar el negro y tampoco el blanco
+        if(hist(g)>0){
+            contador++;
+        }
+    }
+
+    return contador;
+}
+///****************************************
+///GREYSLICING
+///****************************************
+template<typename T>
+CImg<T> greyslicing(CImg<T> imagen,int ancho=10){
+    CImg<T> final;
+    CImgDisplay v1(imagen,"Presione sobre el gris deseado"),v2(imagen,"Resultado");
+
+    while(!v1.is_closed() || !v2.is_closed()){
+        v1.wait();
+        if(v1.button()==1){
+
+            int mx=v1.mouse_x();
+            int my=v1.mouse_y();
+
+            //Defino los puntos de la zona media
+            T p1 = imagen(mx,my)-(ancho/2) >= 0 ? imagen(mx,my)-(ancho/2):0;
+            T p2 = imagen(mx,my)+(ancho/2) <= imagen.max() ? imagen(mx,my)+(ancho/2):imagen.max();
+
+            final = umbral_por_tramos(imagen,p1,p2);
+
+            v2.render(final);
+            v2.paint();
+        }
+    }
+
+    return final;
+}
+
 ///****************************************
 ///OR LOGICO (Union de conjuntos)
 ///****************************************
@@ -1610,9 +1638,10 @@ T media_alfarecortado(CImg<T> window,int d){
     cimg_forXY(window,x,y){
         v.push_back(window(x,y));
     }
+    //Tiene que poder borrar desde arriba y abajo
     sort(v.begin(),v.end());
     for (int i=0;i<d/2;i++){
-        v.erase(v.begin());
+        if (!v.empty()){v.erase(v.begin());}
         v.pop_back();
     }
 
