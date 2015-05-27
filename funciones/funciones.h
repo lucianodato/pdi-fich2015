@@ -335,8 +335,8 @@ int cant_grises(CImg<T> imagen){
     int contador=0;
 
     for(int g=1;g<254;g++){//no contar el negro y tampoco el blanco
-        if(hist(g)!=0){
-            contador+=1;
+        if(hist(g)>0){
+            contador++;
         }
     }
 
@@ -486,6 +486,21 @@ CImg<T> ANDimg(CImg<T> img, CImg<T> masc){
     cimg_forXY(img,i,j)
             resultado(i,j)=(img(i,j)*masc(i,j));
     return resultado;
+}
+///****************************************
+///NOT
+///****************************************
+//Not de una imagen binaria
+template<typename T>
+CImg<T> NOTimg(CImg<T> imagen){
+    cimg_forXY(imagen,i,j){
+        if(imagen(i,j)==0){
+            imagen(i,j)=1;
+        }else{
+            imagen(i,j)=0;
+        }
+    }
+    return imagen;
 }
 ///****************************************
 ///MAYOR
@@ -1913,6 +1928,10 @@ CImg<T> autom_seg_region_growed(CImg<T> img, int delta, int etiqueta, const int 
 ///****************************************
 ///MORFOLOGIA
 ///****************************************
+/// TENER EN CUENTA QUE:
+/// ANDimg es equivalente a la union de conjuntos
+/// ORimg es equivalente a la interseccion de conjuntos
+/// NOTimg es equivalente al complemento de un conjunto
 
 //esta funcion siempe van a recibir img binarias
 CImg<bool> apertura(CImg<bool> img,CImg<bool> ventana){
@@ -1932,54 +1951,57 @@ CImg<bool> cierre(CImg<bool> img,CImg<bool> ventana){
 CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> D,CImg<bool> W){
    // A ⊛ B = (A ⊖ D) ∩ [A c ⊖ (W − D)]
     CImg<bool> p1=A.erode(D);
-    CImg<bool> p2=negativo(A).erode(W-D);
-    return p1 & p2 ;
+    CImg<bool> p2=NOTimg(A).erode(W-D);
+    return ANDimg(p1,p2);
 }
 
 //esta funcion siempe van a recibir img binarias
 CImg<bool> Thinning(CImg<bool> A,CImg<bool> D,CImg<bool> W){
-    //A ⊗ B = A − (A ⊛ B) = A ∩ (A ⊛ B) c
+    //A ⊗ B = A − (A ⊛ B) = A ∩ (A ⊛ B)^c
     CImg<bool> p1=A.erode(D);
-    CImg<bool> p2=negativo(A).erode(W-D);
-    return p1 & p2 ;
+    CImg<bool> p2=NOTimg(A).erode(W-D);
+    return ANDimg(p1,p2) ;
 }
 
-//Retorna el convexhull rectangular de una imagen binaria
-//Para hacer el convexhull circular habria que cambiar el B
-CImg<bool> Rectangular_ConvexHull(CImg<bool> A){
-    CImg<bool> X,X_Ant,B(3,3),W,D,CHull(A.height(),A.width());
-    B(0,1)=B(0,2)=B(1,1)=B(1,2)=B(2,1)=B(2,2)=0;
-    B(0,0)=B(1,0)=B(2,0)=1;
+
+//Devuelve solo el contorno de la imagen booleana que recibe
+CImg<bool> extraccion_de_contornos(CImg<bool> img,CImg<bool> ventana){
+    //(A ⊕ B) − (A ⊖ B) = dilate | erode^c
+    return ORimg(img.get_dilate(ventana),NOTimg(img.get_erode(ventana)));
+}
+
+//Retorna el convexhull de una imagen binaria
+CImg<bool> ConvexHull(CImg<bool> A,CImg<bool> B){
+    CImg<bool> X,X_Ant,W,D,CHull(A.height(),A.width());
 
     int i = 1;
-    for(int j = 0;j<B.size();j++){//Avanza sobre los B
+    for(int j = 0;j<B.size();j++){//Avanza sobre los B - SUPUESTAMENTE EL SIZE DE B DEBERIA SER 4 (Cada una de las orientaciones)
         //Inicializo el vector X para hacer los calculos del B actual
         X.clear();
         X=A;
+
         //Tengo que armar el W y el D a partir del B?
+        W=B(j);
+        D=B(j);
+
         X_Ant=X;
-        X=sumaImg(HitorMiss(X,W,D),A);
+        X=ANDimg(HitorMiss(X,W,D),A);
         while(X != X_Ant){
             i++;
             X_Ant=X;
-            X=sumaImg(HitorMiss(X,W,D),A);
+            X=ANDimg(HitorMiss(X,W,D),A);
         }
-        CHull=sumaImg(CHull,X);//voy sumando el resultado del procesamiento de cada B en CHull
+        CHull=ANDimg(CHull,X);//Hago la union (Operador &) del resultado con B con CHull
         i=1;//reinicio el contador
         B.rotate(90);//roto B
     }
     return CHull;
 }
 
-template <class T>
-CImg<T> extraccion_de_regiones(CImg<T> img,int ventana){
-    return DifImg(img.get_dilate(ventana),img.get_erode(ventana));
-}
-
-template <class T>
-CImg<T> relleno_automatico(CImg<T> img,int ventana){
-    CImg<T> f(img.width(),img.height());
-    CImg<T> bordes = extraccion_de_regiones(img,ventana);//son los bordes de la mascara
+//Revisar esta! No funciona correctamente
+CImg<bool> relleno_automatico(CImg<bool> img,CImg<bool> ventana){
+    CImg<bool> f(img.width(),img.height());
+    CImg<bool> bordes = extraccion_de_contornos(img,ventana);//son los bordes de la mascara
 
     cimg_forXY(img,i,j){
         if(img(i,j)== bordes(i,j)){
@@ -1993,8 +2015,9 @@ CImg<T> relleno_automatico(CImg<T> img,int ventana){
     //Dilato la f
     f.dilate(ventana);
 
-    //Hago la interseccion
-    return multiplicacion(f,negativo(img));
+    //Devuelvo la interseccion de H con el negativo de la original
+    //H la interseccion (Operador |)
+    return ORimg(f,NOTimg(img));
 }
 
 #endif // FUNCIONES
