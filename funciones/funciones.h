@@ -2038,7 +2038,7 @@ CImg<bool> relleno_automatico(CImg<bool> img,CImg<bool> ventana){
         }
     }
     //Dilato la f
-    f.dilate(ventana);
+    f=f.dilate(ventana);
 
     //Devuelvo la interseccion de H con el negativo de la original (igual a la diferencia de conjunto)
     return DIFERENCIAimg(f,img);
