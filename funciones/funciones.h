@@ -63,9 +63,9 @@ struct Pixel {
     int y;
     CImg<double>* img;
 
-    Pixel() : x(0), y(0), img(NULL) {};
-    Pixel(const Pixel& p) : x(p.x), y(p.y), img(p.img) {};
-    Pixel(int x, int y, CImg<double>* img) : x(x), y(y), img(img) {};
+    Pixel() : x(0), y(0), img(NULL) {}
+    Pixel(const Pixel& p) : x(p.x), y(p.y), img(p.img) {}
+    Pixel(int x, int y, CImg<double>* img) : x(x), y(y), img(img) {}
 
     bool operator<( const Pixel& p ) const {
         return this->value() < p.value();
@@ -335,8 +335,8 @@ int cant_grises(CImg<T> imagen){
     int contador=0;
 
     for(int g=1;g<254;g++){//no contar el negro y tampoco el blanco
-        if(hist(g)!=0){
-            contador+=1;
+        if(hist(g)>0){
+            contador++;
         }
     }
 
@@ -462,14 +462,13 @@ CImg<T> umbral_por_tramos(CImg<T> &img, T p1,T p2){
     return resultado;
 }
 ///****************************************
-///OR
+///OR LOGICO (Union de conjuntos)
 ///****************************************
-//Or entre imagen binaria y una mascara binaria
 template<typename T>
-CImg<T> ORimg(CImg<T> img, CImg<T> masc){
-    CImg<T> resultado(img.width(),img.height(),1,1,0);
-    cimg_forXY(img,i,j){
-        if ((int)*img.data(i,j,0,0)==0 & (int)*masc.data(i,j,0,0)==0)
+CImg<T> ORimg(CImg<T> A, CImg<T> B){
+    CImg<T> resultado(A.width(),A.height(),1,1);
+    cimg_forXY(A,i,j){
+        if (A(i,j)==0 & B(i,j)==0)
             resultado(i,j)=0;
         else
             resultado(i,j)=1;
@@ -477,14 +476,55 @@ CImg<T> ORimg(CImg<T> img, CImg<T> masc){
     return resultado;
 }
 ///****************************************
-///AND
+///AND LOGICO (Interseccion de conjuntos)
 ///****************************************
-//And entre imagen binaria y una mascara binaria
 template<typename T>
-CImg<T> ANDimg(CImg<T> img, CImg<T> masc){
-    CImg<T> resultado(img.width(),img.height(),1,1);
-    cimg_forXY(img,i,j)
-            resultado(i,j)=(img(i,j)*masc(i,j));
+CImg<T> ANDimg(CImg<T> A, CImg<T> B){
+    CImg<T> resultado(A.width(),A.height(),1,1);
+    cimg_forXY(A,i,j)
+            resultado(i,j)=(A(i,j)*B(i,j));
+    return resultado;
+}
+///****************************************
+///NOT LOGICO (Complemento de un conjunto)
+///****************************************
+template<typename T>
+CImg<T> NOTimg(CImg<T> A){
+    cimg_forXY(A,i,j){
+        if(A(i,j)==0){
+            A(i,j)=1;
+        }else{
+            A(i,j)=0;
+        }
+    }
+    return A;
+}
+///****************************************
+///DIFERENCIA DE CONJUNTOS
+///****************************************
+template<typename T>
+CImg<T> DIFERENCIAimg(CImg<T> A, CImg<T> B){
+    return ANDimg(A,NOTimg(B));
+}
+///****************************************
+///REFLEXION DE CONJUNTO
+///****************************************
+template<typename T>
+CImg<T> REFLEXIONimg(CImg<T> A){
+    cimg_forXY(A,i,j){
+        A(i,j)*=-1;
+    }
+    return A;
+}
+///****************************************
+///TRANSLACION DE CONJUNTO
+///****************************************
+template<typename T>
+CImg<T> TRANSLACIONimg(CImg<T> A, punto z){
+    CImg<T> resultado(A.width()+abs(z.x),A.height()+abs(z.y),1,1);
+    cimg_forXY(A,i,j){
+        resultado(z.x+i,z.y+j)=A(i,j);
+    }
     return resultado;
 }
 ///****************************************
@@ -1913,6 +1953,10 @@ CImg<T> autom_seg_region_growed(CImg<T> img, int delta, int etiqueta, const int 
 ///****************************************
 ///MORFOLOGIA
 ///****************************************
+/// TENER EN CUENTA QUE:
+/// ANDimg es equivalente a la interseccion de conjuntos
+/// ORimg es equivalente a la union de conjuntos
+/// NOTimg es equivalente al complemento de un conjunto
 
 //esta funcion siempe van a recibir img binarias
 CImg<bool> apertura(CImg<bool> img,CImg<bool> ventana){
@@ -1930,60 +1974,63 @@ CImg<bool> cierre(CImg<bool> img,CImg<bool> ventana){
 
 //esta funcion siempe van a recibir img binarias
 CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> D,CImg<bool> W){
-   // A ⊛ B = (A ⊖ D) ∩ [A c ⊖ (W − D)]
+   // A ⊛ B = (A ⊖ D) ∩ [A^c ⊖ (W − D)]
     CImg<bool> p1=A.erode(D);
-    CImg<bool> p2=negativo(A).erode(W-D);
-    return p1 & p2 ;
+    CImg<bool> p2=NOTimg(A).erode(DIFERENCIAimg(W,D));
+    return ANDimg(p1,p2);
 }
 
 //esta funcion siempe van a recibir img binarias
 CImg<bool> Thinning(CImg<bool> A,CImg<bool> D,CImg<bool> W){
-    //A ⊗ B = A − (A ⊛ B) = A ∩ (A ⊛ B) c
-    CImg<bool> p1=A.erode(D);
-    CImg<bool> p2=negativo(A).erode(W-D);
-    return p1 & p2 ;
+    //A ⊗ B = A − (A ⊛ B) = A ∩ (A ⊛ B)^c
+    CImg<bool> p1=A;
+    CImg<bool> p2=HitorMiss(A,D,W);
+    return DIFERENCIAimg(p1,p2) ;
 }
 
-//Retorna el convexhull rectangular de una imagen binaria
-//Para hacer el convexhull circular habria que cambiar el B
-CImg<bool> Rectangular_ConvexHull(CImg<bool> A){
-    CImg<bool> X,X_Ant,B(3,3),W,D,CHull(A.height(),A.width());
-    B(0,1)=B(0,2)=B(1,1)=B(1,2)=B(2,1)=B(2,2)=0;
-    B(0,0)=B(1,0)=B(2,0)=1;
+
+//Devuelve solo el contorno de la imagen booleana que recibe
+CImg<bool> extraccion_de_contornos(CImg<bool> img,CImg<bool> ventana){
+    //(A ⊕ B) − (A ⊖ B) = dilate | erode^c
+    return DIFERENCIAimg(img.get_dilate(ventana),img.get_erode(ventana));
+}
+
+//Retorna el convexhull de una imagen binaria
+CImg<bool> ConvexHull(CImg<bool> A,CImg<bool> B){
+    CImg<bool> X,X_Ant,W,D,CHull(A.height(),A.width());
 
     int i = 1;
-    for(int j = 0;j<B.size();j++){//Avanza sobre los B
+    for(int j = 0;j<B.size();j++){//Avanza sobre los B - SUPUESTAMENTE EL SIZE DE B DEBERIA SER 4 (Cada una de las orientaciones)
         //Inicializo el vector X para hacer los calculos del B actual
         X.clear();
         X=A;
+
         //Tengo que armar el W y el D a partir del B?
+        W=B(j);
+        D=B(j);
+
         X_Ant=X;
-        X=sumaImg(HitorMiss(X,W,D),A);
+        X=ORimg(HitorMiss(X,W,D),A);
         while(X != X_Ant){
             i++;
             X_Ant=X;
-            X=sumaImg(HitorMiss(X,W,D),A);
+            X=ORimg(HitorMiss(X,W,D),A);
         }
-        CHull=sumaImg(CHull,X);//voy sumando el resultado del procesamiento de cada B en CHull
+        CHull=ORimg(CHull,X);//Hago la union (Operador &) del resultado con B con CHull
         i=1;//reinicio el contador
         B.rotate(90);//roto B
     }
     return CHull;
 }
 
-template <class T>
-CImg<T> extraccion_de_regiones(CImg<T> img,int ventana){
-    return DifImg(img.get_dilate(ventana),img.get_erode(ventana));
-}
-
-template <class T>
-CImg<T> relleno_automatico(CImg<T> img,int ventana){
-    CImg<T> f(img.width(),img.height());
-    CImg<T> bordes = extraccion_de_regiones(img,ventana);//son los bordes de la mascara
+//Devuelve la imagen binaria con los interiores rellenos
+CImg<bool> relleno_automatico(CImg<bool> img,CImg<bool> ventana){
+    CImg<bool> f(img.width(),img.height());
+    CImg<bool> bordes = extraccion_de_contornos(img,ventana);//son los bordes de la mascara
 
     cimg_forXY(img,i,j){
         if(img(i,j)== bordes(i,j)){
-            f(i,j)=1.0-img(i,j);//si esta en el borde de la mascara
+            f(i,j)=1-img(i,j);//si esta en el borde de la mascara
         }
         else
         {
@@ -1991,10 +2038,10 @@ CImg<T> relleno_automatico(CImg<T> img,int ventana){
         }
     }
     //Dilato la f
-    f.dilate(ventana);
+    f=f.dilate(ventana);
 
-    //Hago la interseccion
-    return multiplicacion(f,negativo(img));
+    //Devuelvo la interseccion de H con el negativo de la original (igual a la diferencia de conjunto)
+    return DIFERENCIAimg(f,img);
 }
 
 #endif // FUNCIONES
