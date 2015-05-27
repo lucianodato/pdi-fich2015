@@ -492,9 +492,8 @@ CImg<T> greyslicing(CImg<T> imagen,int ancho=10){
 ///****************************************
 ///OR LOGICO (Union de conjuntos)
 ///****************************************
-template<typename T>
-CImg<T> ORimg(CImg<T> A, CImg<T> B){
-    CImg<T> resultado(A.width(),A.height(),1,1);
+CImg<bool> ORimg(CImg<bool> A, CImg<bool> B){
+    CImg<bool> resultado(A.width(),A.height(),1,1);
     cimg_forXY(A,i,j){
         if (A(i,j)==0 & B(i,j)==0)
             resultado(i,j)=0;
@@ -506,9 +505,8 @@ CImg<T> ORimg(CImg<T> A, CImg<T> B){
 ///****************************************
 ///AND LOGICO (Interseccion de conjuntos)
 ///****************************************
-template<typename T>
-CImg<T> ANDimg(CImg<T> A, CImg<T> B){
-    CImg<T> resultado(A.width(),A.height(),1,1);
+CImg<bool> ANDimg(CImg<bool> A, CImg<bool> B){
+    CImg<bool> resultado(A.width(),A.height(),1,1);
     cimg_forXY(A,i,j)
             resultado(i,j)=(A(i,j)*B(i,j));
     return resultado;
@@ -516,8 +514,7 @@ CImg<T> ANDimg(CImg<T> A, CImg<T> B){
 ///****************************************
 ///NOT LOGICO (Complemento de un conjunto)
 ///****************************************
-template<typename T>
-CImg<T> NOTimg(CImg<T> A){
+CImg<bool> NOTimg(CImg<bool> A){
     cimg_forXY(A,i,j){
         if(A(i,j)==0){
             A(i,j)=1;
@@ -528,17 +525,34 @@ CImg<T> NOTimg(CImg<T> A){
     return A;
 }
 ///****************************************
+///XOR LOGICO 
+///****************************************
+CImg<bool> XORimg(CImg<bool> A, CImg<bool> B){
+    CImg<bool> resultado(A.width(),A.height(),1,1);
+    cimg_forXY(A,i,j){
+        if ((A(i,j)==0 & B(i,j)==0) | (A(i,j)==1 & B(i,j)==1))
+            resultado(i,j)=0;
+        else
+            resultado(i,j)=1;
+    }
+    return resultado;
+}
+///****************************************
+///NOT-AND LOGICO 
+///****************************************
+CImg<bool> NOTANDimg(CImg<bool> A, CImg<bool> B){
+    return ANDimg(NOTimg(A),B);
+}
+///****************************************
 ///DIFERENCIA DE CONJUNTOS
 ///****************************************
-template<typename T>
-CImg<T> DIFERENCIAimg(CImg<T> A, CImg<T> B){
+CImg<bool> DIFERENCIAimg(CImg<bool> A, CImg<bool> B){
     return ANDimg(A,NOTimg(B));
 }
 ///****************************************
 ///REFLEXION DE CONJUNTO
 ///****************************************
-template<typename T>
-CImg<T> REFLEXIONimg(CImg<T> A){
+CImg<bool> REFLEXIONimg(CImg<bool> A){
     cimg_forXY(A,i,j){
         A(i,j)*=-1;
     }
@@ -547,9 +561,8 @@ CImg<T> REFLEXIONimg(CImg<T> A){
 ///****************************************
 ///TRANSLACION DE CONJUNTO
 ///****************************************
-template<typename T>
-CImg<T> TRANSLACIONimg(CImg<T> A, punto z){
-    CImg<T> resultado(A.width()+abs(z.x),A.height()+abs(z.y),1,1);
+CImg<bool> TRANSLACIONimg(CImg<bool> A, punto z){
+    CImg<bool> resultado(A.width()+abs(z.x),A.height()+abs(z.y),1,1);
     cimg_forXY(A,i,j){
         resultado(z.x+i,z.y+j)=A(i,j);
     }
