@@ -41,23 +41,11 @@ void forma2(){
     double A=1.3;//medio
     img_nueva=(A *  img_denoised -  img_denoised.get_convolve(mask(6)));//alta potencia
 
-    img_nueva.display("alta potencia");
+    (img_nueva).display("alta potencia");
     img_nueva.threshold(70).erode(3).dilate(3);
     img_nueva.display("umbral");
-//    Pixel coordenadas= MaximoP(img_denoised);
-//    imgnueva= region_growing(img_denoised,coordenadas.x,coordenadas.y,180,256);
-//    coordenadas= MaximoP(imgnueva);
-//        imgnueva= region_growing(imgnueva,coordenadas.x,coordenadas.y,180,256);
-//        coordenadas= MaximoP(imgnueva);
-//            imgnueva= region_growing(imgnueva,coordenadas.x,coordenadas.y,180,256);
-//            coordenadas= MaximoP(imgnueva);
-//                imgnueva= region_growing(imgnueva,coordenadas.x,coordenadas.y,180,256);
-//    //imgnueva.display("----");
-//    imgnueva= negativo(imgnueva).get_threshold(254);
-//    imgnueva.display();
-    //    imgnueva.display();
-CImg<double> Hough = hough(img_nueva);
-Hough.display("hough");
+    CImg<double> Hough = hough(img_nueva);
+    Hough.display("hough");
 
     CImg<double> linea = InversaHough(Hough,1);
     linea.normalize(0,255);
@@ -71,7 +59,7 @@ Hough.display("hough");
 
 int main()
 {
-     //forma1();
+ //    forma1();
  forma2();
 
     return 0;

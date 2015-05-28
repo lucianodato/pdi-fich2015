@@ -1,7 +1,5 @@
 #include "funciones.h"
 
-///#include <plugins/skeleton.h>
-///#define cimg_plugin "plugins/skeleton.h"
 
 int main()
 {
@@ -29,12 +27,6 @@ int main()
     img(1,1)=img(1,2)=img(1,3)=img(1,5)=img(1,6)=img(1,7)=1;
 
 
-    // Compute the skeleton
-    //CImg<float> flux = img.get_flux(grad,1,1);
-    //    float distance=1;
-    //    bool curve=1;
-    //    int thresh=1;
-    //   const CImg<unsigned int> skel = img.get_skeleton(flux,distance,curve,thresh);
 
     (img,apertura(img,se1)).display("apertura");
     (img,cierre(img,se1)).display("cierre");
