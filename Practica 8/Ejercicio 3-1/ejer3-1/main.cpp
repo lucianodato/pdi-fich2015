@@ -3,11 +3,9 @@
 int main()
 {
     //kernels
-    CImg<bool> img,umbral,se0(3,3),se1(2,3),se3(3,3),se4(3,1);
+    CImg<bool> img,umbral,se0(3,3),se1(4,4),se3(3,3),se4(3,1);
     se0.fill(0,1,0,1,1,1,0,1,0);   //  Structuring element 1
-    se1.fill(1,0,
-             1,0,
-             0,1);
+    se1.fill(1);
     se3.fill(1,1,1,1,1,1,1,1,1);
     se4.fill(1,1,1);
 
@@ -23,9 +21,8 @@ int main()
     img = umbral;
 
     //Aplico segmentacion
-    img = apertura(img,se0);
-    img = img.get_erode(se4).get_erode(se4.rotate(90));
-
+    img = apertura(img,se1);
+    img = DIFERENCIAimg(umbral,img);
 
 //    img = apertura(img,se3);
 //    img = img.erode(se4);

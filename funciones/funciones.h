@@ -445,7 +445,7 @@ CImg<T> umbral_por_tramos(CImg<T> img, T p1,T p2){
     return resultado;
 }
 ///****************************************
-///CONTAR CANTIDAD DE GRISES DISTINTOS (SIN NEGRO Y BLANCO)
+///CONTAR CANTIDAD DE GRISES DISTINTOS
 ///****************************************
 template<typename T>
 int cant_grises(CImg<T> imagen){
@@ -461,11 +461,29 @@ int cant_grises(CImg<T> imagen){
     return contador;
 }
 ///****************************************
-///GREYSLICING
+///DEVOLVER GRISES DE UNA IMAGEN
 ///****************************************
 template<typename T>
-CImg<T> greyslicing(CImg<T> imagen,int ancho=10){
-    CImg<T> final;
+vector<int> grises_disponibles(CImg<T> imagen){
+    CImg<T> hist = imagen.get_histogram(256,0,255);
+    vector<int> grises;
+
+    for(int g=1;g<254;g++){//no contar el negro y tampoco el blanco
+        if(hist(g)>0){
+            grises.push_back(g);
+        }
+    }
+
+    return grises;
+}
+
+///****************************************
+///GREYSLICING INTERACTIVO
+///****************************************
+//Devuelve una imagen binaria
+template<typename T>
+CImg<bool> greyslicing(CImg<T> imagen,int ancho=10){
+    CImg<bool> final;
     CImgDisplay v1(imagen,"Presione sobre el gris deseado"),v2(imagen,"Resultado");
 
     while(!v1.is_closed() || !v2.is_closed()){
@@ -487,86 +505,6 @@ CImg<T> greyslicing(CImg<T> imagen,int ancho=10){
     }
 
     return final;
-}
-
-///****************************************
-///OR LOGICO (Union de conjuntos)
-///****************************************
-CImg<bool> ORimg(CImg<bool> A, CImg<bool> B){
-    CImg<bool> resultado(A.width(),A.height(),1,1);
-    cimg_forXY(A,i,j){
-        if (A(i,j)==0 & B(i,j)==0)
-            resultado(i,j)=0;
-        else
-            resultado(i,j)=1;
-    }
-    return resultado;
-}
-///****************************************
-///AND LOGICO (Interseccion de conjuntos)
-///****************************************
-CImg<bool> ANDimg(CImg<bool> A, CImg<bool> B){
-    CImg<bool> resultado(A.width(),A.height(),1,1);
-    cimg_forXY(A,i,j)
-            resultado(i,j)=(A(i,j)*B(i,j));
-    return resultado;
-}
-///****************************************
-///NOT LOGICO (Complemento de un conjunto)
-///****************************************
-CImg<bool> NOTimg(CImg<bool> A){
-    cimg_forXY(A,i,j){
-        if(A(i,j)==0){
-            A(i,j)=1;
-        }else{
-            A(i,j)=0;
-        }
-    }
-    return A;
-}
-///****************************************
-///XOR LOGICO 
-///****************************************
-CImg<bool> XORimg(CImg<bool> A, CImg<bool> B){
-    CImg<bool> resultado(A.width(),A.height(),1,1);
-    cimg_forXY(A,i,j){
-        if ((A(i,j)==0 & B(i,j)==0) | (A(i,j)==1 & B(i,j)==1))
-            resultado(i,j)=0;
-        else
-            resultado(i,j)=1;
-    }
-    return resultado;
-}
-///****************************************
-///NOT-AND LOGICO 
-///****************************************
-CImg<bool> NOTANDimg(CImg<bool> A, CImg<bool> B){
-    return ANDimg(NOTimg(A),B);
-}
-///****************************************
-///DIFERENCIA DE CONJUNTOS
-///****************************************
-CImg<bool> DIFERENCIAimg(CImg<bool> A, CImg<bool> B){
-    return ANDimg(A,NOTimg(B));
-}
-///****************************************
-///REFLEXION DE CONJUNTO
-///****************************************
-CImg<bool> REFLEXIONimg(CImg<bool> A){
-    cimg_forXY(A,i,j){
-        A(i,j)*=-1;
-    }
-    return A;
-}
-///****************************************
-///TRANSLACION DE CONJUNTO
-///****************************************
-CImg<bool> TRANSLACIONimg(CImg<bool> A, punto z){
-    CImg<bool> resultado(A.width()+abs(z.x),A.height()+abs(z.y),1,1);
-    cimg_forXY(A,i,j){
-        resultado(z.x+i,z.y+j)=A(i,j);
-    }
-    return resultado;
 }
 ///****************************************
 ///MAYOR
@@ -676,6 +614,88 @@ CImgList<T> bitlist(CImg<T> original)
     lista.push_back(img_b7);
 
     return lista;
+}
+
+///----------------Operaciones Logicas Binarias-------------------
+
+///****************************************
+///OR LOGICO (Union de conjuntos)
+///****************************************
+CImg<bool> ORimg(CImg<bool> A, CImg<bool> B){
+    CImg<bool> resultado(A.width(),A.height(),1,1);
+    cimg_forXY(A,i,j){
+        if (A(i,j)==0 & B(i,j)==0)
+            resultado(i,j)=0;
+        else
+            resultado(i,j)=1;
+    }
+    return resultado;
+}
+///****************************************
+///AND LOGICO (Interseccion de conjuntos)
+///****************************************
+CImg<bool> ANDimg(CImg<bool> A, CImg<bool> B){
+    CImg<bool> resultado(A.width(),A.height(),1,1);
+    cimg_forXY(A,i,j)
+            resultado(i,j)=(A(i,j)*B(i,j));
+    return resultado;
+}
+///****************************************
+///NOT LOGICO (Complemento de un conjunto)
+///****************************************
+CImg<bool> NOTimg(CImg<bool> A){
+    cimg_forXY(A,i,j){
+        if(A(i,j)==0){
+            A(i,j)=1;
+        }else{
+            A(i,j)=0;
+        }
+    }
+    return A;
+}
+///****************************************
+///XOR LOGICO
+///****************************************
+CImg<bool> XORimg(CImg<bool> A, CImg<bool> B){
+    CImg<bool> resultado(A.width(),A.height(),1,1);
+    cimg_forXY(A,i,j){
+        if ((A(i,j)==0 & B(i,j)==0) | (A(i,j)==1 & B(i,j)==1))
+            resultado(i,j)=0;
+        else
+            resultado(i,j)=1;
+    }
+    return resultado;
+}
+///****************************************
+///NOT-AND LOGICO
+///****************************************
+CImg<bool> NOTANDimg(CImg<bool> A, CImg<bool> B){
+    return ANDimg(NOTimg(A),B);
+}
+///****************************************
+///DIFERENCIA DE CONJUNTOS
+///****************************************
+CImg<bool> DIFERENCIAimg(CImg<bool> A, CImg<bool> B){
+    return ANDimg(A,NOTimg(B));
+}
+///****************************************
+///REFLEXION DE CONJUNTO
+///****************************************
+CImg<bool> REFLEXIONimg(CImg<bool> A){
+    cimg_forXY(A,i,j){
+        A(i,j)*=-1;
+    }
+    return A;
+}
+///****************************************
+///TRANSLACION DE CONJUNTO
+///****************************************
+CImg<bool> TRANSLACIONimg(CImg<bool> A, punto z){
+    CImg<bool> resultado(A.width()+abs(z.x),A.height()+abs(z.y),1,1);
+    cimg_forXY(A,i,j){
+        resultado(z.x+i,z.y+j)=A(i,j);
+    }
+    return resultado;
 }
 
 ///-------------FILTRADO ESPACIAL-------------------------
@@ -1118,7 +1138,31 @@ CImg<T>  ComposeHSI(CImg<T> h, CImg<T> s, CImg<T> I){
     img.HSItoRGB();
 }
 
+///****************************************
+///COLOURSLICING INTERACTIVO
+///****************************************
+//Devuelve una imagen binaria
+template<typename T>
+CImg<T> colourslicing(CImg<T> imagen,int radio=10){
+    CImg<T> final;
+    CImgDisplay v1(imagen,"Presione sobre el gris deseado"),v2(imagen,"Resultado");
 
+    while(!v1.is_closed() || !v2.is_closed()){
+        v1.wait();
+        if(v1.button()==1){
+
+            int mx=v1.mouse_x();
+            int my=v1.mouse_y();
+
+            final = ColorMaskRGB(imagen,mx,my,radio);
+
+            v2.render(final);
+            v2.paint();
+        }
+    }
+
+    return final;
+}
 ///****************************************
 /// Color Slicing RGB
 ///****************************************
@@ -1168,6 +1212,15 @@ CImg<T> ColorMaskHSI(CImg<T> img, unsigned mx, unsigned my, float radio){
     return img.HSItoRGB();
 }
 
+///****************************************
+///BALANCE DE COLOR RGB
+///****************************************
+template<typename T>
+CImg<T> balancecolorRGB(CImg<T> img_orig,int canal,int aumento){
+    cimg_forXYZ(img_orig,i,j,k)
+            img_orig(i,j,k,canal)+=aumento;
+    return img_orig;
+}
 
 ///****************************************
 ///COPIA CANAL A CANAL
