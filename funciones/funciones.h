@@ -14,6 +14,8 @@
 #include <ctime>
 #include <time.h>       /* time */
 #include <set>
+#define cimg_plugin "plugins/skeleton.h"
+
 
 using namespace cimg_library;
 using namespace std;
@@ -1878,6 +1880,7 @@ CImg<T> denoiseRGB(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     return imgFiltrada;
 }
 
+///-----------------------SEGMENTACION-----------------------
 
 ///****************************************
 ///TRANSFORMADA DE HOUGH
@@ -2087,6 +2090,13 @@ CImg<T> autom_seg_region_growed(CImg<T> img, int delta, int etiqueta, const int 
     return segmentacion;
 }
 
+//segmentacion a partir de coordenadas de una mascara booleana- Va a dejar solo la region que evuelve las coordenadas
+CImg<bool> segmenta_coord(CImg<bool> img,int x,int y){
+    CImg<bool> final(img.width(),img.height(),1,1,0);
+    final = region_growing(img,x,y,0,2);
+    ///ToDo----------No anda!!!
+    return final;
+}
 
 ///****************************************
 ///MORFOLOGIA
@@ -2265,11 +2275,133 @@ CImg<bool> Thickening(CImg<bool> A){
     }
 }
 
+//Dilatacion Geodesica con n ciclos
+CImg<bool> dilatacion_geodesica(CImg<bool> G,int n){
+    CImg<bool> final,B(3,3);
+    CImgDisplay v1(G,"Presione sobre el lugar a rellenar"),v2(G,"Resultado");
+    B.fill(1);
 
+    while(!v1.is_closed() || !v2.is_closed()){
+        v1.wait();
+        if(v1.button()==1){
+
+            int mx=v1.mouse_x();
+            int my=v1.mouse_y();
+
+            CImg<bool> F(G.width(),G.height(),1,1,0);
+            F(mx,my)=1;//seria el p inicial picado por el usuario
+            for(int j = 0;j<n;j++){
+                F=ANDimg(F.get_dilate(B),G);
+            }
+            final = F;
+
+            v2.render(final);
+            v2.paint();
+        }
+    }
+    return final;
+}
+
+//Erosion Geodesica con n ciclos
+CImg<bool> erosion_geodesica(CImg<bool> G,CImg<bool> F,int n){//F seria la mascara donde sintetiso a partir de A
+    CImg<bool> final,B(3,3);
+    B.fill(1);
+
+    for(int j = 0;j<n;j++){
+        F=ORimg(F.get_erode(B),G);
+    }
+    final = F;
+
+    return final;
+}
+
+//Reconstruccion por dilatacion - No necesito mandarle el F porque lo creo adentro!!!
+CImg<bool> reconstruccion_dilatacion(CImg<bool> G){
+    CImg<bool> final,B(3,3);
+    CImgDisplay v1(G,"Presione sobre el lugar a rellenar"),v2(G,"Resultado");
+    B.fill(1);
+
+    while(!v1.is_closed() || !v2.is_closed()){
+        v1.wait();
+        if(v1.button()==1){
+
+            int mx=v1.mouse_x();
+            int my=v1.mouse_y();
+
+            CImg<bool> F(G.width(),G.height(),1,1,0),F_Ant;
+            F(mx,my)=1;//seria el p inicial picado por el usuario
+            F_Ant=F;
+            F=ANDimg(F.get_dilate(B),G);
+            while(F_Ant != F){
+                F_Ant=F;
+                F=ANDimg(F.get_dilate(B),G);
+            }
+            final = F;
+
+            v2.render(final);
+            v2.paint();
+        }
+    }
+    return final;
+}
+
+//APERTURA POR RECONSTUCCION - Sobrecarga (no es interactiva)
+CImg<bool> reconstruccion_dilatacion(CImg<bool> G,CImg<bool> F){
+    CImg<bool> final,B(3,3);
+    B.fill(1);
+
+    CImg<bool> F_Ant;
+    F_Ant=F;
+    F=ANDimg(F.get_dilate(B),G);
+    while(F_Ant != F){
+        F_Ant=F;
+        F=ANDimg(F.get_dilate(B),G);
+    }
+    final = F;
+
+    return final;
+}
+
+//Reconstruccion por erosion
+CImg<bool> reconstruccion_erosion(CImg<bool> G,CImg<bool> F){//F seria la mascara donde sintetiso a partir de A
+    CImg<bool> final,B(3,3);
+    B.fill(1);
+
+    CImg<bool> F_Ant;
+    F_Ant=F;
+    F=ORimg(F.get_erode(B),G);
+    while(F_Ant != F){
+        F_Ant=F;
+        F=ORimg(F.get_erode(B),G);
+    }
+    final = F;
+
+    return final;
+}
+
+//APERTURA POR RECONSTUCCION
+CImg<bool> apertura_reconstruccion(CImg<bool> G,CImg<bool> B,int n){
+    CImg<bool> final;
+
+    CImg<bool> F(G),F_Ant;
+    //Erosiono n veces F
+    for(int i=0;i<n;i++){
+        F.get_erode(B);
+    }
+    F_Ant=F;
+    F=ANDimg(F.get_dilate(B),G);
+    while(F_Ant != F){
+        F_Ant=F;
+        F=ANDimg(F.get_dilate(B),G);
+    }
+    final = F;
+
+    return final;
+}
 
 //Devuelve la imagen binaria con los interiores rellenos
 CImg<bool> relleno_automatico(CImg<bool> img,CImg<bool> ventana){
-    CImg<bool> f(img.width(),img.height());
+    CImg<bool> f(img.width(),img.height()),final;
     CImg<bool> bordes = extraccion_de_contornos(img,ventana);//son los bordes de la mascara
 
     cimg_forXY(img,i,j){
@@ -2281,11 +2413,30 @@ CImg<bool> relleno_automatico(CImg<bool> img,CImg<bool> ventana){
             f(i,j)=0;
         }
     }
-    //Dilato la f
-    f=f.dilate(ventana);
+    //Uso la reconstruccion por dilatacion (uso la sobrecarga)
+    final = NOTimg(reconstruccion_dilatacion(NOTimg(img),f));
 
-    //Devuelvo la interseccion de H con el negativo de la original (igual a la diferencia de conjunto)
-    return DIFERENCIAimg(f,img);
+    return final;
+}
+
+//Limpieza de objetos en los bordes
+CImg<bool> limpieza_bordes(CImg<bool> img,CImg<bool> ventana){
+    CImg<bool> f(img.width(),img.height()),final;
+    CImg<bool> bordes = extraccion_de_contornos(img,ventana);//son los bordes de la mascara
+
+    cimg_forXY(img,i,j){
+        if(img(i,j)== bordes(i,j)){
+            f(i,j)=1-img(i,j);//si esta en el borde de la mascara
+        }
+        else
+        {
+            f(i,j)=0;
+        }
+    }
+    //Uso la reconstruccion por dilatacion (uso la sobrecarga)
+    final = DIFERENCIAimg(img,reconstruccion_dilatacion(img,f));
+
+    return final;
 }
 
 #endif // FUNCIONES

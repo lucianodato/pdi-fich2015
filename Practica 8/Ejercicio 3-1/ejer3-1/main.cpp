@@ -22,7 +22,7 @@ int main()
 
     //Aplico segmentacion
     img = apertura(img,se1);
-    img = DIFERENCIAimg(umbral,img);
+    img = NOTANDimg(umbral,img);
 
 //    img = apertura(img,se3);
 //    img = img.erode(se4);
@@ -31,6 +31,7 @@ int main()
 
     //Visualizo
     (original,umbral,img).display();
+
 
     return 0;
 }
