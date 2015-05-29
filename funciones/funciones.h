@@ -96,6 +96,17 @@ struct Pixel {
     }
 };
 
+
+ // transforma radianes a reg
+double radToReg(double rad) {
+    return rad*180.0/M_PI;
+}
+
+//transforma reg a rad
+double degToRad(double deg) {
+    return deg*M_PI/180.0;
+}
+
 //------------------------------FUNCIONES AUXILIARES--------------------------------------------
 
 ///****************************************
