@@ -119,7 +119,7 @@ CImg<floatT> get_flux ( const CImgList<floatT> & grad,
 /**
  * Definition of a point with his flux value
  */
-00119 struct _PointFlux
+struct _PointFlux
 {
   int pos [3];
   float flux;
@@ -129,12 +129,12 @@ CImg<floatT> get_flux ( const CImgList<floatT> & grad,
 /**
  * Class for the priority queue
  */
-00129 class _compare_point
+class _compare_point
 {
   /**
    * Create medial curves
    */
-00134   bool curve;
+ bool curve;
 
  public:
   _compare_point ( bool curve = false )
