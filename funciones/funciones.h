@@ -2,22 +2,22 @@
 #define FUNCIONES
 
 #include <iostream>
-#include "CImg.h"
 #include <vector>
 #include <algorithm>
 #include <math.h>
 #include <string>
 #include <complex>
-#include <PDI_functions.h>
 #include <fstream>
 #include <cstdio>
 #include <ctime>
 #include <time.h>       /* time */
 #include <set>
 #include <deque>
+#include <queue>
+
 #define cimg_plugin "plugins/skeleton.h"
-
-
+#include "CImg.h"
+#include <PDI_functions.h>
 
 using namespace cimg_library;
 using namespace std;
