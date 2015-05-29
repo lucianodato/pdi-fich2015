@@ -2179,6 +2179,12 @@ CImg<bool> MaximosLocales( CImg<double>& img, double limite ) {
 /// ORimg es equivalente a la union de conjuntos
 /// NOTimg es equivalente al complemento de un conjunto
 
+//EROSION n veces
+CImg<bool> nerode(CImg<bool> img,CImg<bool> ventana,int n){
+    for(int i=0;i<n;i++){img.erode(ventana);}//Erosionamos
+    return img;
+}
+
 //APERTURA
 CImg<bool> apertura(CImg<bool> img,CImg<bool> ventana){
     img.erode(ventana);//Erosionamos
@@ -2215,8 +2221,8 @@ CImg<bool> extraccion_de_contornos(CImg<bool> img,CImg<bool> ventana){
 }
 
 //RELLENO SEMIAUTOMATICO INTERACTIVO
-CImg<bool> relleno_semiautomatico(CImg<bool> A){
-    CImg<bool> final,B(3,3);
+CImg<bool> relleno_semiautomatico(CImg<bool> A,bool continuo=false){
+    CImg<bool> final(A.width(),A.height(),1,1,0),B(3,3);
     CImgDisplay v1(A,"Presione sobre el lugar a rellenar"),v2(A,"Resultado");
     B.fill(0,1,0,1,1,1,0,1,0);
 
@@ -2227,15 +2233,21 @@ CImg<bool> relleno_semiautomatico(CImg<bool> A){
             int mx=v1.mouse_x();
             int my=v1.mouse_y();
 
-            CImg<bool> X,X_Ant;
-            X=X_Ant=A;
+            CImg<bool> X(A.width(),A.height(),1,1,0),X_Ant(A.width(),A.height(),1,1,0);
+            X(mx,my)=1;
+
+            X_Ant=X;
             X=DIFERENCIAimg(X.get_dilate(B),A);
 
             while(X_Ant != X){
                 X_Ant=X;
                 X=DIFERENCIAimg(X.get_dilate(B),A);
             }
-            final = ORimg(X,A);//Uno el resultado con la original
+            if(continuo){
+                final = ORimg(final,ORimg(X,A));//Acumulo en final
+            }else{
+                final = ORimg(X,A);//Solo se rellena lo que pica el usuario y se reemplaza cada vez que se pica en otro lado
+            }
 
             v2.render(final);
             v2.paint();
