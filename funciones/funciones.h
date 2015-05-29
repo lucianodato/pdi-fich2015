@@ -96,6 +96,17 @@ struct Pixel {
     }
 };
 
+
+ // transforma radianes a reg
+double radToReg(double rad) {
+    return rad*180.0/M_PI;
+}
+
+//transforma reg a rad
+double degToRad(double deg) {
+    return deg*M_PI/180.0;
+}
+
 //------------------------------FUNCIONES AUXILIARES--------------------------------------------
 
 ///****************************************
@@ -1838,11 +1849,21 @@ CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
                 imgout(x,y)=punto_medio(window);
                 break;
             case 5:
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8e47a3abeb7310c0794ed21cc8ec619aae9297cf
                 //                if(d/2 < window/2){
                 imgout(x,y)=media_alfarecortado(window,d);
                 //                }else{
                 // cout<<"ESTA SELECCIONADO UN d MUY GRANDE CON RESPECTO AL TAMAÑO DE VENTANA"<<endl;
                 //}
+<<<<<<< HEAD
+=======
+=======
+                    imgout(x,y)=media_alfarecortado(window,d);
+>>>>>>> fa9109999a39fbb773b18379643fe8d205570e39
+>>>>>>> 8e47a3abeb7310c0794ed21cc8ec619aae9297cf
                 break;
             case 6:
                 imgout(x,y)=maximo(window);

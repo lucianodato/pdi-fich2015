@@ -44,6 +44,10 @@ void forma2(){
     (img_nueva).display("alta potencia");
     img_nueva.threshold(70).erode(3).dilate(3);
     img_nueva.display("umbral");
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 8e47a3abeb7310c0794ed21cc8ec619aae9297cf
 //    Pixel coordenadas= MaximoP(img_denoised);
 //    imgnueva= region_growing(img_denoised,coordenadas.x,coordenadas.y,180,256);
 //    coordenadas= MaximoP(imgnueva);
@@ -59,6 +63,15 @@ void forma2(){
 CImg<double> Hough = hough(img_nueva);
 Hough.display("hough");
     CImg<double> linea = InversaHough(Hough,10);
+<<<<<<< HEAD
+=======
+=======
+    CImg<double> Hough = hough(img_nueva);
+    Hough.display("hough");
+
+    CImg<double> linea = InversaHough(Hough,1);
+>>>>>>> fa9109999a39fbb773b18379643fe8d205570e39
+>>>>>>> 8e47a3abeb7310c0794ed21cc8ec619aae9297cf
     linea.normalize(0,255);
     linea.display("linea");
     CImg<double> resultado=sumaImg(linea.normalize(0,255),img_denoised.normalize(0,255));
@@ -70,10 +83,20 @@ Hough.display("hough");
 
 int main()
 {
+<<<<<<< HEAD
      forma1();
  //forma2();
  //    forma1();
 
+=======
+<<<<<<< HEAD
+     forma1();
+ //forma2();
+=======
+ //    forma1();
+ forma2();
+>>>>>>> fa9109999a39fbb773b18379643fe8d205570e39
+>>>>>>> 8e47a3abeb7310c0794ed21cc8ec619aae9297cf
 
     return 0;
 }
