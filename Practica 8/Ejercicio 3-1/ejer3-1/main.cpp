@@ -18,11 +18,10 @@ int main()
     umbral = negativo(original.get_threshold(232));
     img = umbral;
 
-    //Aplico segmentacion
-    img = apertura(img,se0);
-    img = cierre(img,se0);
-    img = img.get_erode(se1).get_erode(se1).get_erode(se0);
+    //Aplico segmentacion erosionando fuertemente y reconstruyendo
+    img = img.get_erode(se0).get_dilate(se1).get_erode(se0).get_dilate(se1).get_erode(se0);
     img = reconstruccion_dilatacion(umbral,img);//Reconstruccion es la posta
+
 
     //Visualizo
     (original,umbral,img).display();
