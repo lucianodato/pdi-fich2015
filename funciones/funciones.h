@@ -18,6 +18,7 @@
 #define cimg_plugin "plugins/skeleton.h"
 
 
+
 using namespace cimg_library;
 using namespace std;
 
@@ -1480,7 +1481,7 @@ CImg<T> gaussian_band(CImg<T> &img,T d,T W,bool pass=false){
 
 ///****************************************
 ///FILTROS NOTCH IDEAL
-///****************************************
+///*********NOTimg(*******************************
 template <class T>
 CImg<T> ideal_notch(CImg<T> &img,T d,T u0,T v0,bool notch=false){
     int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
@@ -2123,7 +2124,7 @@ CImg<bool> Inundar( CImg<double> img, double umbral, int x, int y) {
     cola.push_back(Pixel(x, y, &img));
     //cola.push_back( MinimoP( img ) );
     procesado(cola.front().x, cola.front().y) = true;
-    img.display();
+   // img.display("Inundar");
     while( !cola.empty() ) {
         Pixel p = cola.front(); cola.pop_front();
         double a=p.value();
@@ -2491,52 +2492,28 @@ CImg<bool> relleno_automatico(CImg<bool> img,CImg<bool> ventana){
     return final;
 }
 
+
+
 //Limpieza de objetos en los bordes
-CImg<bool> limpieza_bordes(CImg<bool> img,CImg<bool> ventana){
-    CImg<bool> f(img.width(),img.height()),final;
-    CImg<bool> bordes = extraccion_de_contornos(img,ventana);//son los bordes de la mascara
-
-    //bordes.display("hola");
-
-    f.fill(0);
-    //bordes de la imagen
-    int xd=img.width();
-    int xi=0;
-    int ys=img.height();
-    int yi=0;
-
-    cimg_forY(img,j){
-        if(img(xi,j)!=0){
-            //va inundacion
-            //f(i,j)=img(xi,j);//si esta en el borde de la mascara
-        }
-    }
-    cimg_forY(img,j){
-        if(img(xd,j)!=0){
-            //va inundacion
-            //f(xd,j)=img(xd,j);//si esta en el borde de la mascara
-        }
-    }
-    cimg_forX(img,i){
-        if(img(i,yi)!=0){
-            //va inundacion
-            //f(i,j)=img(i,yi);//si esta en el borde de la mascara
-        }
-    }
-    cimg_forX(img,i){
-        if(img(i,ys)!=0){
-            //va inundacion
-            //  f(i,j)=img(i,j);//si esta en el borde de la mascara
-        }
-    }
-
-    f.display("lucho");
-
-
-    //Uso la reconstruccion por dilatacion (uso la sobrecarga)
-    final = DIFERENCIAimg(img,reconstruccion_dilatacion(img,f));
-
-    return final;
+//recibe una imagen maskara y retorna la misma sin los objetos en el borde
+// por defecto b=true : retorna solo elementos del borde de img el borde
+// b=false : retorna img sin los elementos del borde
+//NOTA: si no recorba bien los bordes controlar el umbral en la imagen CImg<bool> img que se le da como parametro de entrada
+CImg<bool> bordes(CImg<bool> img, bool b=true){
+    CImg<bool> mask(img.width()+2,img.height()+2,1,1,0);
+    for(int i=1;i<mask.width()-1;i++)
+        for(int j=1;j<mask.height()-1;j++)
+            mask(i,j)=img(i-1,j-1);
+    //Inundar inunda zonas true por eso hago NOTimg(mask) ->(por que el borde lo escribi en false, lo invierto a true)
+    mask=Inundar(NOTimg(mask),0.5,0,0);
+    //quito el borde agregado
+    mask.crop(1,1,mask.width()-2,mask.height()-2);
+    mask = reconstruccion_dilatacion(mask,img);//Reconstruccion es la posta
+    mask.display("maskara reco dilar");
+    if (b)
+        return NOTimg(mask);
+    else
+        return reconstruccion_dilatacion(ORimg(img,mask),img);
 }
 
 
