@@ -3,11 +3,9 @@
 int main()
 {
     //kernels
-    CImg<bool> img,umbral,se0(3,3),se1(4,4),se3(3,3),se4(3,1);
-    se0.fill(0,1,0,1,1,1,0,1,0);   //  Structuring element 1
-    se1.fill(1);
-    se3.fill(1,1,1,1,1,1,1,1,1);
-    se4.fill(1,1,1);
+    CImg<bool> img,umbral,se0(3,3),se1(3,3);
+    se0.fill(1);   //  Structuring element 1
+    se1.fill(0,1,0,1,1,1,0,1,0);
 
     //imagen
     CImg<double> original;
@@ -21,13 +19,10 @@ int main()
     img = umbral;
 
     //Aplico segmentacion
-    img = apertura(img,se1);
-    img = NOTANDimg(umbral,img);
-
-//    img = apertura(img,se3);
-//    img = img.erode(se4);
-//    img = img.erode(se4.rotate(90));
-
+    img = apertura(img,se0);
+    img = cierre(img,se0);
+    img = img.get_erode(se1).get_erode(se1).get_erode(se0);
+    img = reconstruccion_dilatacion(umbral,img);//Reconstruccion es la posta
 
     //Visualizo
     (original,umbral,img).display();

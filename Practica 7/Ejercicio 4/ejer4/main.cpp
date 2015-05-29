@@ -49,7 +49,7 @@ int main()
 
     //Operacion de etiquetado
     etiqueta = label_cc(mascara);
-    //etiqueta.display("Etiquetado");
+    etiqueta.display("Etiquetado");
 
     //Cuenta de la cantidad de rosas (Contar niveles de grises diferentes)
     int cant_rosas = cant_grises(etiqueta);
@@ -80,7 +80,7 @@ int main()
         //Creo una mascara a partir del ciculo
         masc.draw_circle(centro_x,centro_y,radio,white);
     }
-    //masc.display("Mascara de circulos");
+    masc.display("Mascara de circulos");
 
     //Pinto la imagen original con los circulos rojos (en realidad hago un balance de color con un aumento grande)
     final = balancecolorRGB(final,0,300).get_mul(masc) + final.get_mul(negativo(masc));

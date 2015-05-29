@@ -1,8 +1,8 @@
 #include "funciones.h"
 void forma1(){
     CImg<double> img,img_denoised,img_nueva;
-   img.load("../../../../images/corrientes_ruidogris.jpg");
-   //img.load("../../../../images/iguazu_ruidogris.jpg");
+   //img.load("../../../../images/corrientes_ruidogris.jpg");
+   img.load("../../../../images/iguazu_ruidogris.jpg");
    // //denoise(img.get_channel(0),sizew,tipofiltro,Q,d);
     img_denoised = denoise(img,3,3);
     img_denoised = denoise(img,3,5,0,4);//Media Alfa Recortada d = la cantidad de pixeles de la ventana que puede recortar
@@ -58,8 +58,7 @@ void forma2(){
     //    imgnueva.display();
 CImg<double> Hough = hough(img_nueva);
 Hough.display("hough");
-
-    CImg<double> linea = InversaHough(Hough,1);
+    CImg<double> linea = InversaHough(Hough,10);
     linea.normalize(0,255);
     linea.display("linea");
     CImg<double> resultado=sumaImg(linea.normalize(0,255),img_denoised.normalize(0,255));
@@ -71,8 +70,8 @@ Hough.display("hough");
 
 int main()
 {
-     //forma1();
- forma2();
+     forma1();
+ //forma2();
 
     return 0;
 }

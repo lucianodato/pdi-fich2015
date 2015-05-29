@@ -69,11 +69,11 @@ bool compara_puntos(const punto &a, const punto &b)
 //Colores auxiliares
 
 const unsigned char red[] = { 255,0,0 },
-                    green[] = { 0,255,0 },
-                    blue[] = { 0,0,255 },
-                    white[] = { 255,255,255 },
-                    black[] = { 0,0,0 },
-                    yellow[] = { 255,255,0 };
+green[] = { 0,255,0 },
+blue[] = { 0,0,255 },
+white[] = { 255,255,255 },
+black[] = { 0,0,0 },
+yellow[] = { 255,255,0 };
 
 struct Pixel {
     int x;
@@ -122,7 +122,7 @@ CImg<T> generar_lut(T a,T c,T ini,T fin){
     T s;
     for (int i=ini;i<abs(fin-ini)+1;i++){
         s=T(a*i+c);
-    ///--------------------------    if (s>255) s=255;
+        ///--------------------------    if (s>255) s=255;
         if (s<0) s=0;
         lut(i)=s;
     }
@@ -916,11 +916,11 @@ template<typename T>
 CImg<T> LoG(CImg<T> img){
     CImg<T> G(5,5);
 
-        G(0,0)=0; G(0,1)=0; G(0,2)=-1;G(0,3)=0; G(0,4)=0;
-        G(1,0)=0; G(1,1)=-1; G(1,2)=-2;G(1,3)=-1; G(1,4)=0;
-        G(2,0)=-1; G(2,1)=-2; G(2,2)=16;G(2,3)=-2; G(2,4)=-1;
-        G(3,0)=0; G(3,1)=-1; G(3,2)=-2;G(3,3)=-1; G(3,4)=0;
-        G(4,0)=0; G(4,1)=0; G(4,2)=-1;G(4,3)=0; G(4,4)=0;
+    G(0,0)=0; G(0,1)=0; G(0,2)=-1;G(0,3)=0; G(0,4)=0;
+    G(1,0)=0; G(1,1)=-1; G(1,2)=-2;G(1,3)=-1; G(1,4)=0;
+    G(2,0)=-1; G(2,1)=-2; G(2,2)=16;G(2,3)=-2; G(2,4)=-1;
+    G(3,0)=0; G(3,1)=-1; G(3,2)=-2;G(3,3)=-1; G(3,4)=0;
+    G(4,0)=0; G(4,1)=0; G(4,2)=-1;G(4,3)=0; G(4,4)=0;
 
     return img.get_convolve(G).abs().normalize(0,255);
 }
@@ -973,7 +973,7 @@ CImg<T> promedio_histograma(CImgList<T> lista){
 
     for (int p=1;p<lista.size();p++){
         img = lista(p);
-         for (int i=0;i<promedio.width();i++){
+        for (int i=0;i<promedio.width();i++){
             promedio(i)+=img(i);
             promedio(i)*=0.5;
         }
@@ -1145,7 +1145,7 @@ CImg<T> complemento_color(CImg<T> img){
         if(img(i,j,0,0) > 360)
             img(i,j,0,0)=(img(i,j,0,0)-360);
         img(i,j,0,2)=1-img(i,j,0,2);//Hace el negativo de la intensidad
-	}
+    }
     img.HSItoRGB();
     return img;
 }
@@ -1209,23 +1209,23 @@ CImg<T> colourslicing(CImg<T> imagen,int radio=10){
 ///****************************************
 template <class T>
 CImg<T> ColorMaskRGB(CImg<T> img, unsigned char x, unsigned char y, float radio){
-	unsigned ww=img.width();
-	unsigned hh=img.height();   
-	T r0, g0, b0;
-	r0=img(x, y, 0, 0);
-	g0=img(x, y, 0, 1);
-	b0=img(x, y, 0, 2);
-	float dist;
-	for(unsigned i=0; i<ww; i++){
-		for(unsigned j=0; j<hh; j++){
-			dist=sqrt(powf(r0-img(i,j,0,0),2)+powf(g0-img(i,j,0,1),2)+powf(b0-img(i,j,0,2),2));
-			if(dist>radio){
-				img(i,j,0,0)=0;
-				img(i,j,0,1)=0;
-				img(i,j,0,2)=0;
-			}
-		}
-	}
+    unsigned ww=img.width();
+    unsigned hh=img.height();
+    T r0, g0, b0;
+    r0=img(x, y, 0, 0);
+    g0=img(x, y, 0, 1);
+    b0=img(x, y, 0, 2);
+    float dist;
+    for(unsigned i=0; i<ww; i++){
+        for(unsigned j=0; j<hh; j++){
+            dist=sqrt(powf(r0-img(i,j,0,0),2)+powf(g0-img(i,j,0,1),2)+powf(b0-img(i,j,0,2),2));
+            if(dist>radio){
+                img(i,j,0,0)=0;
+                img(i,j,0,1)=0;
+                img(i,j,0,2)=0;
+            }
+        }
+    }
     return img;
 }
 ///****************************************
@@ -1237,19 +1237,19 @@ CImg<T> ColorMaskHSI(CImg<T> img, unsigned mx, unsigned my, float radio){
     T h=img(mx, my, 0, 0);//h
     T s=img(mx, my, 0, 1);//s
     T i=img(mx, my, 0, 2);//I
-	unsigned ww=img.width();
-	unsigned hh=img.height();
-	float dist;
-	for(unsigned i=0; i<ww; i++){
-		for(unsigned j=0; j<hh; j++){
-			dist=sqrt(powf(h-img(i,j,0,0),2)+powf(s-img(i,j,0,1),2));
-			if(dist>radio){
+    unsigned ww=img.width();
+    unsigned hh=img.height();
+    float dist;
+    for(unsigned i=0; i<ww; i++){
+        for(unsigned j=0; j<hh; j++){
+            dist=sqrt(powf(h-img(i,j,0,0),2)+powf(s-img(i,j,0,1),2));
+            if(dist>radio){
                 img(i,j,0,0)=0;//h
                 img(i,j,0,1)=0;//s
                 img(i,j,0,2)=0;//I
-			}
-		}
-	}
+            }
+        }
+    }
     return img.HSItoRGB();
 }
 
@@ -1674,7 +1674,7 @@ T mediana(CImg<T> window){
 
     vector<T> v;
     cimg_forXY(window,x,y)
-        v.push_back(window(x,y));
+            v.push_back(window(x,y));
     sort(v.begin(),v.end());//ordeno
     if(v.size()%2!=0) // si el numero de elementos  de la ventana es impar
         return v.at((v.size()+1)/2);
@@ -1713,7 +1713,7 @@ T moda(CImg<T> window){
 
     vector<T> v;
     cimg_forXY(window,x,y)
-        v.push_back(window(x,y));
+            v.push_back(window(x,y));
     sort(v.begin(),v.end());//ordeno
     //Cuento cual es el valor que mas aparece
     return most_appeared(v);
@@ -1797,10 +1797,10 @@ double filtro_distancias(CImg<double> window){
 ///media armonica= para ruido sal (malo para pimienta), bueno para gaussiano
 ///1.media geometrica= bueno ruido gaussiano
 ///2.media contra armonica
-    //Q=-1 media armonica
-    //Q=0 media aritmetica
-    //Q>0 = elimina pimienta
-    //Q<0 =elimina sal
+//Q=-1 media armonica
+//Q=0 media aritmetica
+//Q>0 = elimina pimienta
+//Q<0 =elimina sal
 ///3.mediana= ruido impulsivo (sin desenfoque)
 ///moda = ruido impulsivo (malo para otro tipo de ruido)
 ///4.punto medio = ruido gaussiano o uniforme
@@ -1813,7 +1813,7 @@ template <class T>
 CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
 
     int N=img.height(),
-        M=img.width();
+            M=img.width();
     int medio=sizew/2;//posicion del medio de la ventana
 
     CImg<T> imgout(M,N),window(sizew,sizew);
@@ -1837,11 +1837,11 @@ CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
                 imgout(x,y)=punto_medio(window);
                 break;
             case 5:
-                if(d/2 < window/2){
-                    imgout(x,y)=media_alfarecortado(window,d);
-                }else{
-                    cout<<"ESTA SELECCIONADO UN d MUY GRANDE CON RESPECTO AL TAMAÑO DE VENTANA"<<endl;
-                }
+                //                if(d/2 < window/2){
+                imgout(x,y)=media_alfarecortado(window,d);
+                //                }else{
+                // cout<<"ESTA SELECCIONADO UN d MUY GRANDE CON RESPECTO AL TAMAÑO DE VENTANA"<<endl;
+                //}
                 break;
             case 6:
                 imgout(x,y)=maximo(window);
@@ -2043,25 +2043,25 @@ CImg<T> wrapper_region_growed(CImg<T> img,int x,int y,int delta,int etiqueta,CIm
     region_crecida = img - aux;
     CImg<double> compuesta(img.width(),img.height(),1,3,0);
     CImg<double> aux_flood=region_crecida.get_channel(0).normalize(0,1);
-   // region_crecida.get_channel(0).display("flooddddddddd");
+    // region_crecida.get_channel(0).display("flooddddddddd");
     //aca tengo que pintar cada nueva zona de un color distinto.
     compuesta.RGBtoHSI();
     int color=rand()%360;
     cimg_forXY(compuesta,i,j){
         if(region_crecida(i,j)!=0)
             compuesta(i,j,0,0)=color;//h
-            compuesta(i,j,0,1)=1;//s
-            compuesta(i,j,0,2)=aux_flood(i,j);//I
+        compuesta(i,j,0,1)=1;//s
+        compuesta(i,j,0,2)=aux_flood(i,j);//I
 
     }
     compuesta.HSItoRGB();
     segmentacion= compuesta+segmentacion;
-           // (img, region_crecida, segmentacion).display("imagen, Region fooldd, Seleccion", 0);
+    // (img, region_crecida, segmentacion).display("imagen, Region fooldd, Seleccion", 0);
 
 
-        img -= region_crecida;
+    img -= region_crecida;
 
-        return img;
+    return img;
 }
 
 
@@ -2224,7 +2224,7 @@ CImg<bool> ConvexHull(CImg<bool> A,CImg<bool> B,bool limitar=false){
         }
     }
     else{
-       //Si no tengo que sobrepasar los limites
+        //Si no tengo que sobrepasar los limites
         vector<punto> maxmin_masc=maxmin_coord(A);
         vector<punto> aux;
         int i = 1;
@@ -2345,7 +2345,7 @@ CImg<bool> reconstruccion_dilatacion(CImg<bool> G){
     return final;
 }
 
-//APERTURA POR RECONSTUCCION - Sobrecarga (no es interactiva)
+//Reconstruccion por dilatacion - Sobrecarga (no es interactiva)
 CImg<bool> reconstruccion_dilatacion(CImg<bool> G,CImg<bool> F){
     CImg<bool> final,B(3,3);
     B.fill(1);
@@ -2392,7 +2392,7 @@ CImg<bool> apertura_reconstruccion(CImg<bool> G,CImg<bool> B,int n){
     F=ANDimg(F.get_dilate(B),G);
     while(F_Ant != F){
         F_Ant=F;
-        F=ANDimg(F.get_dilate(B),G);
+        F=ANDimg(F.get_dilate(B),G  );
     }
     final = F;
 
@@ -2424,20 +2424,49 @@ CImg<bool> limpieza_bordes(CImg<bool> img,CImg<bool> ventana){
     CImg<bool> f(img.width(),img.height()),final;
     CImg<bool> bordes = extraccion_de_contornos(img,ventana);//son los bordes de la mascara
 
-    cimg_forXY(img,i,j){
-        if(img(i,j)== bordes(i,j)){
-            f(i,j)=1-img(i,j);//si esta en el borde de la mascara
-        }
-        else
-        {
-            f(i,j)=0;
+    //bordes.display("hola");
+
+    f.fill(0);
+    //bordes de la imagen
+    int xd=img.width();
+    int xi=0;
+    int ys=img.height();
+    int yi=0;
+
+    cimg_forY(img,j){
+        if(img(xi,j)!=0){
+            //va inundacion
+            //f(i,j)=img(xi,j);//si esta en el borde de la mascara
         }
     }
+    cimg_forY(img,j){
+        if(img(xd,j)!=0){
+            //va inundacion
+            //f(xd,j)=img(xd,j);//si esta en el borde de la mascara
+        }
+    }
+    cimg_forX(img,i){
+        if(img(i,yi)!=0){
+            //va inundacion
+            //f(i,j)=img(i,yi);//si esta en el borde de la mascara
+        }
+    }
+    cimg_forX(img,i){
+        if(img(i,ys)!=0){
+            //va inundacion
+            //  f(i,j)=img(i,j);//si esta en el borde de la mascara
+        }
+    }
+
+    f.display("lucho");
+
+
     //Uso la reconstruccion por dilatacion (uso la sobrecarga)
     final = DIFERENCIAimg(img,reconstruccion_dilatacion(img,f));
 
     return final;
 }
+
 
 #endif // FUNCIONES
 
