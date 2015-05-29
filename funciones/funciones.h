@@ -14,6 +14,7 @@
 #include <ctime>
 #include <time.h>       /* time */
 #include <set>
+#include <deque>
 #define cimg_plugin "plugins/skeleton.h"
 
 
@@ -2096,6 +2097,70 @@ CImg<bool> segmenta_coord(CImg<bool> img,int x,int y){
     final = region_growing(img,x,y,0,2);
     ///ToDo----------No anda!!!
     return final;
+}
+
+///Inundar
+///Retorna una mascara con las regiones inundadas de acuerdo a los paramatros
+//CImg<double> img : imagen en griz o bool
+//umbral : recibe ubral de corte normalizado a rango [0,1]
+// x, y posicion inicial para la semilla en img
+//NOTA: al pasar los parametros tener en cuenta que el valor del pixel de semilla en img
+// debe ser menor al umbral que se puso.
+//si no es asi, va retornar una imagen vacia en false.
+// img_cres= InundarInverso(img_nueva, 0.50,297,173 );
+CImg<bool> Inundar( CImg<double> img, double umbral, int x, int y) {
+    img.normalize(0.0, 1.0);
+    CImg<bool> mask(img.width(), img.height(), 1, 1, false );
+    CImg<bool> procesado(img.width(), img.height(), 1, 1, false );
+    deque<Pixel> cola;
+    cola.push_back(Pixel(x, y, &img));
+    //cola.push_back( MinimoP( img ) );
+    procesado(cola.front().x, cola.front().y) = true;
+    img.display();
+    while( !cola.empty() ) {
+        Pixel p = cola.front(); cola.pop_front();
+        double a=p.value();
+        if( p.value() > umbral ) {
+            mask(p.x,p.y) = true;
+            Pixel pix = p;
+            pix.x++;
+            if( pix.AdentroImagen() && !procesado(pix.x, pix.y) ) {
+                cola.push_back( pix );
+                procesado(pix.x, pix.y) = true;
+            }
+            pix.x -= 2;
+            if( pix.AdentroImagen() && !procesado(pix.x, pix.y) ) {
+                cola.push_back( pix );
+                procesado(pix.x, pix.y) = true;
+            }
+            pix.x++; pix.y++;
+            if( pix.AdentroImagen() && !procesado(pix.x, pix.y) ) {
+                cola.push_back( pix );
+                procesado(pix.x, pix.y) = true;
+            }
+            pix.y -= 2;
+            if( pix.AdentroImagen() && !procesado(pix.x, pix.y) ) {
+                cola.push_back( pix );
+                procesado(pix.x, pix.y) = true;
+            }
+        }
+    }
+    return mask;
+}
+
+
+CImg<bool> MaximosLocales( CImg<double>& img, double limite ) {
+    CImg<bool> maximo(img.width(), img.height(),1,1,true);
+    cimg_forXY(img,i,j) {
+        for(int dx=-1; dx<=1 && maximo(i,j); dx++) {
+            for(int dy=-1; dy<=1 && maximo(i,j); dy++) {
+                if(dx==0 && dy==0) continue;
+                if( i+dx < 0 || i+dx >= img.width() || j+dy < 0 || j+dy >= img.height() ) continue;
+                maximo(i,j) = maximo(i,j) && ( img(i,j) >= img(i+dx,j+dy) ) && img(i,j) > limite;
+            }
+        }
+    }
+    return maximo;
 }
 
 ///****************************************

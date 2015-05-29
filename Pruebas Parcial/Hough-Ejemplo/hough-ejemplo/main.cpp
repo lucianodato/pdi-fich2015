@@ -41,7 +41,7 @@ void forma2(){
     double A=1.3;//medio
     img_nueva=(A *  img_denoised -  img_denoised.get_convolve(mask(6)));//alta potencia
 
-    img_nueva.display("alta potencia");
+    (img_nueva).display("alta potencia");
     img_nueva.threshold(70).erode(3).dilate(3);
     img_nueva.display("umbral");
 //    Pixel coordenadas= MaximoP(img_denoised);
@@ -72,6 +72,8 @@ int main()
 {
      forma1();
  //forma2();
+ //    forma1();
+
 
     return 0;
 }
