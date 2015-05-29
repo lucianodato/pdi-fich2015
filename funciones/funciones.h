@@ -2200,18 +2200,18 @@ CImg<bool> cierre(CImg<bool> img,CImg<bool> ventana){
 }
 
 //HIT OR MISS - LOCALIZACION DE CONJUNTO
-CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> B,CImg<bool> X=CImg<bool>()){
+CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> B,CImg<bool> X){
     // A ⊛ B = (A ⊖ D) ∩ [A^c ⊖ (W − D)]
-    if(X.empty()){//Caso donde el fondo no se requiere
-        return A.get_erode(B);//Es una simple erosion
-    }
-    else{
-        CImg<bool> W=X.get_dilate(3);//Una ventana que encierra a X
-        CImg<bool> D=DIFERENCIAimg(X,W);//Contorno que se formaria entre X y W
-        CImg<bool> p1=A.erode(D);
-        CImg<bool> p2=NOTimg(A).erode(DIFERENCIAimg(W,D));
-        return ANDimg(p1,p2);
-    }
+    CImg<bool> W=X.get_dilate(3);//Una ventana que encierra a X
+    CImg<bool> D=DIFERENCIAimg(X,W);//Contorno que se formaria entre X y W
+    CImg<bool> p1=A.erode(D);
+    CImg<bool> p2=NOTimg(A).erode(DIFERENCIAimg(W,D));
+    return ANDimg(p1,p2);
+}
+
+//HIT OR MISS - LOCALIZACION DE CONJUNTO - Sobrecarga cuando no se requiere el fondo
+CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> B){
+    return A.get_erode(B);//Es una simple erosion
 }
 
 //EXTRACCION DE CONTORNOS
@@ -2288,23 +2288,20 @@ CImg<bool> componentes_conectadas(CImg<bool> A){
 }
 
 //Retorna el convexhull de una imagen binaria (con posibilidad de limites)
-CImg<bool> ConvexHull(CImg<bool> A,CImg<bool> B,bool limitar=false){
-    CImg<bool> X,X_Ant,W,D,CHull(A.height(),A.width());
+CImg<bool> ConvexHull(CImg<bool> A,bool limitar=false){
+    CImg<bool> X,X_Ant,CHull(A.height(),A.width(),1,1,0);
+    CImg<bool> B(3,3);B.fill(0,0,0,1,0,1,1,1,1);
+
     if(limitar==false){
-        int i = 1;
         for(int j = 0;j<4;j++){//Avanza sobre los B - SUPUESTAMENTE EL SIZE DE B DEBERIA SER 4 (Cada una de las orientaciones)
             //Inicializo el vector X para hacer los calculos del B actual
-            X.clear();
-            X=A;
-            X_Ant=X;
+            X_Ant=X=A;
             X=ORimg(HitorMiss(X,B),A);
             while(X != X_Ant){
-                i++;
                 X_Ant=X;
                 X=ORimg(HitorMiss(X,B),A);
             }
-            CHull=ORimg(CHull,X);//Hago la union (Operador &) del resultado con B con CHull
-            i=1;//reinicio el contador
+            CHull=ORimg(CHull,X);//Hago la union del resultado con B con CHull
             B.rotate(90);//roto B
         }
     }
@@ -2312,22 +2309,17 @@ CImg<bool> ConvexHull(CImg<bool> A,CImg<bool> B,bool limitar=false){
         //Si no tengo que sobrepasar los limites
         vector<punto> maxmin_masc=maxmin_coord(A);
         vector<punto> aux;
-        int i = 1;
         for(int j = 0;j<4;j++){//Avanza sobre los B - SUPUESTAMENTE EL SIZE DE B DEBERIA SER 4 (Cada una de las orientaciones)
             //Inicializo el vector X para hacer los calculos del B actual
-            X.clear();
-            X=A;
-            X_Ant=X;
+            X_Ant=X=A;
             X=ORimg(HitorMiss(X,B),A);
             aux=maxmin_coord(X);
             while(X != X_Ant & aux.at(0) >= maxmin_masc.at(0) & aux.at(1) <= maxmin_masc.at(1)){//Tengo en cuenta que no se pase de los limites
-                i++;
                 X_Ant=X;
                 X=ORimg(HitorMiss(X,B),A);
                 aux=maxmin_coord(X);
             }
-            CHull=ORimg(CHull,X);//Hago la union (Operador &) del resultado con B con CHull
-            i=1;//reinicio el contador
+            CHull=ORimg(CHull,X);//Hago la union del resultado con B con CHull
             B.rotate(90);//roto B
         }
     }

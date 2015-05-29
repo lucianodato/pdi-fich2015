@@ -26,7 +26,7 @@ int main()
     img2 = DIFERENCIAimg(umbral,img);
 
     //Visualizo
-    (original,umbral,img,img2).display();
+    (original,umbral,NOTimg(img),NOTimg(img2)).display();
 
 
     return 0;

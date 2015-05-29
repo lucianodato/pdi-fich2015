@@ -8,8 +8,7 @@ int main()
     CImg<float> original;
     original.load("../../../../images/Morfologia/Melanoma.jpg");
     //kernel para segentacion
-    CImg<bool> B(3,3,1,1,1),B_CH(3,3,1,1,0),B2(8,8,1,1,1);
-    B_CH.fill(1,0,0,1,0,0,1,0,0);
+    CImg<bool> B(3,3,1,1,1),B2(8,8,1,1,1);
 
     //Creo la mascara y proceso la imagen original para obtener la envoltura convexa
     CImg<bool> umbral,segmentacion;
@@ -21,9 +20,7 @@ int main()
     segmentacion = reconstruccion_dilatacion(umbral,segmentacion);
     segmentacion = ORimg(segmentacion,relleno_automatico(segmentacion,B));
     segmentacion = relleno_automatico(segmentacion,B2);
-
-
-    //segmentacion = ConvexHull(segmentacion,B_CH);
+    segmentacion = ConvexHull(segmentacion);
 
     (original,umbral,segmentacion).display("Umbralado - Segmentacion");
 

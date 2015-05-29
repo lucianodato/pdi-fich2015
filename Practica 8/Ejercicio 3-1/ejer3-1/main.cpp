@@ -24,7 +24,7 @@ int main()
 
 
     //Visualizo
-    (original,umbral,img).display();
+    (original,umbral,NOTimg(img)).display();
 
 
     return 0;
