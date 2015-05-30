@@ -2533,5 +2533,44 @@ CImg<bool> bordes(CImg<bool> img, bool b=true){
 }
 
 
+///****************************************
+///EQUALIZACION DE HISTOGRAMA (TP FINAL)
+///****************************************
+
+
+///ECUALIZACION ESTANDAR
+///
+//! Equalize histogram of pixel values.
+/**
+   \param nb_levels Number of histogram levels used for the equalization.
+   \param min_value Minimum pixel value considered for the histogram computation. All pixel values lower than \p min_value will not be counted.
+   \param max_value Maximum pixel value considered for the histogram computation. All pixel values higher than \p max_value will not be counted.
+   \note
+   - If \p min_value==max_value==0 (default behavior), the function first estimates the whole range of pixel values
+   then uses it to equalize the histogram.
+   \par Example
+   \code
+   const CImg<float> img("reference.jpg"), res = img.get_equalize(256);
+   (img,res).display();
+   \endcode
+   \image html ref_equalize.jpg
+**/
+template <class T>
+CImg<T> equalizar_comun(CImg<T> img,const unsigned int nb_levels, const T min_value=(T)0, const T max_value=(T)0) {
+  T vmin = min_value, vmax = max_value;
+  if (vmin==vmax && vmin==0) vmin = min_max(vmax);
+  if (vmin<vmax) {
+    CImg<T> hist = img.get_histogram(nb_levels,vmin,vmax);
+    unsigned long cumul = 0;
+    cimg_forX(hist,pos) { cumul+=hist[pos]; hist[pos] = cumul; }
+    cimg_for(img,ptrd,T) {
+      const int pos = (int)((*ptrd-vmin)*(nb_levels-1)/(vmax-vmin));
+      if (pos>=0 && pos<(int)nb_levels) *ptrd = (T)(vmin + (vmax-vmin)*hist[pos]/size());
+    }
+  }
+  return img;
+}
+
+
 #endif // FUNCIONES
 
