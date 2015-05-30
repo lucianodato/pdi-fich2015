@@ -19,6 +19,12 @@
 #include "CImg.h"
 #include <PDI_functions.h>
 
+//Inclusion de quadprog++
+#include "quadprog/Array.hh"
+#include "quadprog/QuadProg++.hh"
+#include "quadprog/uQuadProg++.hh"
+
+
 using namespace cimg_library;
 using namespace std;
 
