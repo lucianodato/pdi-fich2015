@@ -15,6 +15,10 @@ set(functions ../../../funciones/funciones.h)
 set(cimg ../../../funciones/CImg.h)
 set(fPDI ../../../funciones/PDI_functions.h)
 set(fskelet ../../../funciones/plugins/skeleton.h)
+set(quadprog1 ../../../funciones/quadprog/QuadProg++.hh)
+set(quadprog2 ../../../funciones/quadprog/QuadProg++.cc)
+set(quadprog3 ../../../funciones/quadprog/uQuadProg++.hh)
+set(quadprog4 ../../../funciones/quadprog/uQuadProg++.cc)
 
 #Adds directories
 include_directories(${FUNCTIONS_DIRECTORY})
@@ -26,7 +30,7 @@ file(GLOB MySources *.c *.h *.cpp)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 #Agrega el ejecutable
-add_executable(${PROJECT_NAME} ${SRC_LIST} ${MySources} ${cimg} ${functions} ${fPDI} ${fskelet})
+add_executable(${PROJECT_NAME} ${SRC_LIST} ${MySources} ${cimg} ${functions} ${fPDI} ${fskelet} ${quadprog1} ${quadprog2} ${quadprog3} ${quadprog4})
 
 #linkea las librerias en tiempo de ejecucion
 

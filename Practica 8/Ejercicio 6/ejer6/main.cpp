@@ -11,20 +11,15 @@ int main()
 
 
     CImg<float> original,img,resultado;
-    CImg<int> etiqueta,final;
-    CImg<bool> mascara,vent(3,3);
-    int mx,my;
-    vent.fill(1);
     const char* path = "../../../../images/Morfologia/Rio.jpeg";
     original.load(path);
-    mascara.assign(img.width(),img.height(),1,1);
-    //final.assign(img.width(),img.height(),1,3);
-    //img = balancecolorRGB_condicional(original,2,300);
-    //img = balancecolorRGB_condicional(original,2,300);
+    CImg<int> etiqueta,final;
+
+    CImg<bool> mascara(img.width(),img.height(),1,1),vent(3,3);
+    vent.fill(1);
+
+    //Crear la mascara
     img = original.RGBtoHSI().get_channel(2).get_normalize(0,255);
-    //img = negativo(original.RGBtoHSI().get_channel(2).get_normalize(0,255));
-    final = img.get_histogram(256,0,255);
-    final.display_graph();
 
 
     //img = original;
@@ -38,6 +33,8 @@ int main()
     mascara.display();
 
     //CImgDisplay v1(img,"Presione sobre el color deseado"),v2(img,"Resultado");
+
+    int mx,my;
 
     //while(!v1.is_closed() || !v2.is_closed()){
       //  v1.wait();
