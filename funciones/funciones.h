@@ -2211,7 +2211,7 @@ CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> B,CImg<bool> X){
 
 //HIT OR MISS - LOCALIZACION DE CONJUNTO - Sobrecarga cuando no se requiere el fondo
 CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> B){
-    return A.get_erode(B);//Es una simple erosion
+    return A.get_dilate(B);//Es una simple erosion
 }
 
 //EXTRACCION DE CONTORNOS
@@ -2288,42 +2288,54 @@ CImg<bool> componentes_conectadas(CImg<bool> A){
 }
 
 //Retorna el convexhull de una imagen binaria (con posibilidad de limites)
-CImg<bool> ConvexHull(CImg<bool> A,bool limitar=false){
-    CImg<bool> X,X_Ant,CHull(A.height(),A.width(),1,1,0);
-    CImg<bool> B(3,3);B.fill(0,0,0,1,0,1,1,1,1);
+//Hay que tener en cuenta que A tiene que ser los blancos lo que marquen el objeto!!!
+CImg<bool> ConvexHull(CImg<bool> A,bool blanco=true,bool limitar=false){
+    CImg<bool> X,X_Ant,CHull(A.width(),A.height(),1,1,0);
+    CImg<bool> B(3,3);
+    vector< CImg<bool> > D;
+    B.fill(0,1,1,0,0,1,0,1,1);
 
     if(limitar==false){
         for(int j = 0;j<4;j++){//Avanza sobre los B - SUPUESTAMENTE EL SIZE DE B DEBERIA SER 4 (Cada una de las orientaciones)
             //Inicializo el vector X para hacer los calculos del B actual
             X_Ant=X=A;
-            X=ORimg(HitorMiss(X,B),A);
+            X=HitorMiss(X,B);
             while(X != X_Ant){
                 X_Ant=X;
-                X=ORimg(HitorMiss(X,B),A);
+                X=HitorMiss(X,B);
             }
-            CHull=ORimg(CHull,X);//Hago la union del resultado con B con CHull
+            D.push_back(ORimg(X,A));
             B.rotate(90);//roto B
         }
     }
-    else{
+    else{//No va a funcionar asi!!
         //Si no tengo que sobrepasar los limites
-        vector<punto> maxmin_masc=maxmin_coord(A);
-        vector<punto> aux;
+        B=NOTimg(B);
         for(int j = 0;j<4;j++){//Avanza sobre los B - SUPUESTAMENTE EL SIZE DE B DEBERIA SER 4 (Cada una de las orientaciones)
             //Inicializo el vector X para hacer los calculos del B actual
             X_Ant=X=A;
-            X=ORimg(HitorMiss(X,B),A);
-            aux=maxmin_coord(X);
-            while(X != X_Ant & aux.at(0) >= maxmin_masc.at(0) & aux.at(1) <= maxmin_masc.at(1)){//Tengo en cuenta que no se pase de los limites
+            X=HitorMiss(X,B);
+            while(X != X_Ant){//Tengo en cuenta que no se pase de los limites
                 X_Ant=X;
-                X=ORimg(HitorMiss(X,B),A);
-                aux=maxmin_coord(X);
+                X=HitorMiss(X,B);
             }
-            CHull=ORimg(CHull,X);//Hago la union del resultado con B con CHull
+            D.push_back(ORimg(X,A));
             B.rotate(90);//roto B
         }
     }
-    return CHull;
+
+    if(blanco){
+        for(int j = 0;j<4;j++){
+            CHull=ORimg(CHull,NOTimg(D[j]));
+        }
+        return NOTimg(CHull);
+    }else{
+        for(int j = 0;j<4;j++){
+            CHull=ORimg(CHull,NOTimg(D[j]));
+        }
+        return CHull;
+    }
+
 }
 
 //Adelgaza la mascara

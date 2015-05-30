@@ -11,7 +11,7 @@ int main()
     CImg<bool> B(3,3,1,1,1),B2(8,8,1,1,1);
 
     //Creo la mascara y proceso la imagen original para obtener la envoltura convexa
-    CImg<bool> umbral,segmentacion;
+    CImg<bool> umbral,segmentacion,chull;
     //Umbralado
     umbral = NOTimg(original.get_RGBtoHSI().get_channel(2).get_normalize(0,255).get_threshold(UMBRAL).get_normalize(0,1));
 
@@ -20,9 +20,12 @@ int main()
     segmentacion = reconstruccion_dilatacion(umbral,segmentacion);
     segmentacion = ORimg(segmentacion,relleno_automatico(segmentacion,B));
     segmentacion = relleno_automatico(segmentacion,B2);
-    segmentacion = ConvexHull(segmentacion);
 
-    (original,umbral,segmentacion).display("Umbralado - Segmentacion");
+    //ConvexHull TENGO QUE TENER EN CUENTA QUE FUNCIONA PARA MASCARAS DONDE LO QUE IMPORTA ES EL BLANCO
+    chull = ConvexHull(segmentacion);
+    chull = extraccion_de_contornos(chull,B);
+
+    (original,umbral,segmentacion,original.get_mul(NOTimg(chull))).display();
 
 
     return 0;
