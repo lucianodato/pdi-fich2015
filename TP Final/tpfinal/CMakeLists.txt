@@ -10,15 +10,15 @@ set(CMAKE_CXX_FLAGS "-g -lm -pthread -lX11 -lfftw3  -lfftw3_threads")
 
 
 #Paths
-set(FUNCTIONS_DIRECTORY ../../../funciones)
-set(functions ../../../funciones/funciones.h)
-set(cimg ../../../funciones/CImg.h)
-set(fPDI ../../../funciones/PDI_functions.h)
-set(fskelet ../../../funciones/plugins/skeleton.h)
-set(quadprog1 ../../../funciones/quadprog/QuadProg++.hh)
-set(quadprog2 ../../../funciones/quadprog/QuadProg++.cc)
-set(quadprog3 ../../../funciones/quadprog/uQuadProg++.hh)
-set(quadprog4 ../../../funciones/quadprog/uQuadProg++.cc)
+set(FUNCTIONS_DIRECTORY ../../funciones)
+set(functions ../../funciones/funciones.h)
+set(cimg ../../funciones/CImg.h)
+set(fPDI ../../funciones/PDI_functions.h)
+set(fskelet ../../funciones/plugins/skeleton.h)
+set(quadprog1 ../../funciones/quadprog/QuadProg++.hh)
+set(quadprog2 ../../funciones/quadprog/QuadProg++.cc)
+set(quadprog3 ../../funciones/quadprog/uQuadProg++.hh)
+set(quadprog4 ../../funciones/quadprog/uQuadProg++.cc)
 
 #Adds directories
 include_directories(${FUNCTIONS_DIRECTORY})
