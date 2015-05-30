@@ -1267,12 +1267,69 @@ CImg<T> ColorMaskHSI(CImg<T> img, unsigned mx, unsigned my, float radio){
 }
 
 ///****************************************
+/// GreySlicing
+///****************************************
+template <class T>
+CImg<T> GreyMask(CImg<T> img, unsigned char x, unsigned char y, float radio){
+    unsigned ww=img.width();
+    unsigned hh=img.height();
+    T g0;
+    g0=img(x, y, 0, 0);
+    float dist;
+    for(unsigned i=0; i<ww; i++){
+        for(unsigned j=0; j<hh; j++){
+            dist=sqrt(powf(g0-img(i,j,0,0),2));
+            if(dist>radio){
+                img(i,j,0,0)=0;
+            }
+        }
+    }
+    return img;
+}
+
+///****************************************
 ///BALANCE DE COLOR RGB
 ///****************************************
 template<typename T>
 CImg<T> balancecolorRGB(CImg<T> img_orig,int canal,int aumento){
     cimg_forXYZ(img_orig,i,j,k)
             img_orig(i,j,k,canal)+=aumento;
+    return img_orig;
+}
+
+///****************************************
+///BALANCE DE COLOR RGB CONDICIONAL (AUMENTO UN UNICO CANAL)
+///****************************************
+template<typename T>
+CImg<T> balancecolorRGB_condicional(CImg<T> img_orig,int canal,int aumento){
+    //Banderas para prueba
+    int izq,der;
+    if(canal == 0){
+        //canales restantes (R,G o B)
+        izq = 1;
+        der = 2;
+    }
+    if(canal == 1){
+        //canales restantes (R,G o B)
+        izq = 0;
+        der = 2;
+    }
+    if(canal == 2){
+        //canales restantes (R,G o B)
+        izq = 0;
+        der = 1;
+    }
+
+    cimg_forXYZ(img_orig,i,j,k){
+        if(img_orig(i,j,k,canal)>=img_orig(i,j,k,izq) && img_orig(i,j,k,canal)>=img_orig(i,j,k,der)){
+            img_orig(i,j,k,canal)+=aumento;
+            img_orig(i,j,k,izq)-=aumento/2;
+            img_orig(i,j,k,der)-=aumento/2;}
+        else{
+            //img_orig(i,j,k,izq)+=aumento/2;
+            //img_orig(i,j,k,der)+=aumento/2;
+        }
+    }
     return img_orig;
 }
 
