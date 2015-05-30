@@ -2288,12 +2288,15 @@ CImg<bool> componentes_conectadas(CImg<bool> A){
 }
 
 //Retorna el convexhull de una imagen binaria (con posibilidad de limites)
-//Hay que tener en cuenta que A tiene que ser los blancos lo que marquen el objeto!!!
+//IMPORTANTE Esta programado para que haga el convexhull para blancos de una mascara
+//si se desea hacer a partir de los negros hay que poner false en blanco
 CImg<bool> ConvexHull(CImg<bool> A,bool blanco=true,bool limitar=false){
     CImg<bool> X,X_Ant,CHull(A.width(),A.height(),1,1,0);
     CImg<bool> B(3,3);
     vector< CImg<bool> > D;
     B.fill(0,1,1,0,0,1,0,1,1);
+
+    if(!blanco){A=NOTimg(A);}
 
     if(limitar==false){
         for(int j = 0;j<4;j++){//Avanza sobre los B - SUPUESTAMENTE EL SIZE DE B DEBERIA SER 4 (Cada una de las orientaciones)
@@ -2324,18 +2327,15 @@ CImg<bool> ConvexHull(CImg<bool> A,bool blanco=true,bool limitar=false){
         }
     }
 
-    if(blanco){
-        for(int j = 0;j<4;j++){
-            CHull=ORimg(CHull,NOTimg(D[j]));
-        }
-        return NOTimg(CHull);
-    }else{
-        for(int j = 0;j<4;j++){
-            CHull=ORimg(CHull,NOTimg(D[j]));
-        }
-        return CHull;
+    for(int j = 0;j<4;j++){
+        CHull=ORimg(CHull,NOTimg(D[j]));
     }
 
+    if(blanco){
+        return NOTimg(CHull);
+    }else{
+        return CHull;
+    }
 }
 
 //Adelgaza la mascara

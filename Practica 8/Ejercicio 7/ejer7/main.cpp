@@ -21,8 +21,9 @@ int main()
     segmentacion = ORimg(segmentacion,relleno_automatico(segmentacion,B));
     segmentacion = relleno_automatico(segmentacion,B2);
 
-    //ConvexHull TENGO QUE TENER EN CUENTA QUE FUNCIONA PARA MASCARAS DONDE LO QUE IMPORTA ES EL BLANCO
+    //ConvexHull
     chull = ConvexHull(segmentacion);
+    chull.display();
     chull = extraccion_de_contornos(chull,B);
 
     (original,umbral,segmentacion,original.get_mul(NOTimg(chull))).display();
