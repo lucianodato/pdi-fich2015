@@ -949,7 +949,7 @@ CImg<T> LoG(CImg<T> img){
 ///****************************************
 //Recibe la imagen el kernel pasa bajo y la amplificacion
 template<typename T>
-CImg<T> filtroAP(CImg<T> img,CImg<T> kernel,T amp){
+CImg<T> filtroAP(CImg<T> img,CImg<T> kernel,float amp=0.0){
     //auxiliares
     CImg<T> pb,dif,sum;
 
@@ -970,7 +970,7 @@ CImg<T> filtroAP(CImg<T> img,CImg<T> kernel,T amp){
 ///****************************************
 //Recibe la imagen el kernel pasa bajo y la amplificacion
 template<typename T>
-CImg<T> filtroAP3(CImg<T> img,CImg<T> kernel, T amp){
+CImg<T> filtroAP3(CImg<T> img,CImg<T> kernel, float amp=0.0){
 
     CImg<T> c1,c2,c3;
 
@@ -1196,33 +1196,9 @@ CImg<T>  ComposeHSI(CImg<T> h, CImg<T> s, CImg<T> I){
         }
     }
     img.HSItoRGB();
+    return img;
 }
 
-///****************************************
-///COLOURSLICING INTERACTIVO
-///****************************************
-//Devuelve una imagen binaria
-template<typename T>
-CImg<T> colourslicing(CImg<T> imagen,int radio=10){
-    CImg<T> final;
-    CImgDisplay v1(imagen,"Presione sobre el gris deseado"),v2(imagen,"Resultado");
-
-    while(!v1.is_closed() || !v2.is_closed()){
-        v1.wait();
-        if(v1.button()==1){
-
-            int mx=v1.mouse_x();
-            int my=v1.mouse_y();
-
-            final = ColorMaskRGB(imagen,mx,my,radio);
-
-            v2.render(final);
-            v2.paint();
-        }
-    }
-
-    return final;
-}
 ///****************************************
 /// Color Slicing RGB
 ///****************************************
@@ -1291,6 +1267,32 @@ CImg<T> GreyMask(CImg<T> img, unsigned char x, unsigned char y, float radio){
         }
     }
     return img;
+}
+
+///****************************************
+///COLOURSLICING INTERACTIVO
+///****************************************
+//Devuelve una imagen binaria
+template<typename T>
+CImg<T> colourslicing(CImg<T> imagen,int radio=10){
+    CImg<T> final(imagen.width(),imagen.height(),1,1,0);
+    CImgDisplay v1(imagen,"Presione sobre el gris deseado"),v2(final,"Resultado");
+
+    while(!v1.is_closed() || !v2.is_closed()){
+        v1.wait();
+        if(v1.button()==1){
+
+            int mx=v1.mouse_x();
+            int my=v1.mouse_y();
+
+            final = ColorMaskHSI(imagen,mx,my,radio);
+
+            v2.render(final);
+            v2.paint();
+        }
+    }
+
+    return final;
 }
 
 ///****************************************
@@ -1690,20 +1692,21 @@ CImg<double> filtradoHomomorficoCompleto(CImg<double> img, unsigned int frec_cor
 }
 
 ///****************************************
-///FILTRO DE ENFASIS DE ALTA POTENCIA (FREC.)
+///FILTRO DE ENFASIS DE ALTA FRECUENCIA
 ///****************************************
 //Recibe los parametros a = (A-1) y b. 
 // Si b = 1 el resultado es un filtro de alta potencia.
 // si b> 1 con b>a, entonces obtengo como resultado el filtro de enfasis en alta potencia. 
-CImg<double> filtroAP_frecuencia(CImg<double> img,double alpha,double b) {
+template <class T>
+CImg<T> filtroAP_frecuencia(CImg<T> img,T alpha,T b) {
 
     //img, frecuencia de corte (D0) y bandera = true [Highpass filter]
     //En este caso uso el gaussiano pero puede ser tambien ideal, butter o laplaciano
     double frec_corte = img.width()/4; //nyquest / 2---> (w/2)/2
 
-    CImg<double>  filtro_PA= gaussian_mask(img,frec_corte,true);
+    CImg<T>  filtro_PA= gaussian_mask(img,frec_corte,true);
 
-    CImg<double> Resultado,filtro_frec;
+    CImg<T> Resultado,filtro_frec;
 
     //Calculo el filtro AP o EAF en funcion de los parametros alpha y b
     filtro_frec = alpha + b*filtro_PA;
@@ -1713,6 +1716,19 @@ CImg<double> filtroAP_frecuencia(CImg<double> img,double alpha,double b) {
 
     return Resultado;
 
+}
+
+template <class T>
+CImg<T> filtroAP3_frecuencia(CImg<T> img,T alpha,T b) {
+    CImg<T> c1,c2,c3;
+
+    //Aplico alta potencia a cada canal por separado
+    c1 = img.get_RGBtoHSI().channel(0);
+    c2 = img.get_RGBtoHSI().channel(1);
+    c3 = filtroAP_frecuencia(img.get_RGBtoHSI().channel(2),alpha,b);
+
+    //Devuelvo la suma de canales
+    return ComposeHSI(c1,c2,c3);
 }
 
 
@@ -1786,7 +1802,6 @@ T most_appeared(vector<T> v){
 //moda
 template <class T>
 T moda(CImg<T> window){
-
     vector<T> v;
     cimg_forXY(window,x,y)
             v.push_back(window(x,y));
@@ -1943,13 +1958,14 @@ CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
 //Wrapper para 3 canales RGB
 template <class T>
 CImg<T> denoiseRGB(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
-    CImg<double> imgR=denoise(img.get_channel(0),sizew,tipofiltro,Q,d);
-    CImg<double> imgB=denoise(img.get_channel(1),sizew,tipofiltro,Q,d);
-    CImg<double> imgG=denoise(img.get_channel(2),sizew,tipofiltro,Q,d);
-    CImg<double> imgFiltrada;
-    ComposeRGB(imgFiltrada,imgR,imgG,imgB);
 
-    return imgFiltrada;
+
+    CImg<double> imgH=img.get_RGBtoHSI().channel(0);
+    CImg<double> imgS=img.get_RGBtoHSI().channel(1);
+    CImg<double> imgI=denoise(img.get_RGBtoHSI().channel(2),sizew,tipofiltro,Q,d);
+
+
+    return ComposeHSI(imgH,imgS,imgI);
 }
 
 ///-----------------------SEGMENTACION-----------------------
@@ -2620,6 +2636,7 @@ CImg<bool> bordes(CImg<bool> img, bool b=true){
 **/
 template <class T>
 CImg<T> equalizar_comun(CImg<T> img,const unsigned int nb_levels, const T min_value=(T)0, const T max_value=(T)0) {
+  if(img.is_empty()) return img;
   T vmin = min_value, vmax = max_value;
   if (vmin==vmax && vmin==0) vmin = min_max(vmax);
   if (vmin<vmax) {
