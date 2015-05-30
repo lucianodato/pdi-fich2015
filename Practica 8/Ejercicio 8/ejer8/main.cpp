@@ -23,12 +23,15 @@ int main()
     //Tengo que usar la imagen original pero guardar una version binaria (proceso conforme a esi)
     //CImg<unsigned int> mascara = original.get_norm().quantize(2).normalize(0.0f,1.0f);
     CImg<unsigned int> mascara = original.get_RGBtoHSI().channel(2).normalize(0,255).threshold(UMBRAL).get_normalize(0,1);
+    mascara.display();
     if (median) mascara.blur_median(median);
     if (invert) (mascara-=1)*=-1;
 
     //Segmento para que la mascara sea mejor
     mascara = apertura(mascara,B2);
+    mascara.display();
     mascara = relleno_automatico(mascara,B);
+    mascara.display();
 
 
     //Calculo el mapa de distancia

@@ -2565,7 +2565,7 @@ CImg<T> equalizar_comun(CImg<T> img,const unsigned int nb_levels, const T min_va
     cimg_forX(hist,pos) { cumul+=hist[pos]; hist[pos] = cumul; }
     cimg_for(img,ptrd,T) {
       const int pos = (int)((*ptrd-vmin)*(nb_levels-1)/(vmax-vmin));
-      if (pos>=0 && pos<(int)nb_levels) *ptrd = (T)(vmin + (vmax-vmin)*hist[pos]/size());
+      if (pos>=0 && pos<(int)nb_levels) *ptrd = (T)(vmin + (vmax-vmin)*hist[pos]/img.size());
     }
   }
   return img;
