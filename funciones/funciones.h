@@ -2236,6 +2236,12 @@ CImg<bool> MaximosLocales( CImg<double>& img, double limite ) {
 /// ORimg es equivalente a la union de conjuntos
 /// NOTimg es equivalente al complemento de un conjunto
 
+//EROSION n veces
+CImg<bool> nerode(CImg<bool> img,CImg<bool> ventana,int n){
+    for(int i=0;i<n;i++){img.erode(ventana);}//Erosionamos
+    return img;
+}
+
 //APERTURA
 CImg<bool> apertura(CImg<bool> img,CImg<bool> ventana){
     img.erode(ventana);//Erosionamos
@@ -2251,18 +2257,18 @@ CImg<bool> cierre(CImg<bool> img,CImg<bool> ventana){
 }
 
 //HIT OR MISS - LOCALIZACION DE CONJUNTO
-CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> B,CImg<bool> X=CImg<bool>()){
+CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> B,CImg<bool> X){
     // A ⊛ B = (A ⊖ D) ∩ [A^c ⊖ (W − D)]
-    if(X.empty()){//Caso donde el fondo no se requiere
-        return A.get_erode(B);//Es una simple erosion
-    }
-    else{
-        CImg<bool> W=X.get_dilate(3);//Una ventana que encierra a X
-        CImg<bool> D=DIFERENCIAimg(X,W);//Contorno que se formaria entre X y W
-        CImg<bool> p1=A.erode(D);
-        CImg<bool> p2=NOTimg(A).erode(DIFERENCIAimg(W,D));
-        return ANDimg(p1,p2);
-    }
+    CImg<bool> W=X.get_dilate(3);//Una ventana que encierra a X
+    CImg<bool> D=DIFERENCIAimg(X,W);//Contorno que se formaria entre X y W
+    CImg<bool> p1=A.erode(D);
+    CImg<bool> p2=NOTimg(A).erode(DIFERENCIAimg(W,D));
+    return ANDimg(p1,p2);
+}
+
+//HIT OR MISS - LOCALIZACION DE CONJUNTO - Sobrecarga cuando no se requiere el fondo
+CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> B){
+    return A.get_dilate(B);//Es una simple erosion
 }
 
 //EXTRACCION DE CONTORNOS
@@ -2272,8 +2278,8 @@ CImg<bool> extraccion_de_contornos(CImg<bool> img,CImg<bool> ventana){
 }
 
 //RELLENO SEMIAUTOMATICO INTERACTIVO
-CImg<bool> relleno_semiautomatico(CImg<bool> A){
-    CImg<bool> final,B(3,3);
+CImg<bool> relleno_semiautomatico(CImg<bool> A,bool continuo=false){
+    CImg<bool> final(A.width(),A.height(),1,1,0),B(3,3);
     CImgDisplay v1(A,"Presione sobre el lugar a rellenar"),v2(A,"Resultado");
     B.fill(0,1,0,1,1,1,0,1,0);
 
@@ -2284,15 +2290,21 @@ CImg<bool> relleno_semiautomatico(CImg<bool> A){
             int mx=v1.mouse_x();
             int my=v1.mouse_y();
 
-            CImg<bool> X,X_Ant;
-            X=X_Ant=A;
+            CImg<bool> X(A.width(),A.height(),1,1,0),X_Ant(A.width(),A.height(),1,1,0);
+            X(mx,my)=1;
+
+            X_Ant=X;
             X=DIFERENCIAimg(X.get_dilate(B),A);
 
             while(X_Ant != X){
                 X_Ant=X;
                 X=DIFERENCIAimg(X.get_dilate(B),A);
             }
-            final = ORimg(X,A);//Uno el resultado con la original
+            if(continuo){
+                final = ORimg(final,ORimg(X,A));//Acumulo en final
+            }else{
+                final = ORimg(X,A);//Solo se rellena lo que pica el usuario y se reemplaza cada vez que se pica en otro lado
+            }
 
             v2.render(final);
             v2.paint();
@@ -2333,50 +2345,54 @@ CImg<bool> componentes_conectadas(CImg<bool> A){
 }
 
 //Retorna el convexhull de una imagen binaria (con posibilidad de limites)
-CImg<bool> ConvexHull(CImg<bool> A,CImg<bool> B,bool limitar=false){
-    CImg<bool> X,X_Ant,W,D,CHull(A.height(),A.width());
+//IMPORTANTE Esta programado para que haga el convexhull para blancos de una mascara
+//si se desea hacer a partir de los negros hay que poner false en blanco
+CImg<bool> ConvexHull(CImg<bool> A,bool blanco=true,bool limitar=false){
+    CImg<bool> X,X_Ant,CHull(A.width(),A.height(),1,1,0);
+    CImg<bool> B(3,3);
+    vector< CImg<bool> > D;
+    B.fill(0,1,1,0,0,1,0,1,1);
+
+    if(!blanco){A=NOTimg(A);}
+
     if(limitar==false){
-        int i = 1;
         for(int j = 0;j<4;j++){//Avanza sobre los B - SUPUESTAMENTE EL SIZE DE B DEBERIA SER 4 (Cada una de las orientaciones)
             //Inicializo el vector X para hacer los calculos del B actual
-            X.clear();
-            X=A;
-            X_Ant=X;
-            X=ORimg(HitorMiss(X,B),A);
+            X_Ant=X=A;
+            X=HitorMiss(X,B);
             while(X != X_Ant){
-                i++;
                 X_Ant=X;
-                X=ORimg(HitorMiss(X,B),A);
+                X=HitorMiss(X,B);
             }
-            CHull=ORimg(CHull,X);//Hago la union (Operador &) del resultado con B con CHull
-            i=1;//reinicio el contador
+            D.push_back(ORimg(X,A));
             B.rotate(90);//roto B
         }
     }
-    else{
+    else{//No va a funcionar asi!!
         //Si no tengo que sobrepasar los limites
-        vector<punto> maxmin_masc=maxmin_coord(A);
-        vector<punto> aux;
-        int i = 1;
+        B=NOTimg(B);
         for(int j = 0;j<4;j++){//Avanza sobre los B - SUPUESTAMENTE EL SIZE DE B DEBERIA SER 4 (Cada una de las orientaciones)
             //Inicializo el vector X para hacer los calculos del B actual
-            X.clear();
-            X=A;
-            X_Ant=X;
-            X=ORimg(HitorMiss(X,B),A);
-            aux=maxmin_coord(X);
-            while(X != X_Ant & aux.at(0) >= maxmin_masc.at(0) & aux.at(1) <= maxmin_masc.at(1)){//Tengo en cuenta que no se pase de los limites
-                i++;
+            X_Ant=X=A;
+            X=HitorMiss(X,B);
+            while(X != X_Ant){//Tengo en cuenta que no se pase de los limites
                 X_Ant=X;
-                X=ORimg(HitorMiss(X,B),A);
-                aux=maxmin_coord(X);
+                X=HitorMiss(X,B);
             }
-            CHull=ORimg(CHull,X);//Hago la union (Operador &) del resultado con B con CHull
-            i=1;//reinicio el contador
+            D.push_back(ORimg(X,A));
             B.rotate(90);//roto B
         }
     }
-    return CHull;
+
+    for(int j = 0;j<4;j++){
+        CHull=ORimg(CHull,NOTimg(D[j]));
+    }
+
+    if(blanco){
+        return NOTimg(CHull);
+    }else{
+        return CHull;
+    }
 }
 
 //Adelgaza la mascara

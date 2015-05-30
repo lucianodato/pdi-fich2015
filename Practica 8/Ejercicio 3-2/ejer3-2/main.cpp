@@ -3,7 +3,7 @@
 int main()
 {
     //kernels
-    CImg<bool> img,umbral,se0(3,3),se1(3,3);
+    CImg<bool> img,img2,umbral,se0(3,3),se1(3,3);
     se0.fill(1);   //  Structuring element 1
     se1.fill(0,1,0,1,1,1,0,1,0);
 
@@ -16,16 +16,17 @@ int main()
 
     //Umbralado de la imagen (negativizo porque erode y dilate trabajan sobre los blancos)
     umbral = negativo(original.get_threshold(232));
-    img = umbral;
+    img = img2 =umbral;
 
-    //Aplico segmentacion
-    img = apertura(img,se0);
-    img = cierre(img,se0);
-    img = img.get_erode(se1).get_erode(se0);
+    //Aplico segmentacion - Para las letras grandes
+    img = img.get_erode(se0).get_dilate(se1).get_erode(se0).get_dilate(se1).get_erode(se0);
     img = reconstruccion_dilatacion(umbral,img);//Reconstruccion es la posta
 
+    //Aplico diferencia con la umbralada - Para las letras chicas
+    img2 = DIFERENCIAimg(umbral,img);
+
     //Visualizo
-    (original,umbral,img).display();
+    (original,umbral,NOTimg(img),NOTimg(img2)).display();
 
 
     return 0;
