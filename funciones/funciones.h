@@ -2444,78 +2444,32 @@ CImg<bool> Thickening(CImg<bool> A){
 }
 
 //Dilatacion Geodesica con n ciclos
-CImg<bool> dilatacion_geodesica(CImg<bool> G,int n){
-    CImg<bool> final,B(3,3);
-    CImgDisplay v1(G,"Presione sobre el lugar a rellenar"),v2(G,"Resultado");
+CImg<bool> dilatacion_geodesica(CImg<bool> G,CImg<bool> F,int n){
+    CImg<bool> B(3,3);
     B.fill(1);
 
-    while(!v1.is_closed() || !v2.is_closed()){
-        v1.wait();
-        if(v1.button()==1){
-
-            int mx=v1.mouse_x();
-            int my=v1.mouse_y();
-
-            CImg<bool> F(G.width(),G.height(),1,1,0);
-            F(mx,my)=1;//seria el p inicial picado por el usuario
-            for(int j = 0;j<n;j++){
-                F=ANDimg(F.get_dilate(B),G);
-            }
-            final = F;
-
-            v2.render(final);
-            v2.paint();
-        }
+    for(int j = 0;j<n;j++){
+        F=ANDimg(F.get_dilate(B),G);
     }
-    return final;
+
+    return F;
 }
 
 //Erosion Geodesica con n ciclos
 CImg<bool> erosion_geodesica(CImg<bool> G,CImg<bool> F,int n){//F seria la mascara donde sintetiso a partir de A
-    CImg<bool> final,B(3,3);
+    CImg<bool> B(3,3);
     B.fill(1);
 
     for(int j = 0;j<n;j++){
         F=ORimg(F.get_erode(B),G);
     }
-    final = F;
 
-    return final;
-}
-
-//Reconstruccion por dilatacion - No necesito mandarle el F porque lo creo adentro!!!
-CImg<bool> reconstruccion_dilatacion(CImg<bool> G){
-    CImg<bool> final,B(3,3);
-    CImgDisplay v1(G,"Presione sobre el lugar a rellenar"),v2(G,"Resultado");
-    B.fill(1);
-
-    while(!v1.is_closed() || !v2.is_closed()){
-        v1.wait();
-        if(v1.button()==1){
-
-            int mx=v1.mouse_x();
-            int my=v1.mouse_y();
-
-            CImg<bool> F(G.width(),G.height(),1,1,0),F_Ant;
-            F(mx,my)=1;//seria el p inicial picado por el usuario
-            F_Ant=F;
-            F=ANDimg(F.get_dilate(B),G);
-            while(F_Ant != F){
-                F_Ant=F;
-                F=ANDimg(F.get_dilate(B),G);
-            }
-            final = F;
-
-            v2.render(final);
-            v2.paint();
-        }
-    }
-    return final;
+    return F;
 }
 
 //Reconstruccion por dilatacion - Sobrecarga (no es interactiva)
 CImg<bool> reconstruccion_dilatacion(CImg<bool> G,CImg<bool> F){
-    CImg<bool> final,B(3,3);
+    CImg<bool> B(3,3);
     B.fill(1);
 
     CImg<bool> F_Ant;
@@ -2525,14 +2479,12 @@ CImg<bool> reconstruccion_dilatacion(CImg<bool> G,CImg<bool> F){
         F_Ant=F;
         F=ANDimg(F.get_dilate(B),G);
     }
-    final = F;
-
-    return final;
+    return F;
 }
 
 //Reconstruccion por erosion
 CImg<bool> reconstruccion_erosion(CImg<bool> G,CImg<bool> F){//F seria la mascara donde sintetiso a partir de A
-    CImg<bool> final,B(3,3);
+    CImg<bool> B(3,3);
     B.fill(1);
 
     CImg<bool> F_Ant;
@@ -2542,9 +2494,7 @@ CImg<bool> reconstruccion_erosion(CImg<bool> G,CImg<bool> F){//F seria la mascar
         F_Ant=F;
         F=ORimg(F.get_erode(B),G);
     }
-    final = F;
-
-    return final;
+    return F;
 }
 
 //APERTURA POR RECONSTUCCION
@@ -2568,6 +2518,7 @@ CImg<bool> apertura_reconstruccion(CImg<bool> G,CImg<bool> B,int n){
 }
 
 //Devuelve la imagen binaria con los interiores rellenos
+//Se rellenan los blancos
 CImg<bool> relleno_automatico(CImg<bool> I){
     CImg<bool> f(I.width(),I.height(),1,1,0),final;
 
@@ -2587,6 +2538,7 @@ CImg<bool> relleno_automatico(CImg<bool> I){
 }
 
 //Devuelve la imagen binaria con los bordes limpios de objetos cortados por los bordes de la imagens
+//Se limpian los blancos del borde
 CImg<bool> limpieza_bordes(CImg<bool> I){
     CImg<bool> f(I.width(),I.height(),1,1,0),final;
 
@@ -2605,7 +2557,51 @@ CImg<bool> limpieza_bordes(CImg<bool> I){
     return final;
 }
 
+//Devuelve true si una mascara binaria tiene todos false
+bool mascara_vacia(CImg<bool> mascara){
+    cimg_forXY(mascara,i,j){
+        if(mascara(i,j)==true){
+            return false;
+        }
+    }
+    return true;
+}
 
+//Devuelve el esqueleto de una mascara binaria
+CImg<bool> esqueleto(CImg<bool> A,CImg<bool> B){
+    CImg<bool> esq(A.width(),A.height(),1,1,0),aux;
+    int k=0;
+    aux=nerode(A,B,k);
+    while(!mascara_vacia(aux)){
+        esq=ORimg(esq,DIFERENCIAimg(aux,apertura(aux,B)));
+        k++;
+
+        aux=nerode(A,B,k);
+    }
+    return esq;
+}
+
+//Aplicar una mascara booleana a una imagen en escala de grises
+CImg<int> mul_mb_g(CImg<int> imagen,CImg<bool> mascara){
+    cimg_forXY(imagen,i,j){
+        if(mascara(i,j)==false)
+            imagen(i,j)*=0;
+    }
+    return imagen;
+}
+
+//Aplicar una mascara booleana a una imagen en escala de grises
+template <class T>
+CImg<T> mul_mb_c(CImg<T> imagen,CImg<bool> mascara){
+    cimg_forXY(imagen,i,j){
+        if(mascara(i,j)==false){
+            imagen(i,j,0,0)*=0;
+            imagen(i,j,0,1)*=0;
+            imagen(i,j,0,2)*=0;
+        }
+    }
+    return imagen;
+}
 
 //Limpieza de objetos en los bordes
 //recibe una imagen maskara y retorna la misma sin los objetos en el borde
