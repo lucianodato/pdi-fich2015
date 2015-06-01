@@ -2568,21 +2568,39 @@ CImg<bool> apertura_reconstruccion(CImg<bool> G,CImg<bool> B,int n){
 }
 
 //Devuelve la imagen binaria con los interiores rellenos
-CImg<bool> relleno_automatico(CImg<bool> img,CImg<bool> ventana){
-    CImg<bool> f(img.width(),img.height()),final;
-    CImg<bool> bordes = extraccion_de_contornos(img,ventana);//son los bordes de la mascara
+CImg<bool> relleno_automatico(CImg<bool> I){
+    CImg<bool> f(I.width(),I.height(),1,1,0),final;
 
-    cimg_forXY(img,i,j){
-        if(img(i,j)== bordes(i,j)){
-            f(i,j)=1-img(i,j);//si esta en el borde de la mascara
-        }
-        else
-        {
-            f(i,j)=0;
-        }
+    //Construyo f con los bordes de I
+    cimg_forY(I,j){
+            f(0,j)=1-I(0,j);//Arriba
+            f(I.width()-1,j)=1-I(I.width()-1,j);//Abajo
+    }
+    cimg_forX(I,i){
+            f(i,0)=1-I(i,0);//Izquierda
+            f(i,I.height()-1)=1-I(i,I.height()-1);//Derecha
     }
     //Uso la reconstruccion por dilatacion (uso la sobrecarga)
-    final = NOTimg(reconstruccion_dilatacion(NOTimg(img),f));
+    final = NOTimg(reconstruccion_dilatacion(NOTimg(I),f));
+
+    return final;
+}
+
+//Devuelve la imagen binaria con los bordes limpios de objetos cortados por los bordes de la imagens
+CImg<bool> limpieza_bordes(CImg<bool> I){
+    CImg<bool> f(I.width(),I.height(),1,1,0),final;
+
+    //Construyo f con los bordes de I
+    cimg_forY(I,j){
+            f(0,j)=I(0,j);//Arriba
+            f(I.width()-1,j)=I(I.width()-1,j);//Abajo
+    }
+    cimg_forX(I,i){
+            f(i,0)=I(i,0);//Izquierda
+            f(i,I.height()-1)=I(i,I.height()-1);//Derecha
+    }
+    //Uso la reconstruccion por dilatacion (uso la sobrecarga)
+    final = DIFERENCIAimg(I,reconstruccion_dilatacion(I,f));
 
     return final;
 }
