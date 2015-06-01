@@ -2178,14 +2178,6 @@ CImg<T> autom_seg_region_growed(CImg<T> img, int delta, int etiqueta, const int 
     return segmentacion;
 }
 
-//segmentacion a partir de coordenadas de una mascara booleana- Va a dejar solo la region que evuelve las coordenadas
-CImg<bool> segmenta_coord(CImg<bool> img,int x,int y){
-    CImg<bool> final(img.width(),img.height(),1,1,0);
-    final = region_growing(img,x,y,0,2);
-    ///ToDo----------No anda!!!
-    return final;
-}
-
 ///Inundar
 ///Retorna una mascara con las regiones inundadas de acuerdo a los paramatros
 //CImg<double> img : imagen en griz o bool
@@ -2603,27 +2595,27 @@ CImg<T> mul_mb_c(CImg<T> imagen,CImg<bool> mascara){
     return imagen;
 }
 
-//Limpieza de objetos en los bordes
-//recibe una imagen maskara y retorna la misma sin los objetos en el borde
-// por defecto b=true : retorna solo elementos del borde de img el borde
-// b=false : retorna img sin los elementos del borde
-//NOTA: si no recorba bien los bordes controlar el umbral en la imagen CImg<bool> img que se le da como parametro de entrada
-CImg<bool> bordes(CImg<bool> img, bool b=true){
-    CImg<bool> mask(img.width()+2,img.height()+2,1,1,0);
-    for(int i=1;i<mask.width()-1;i++)
-        for(int j=1;j<mask.height()-1;j++)
-            mask(i,j)=img(i-1,j-1);
-    //Inundar inunda zonas true por eso hago NOTimg(mask) ->(por que el borde lo escribi en false, lo invierto a true)
-    mask=Inundar(NOTimg(mask),0.5,0,0);
-    //quito el borde agregado
-    mask.crop(1,1,mask.width()-2,mask.height()-2);
-    mask = reconstruccion_dilatacion(mask,img);//Reconstruccion es la posta
-    mask.display("maskara reco dilar");
-    if (b)
-        return NOTimg(mask);
-    else
-        return reconstruccion_dilatacion(ORimg(img,mask),img);
-}
+////Limpieza de objetos en los bordes
+////recibe una imagen maskara y retorna la misma sin los objetos en el borde
+//// por defecto b=true : retorna solo elementos del borde de img el borde
+//// b=false : retorna img sin los elementos del borde
+////NOTA: si no recorba bien los bordes controlar el umbral en la imagen CImg<bool> img que se le da como parametro de entrada
+//CImg<bool> bordes(CImg<bool> img, bool b=true){
+//    CImg<bool> mask(img.width()+2,img.height()+2,1,1,0);
+//    for(int i=1;i<mask.width()-1;i++)
+//        for(int j=1;j<mask.height()-1;j++)
+//            mask(i,j)=img(i-1,j-1);
+//    //Inundar inunda zonas true por eso hago NOTimg(mask) ->(por que el borde lo escribi en false, lo invierto a true)
+//    mask=Inundar(NOTimg(mask),0.5,0,0);
+//    //quito el borde agregado
+//    mask.crop(1,1,mask.width()-2,mask.height()-2);
+//    mask = reconstruccion_dilatacion(mask,img);//Reconstruccion es la posta
+//    mask.display("maskara reco dilar");
+//    if (b)
+//        return NOTimg(mask);
+//    else
+//        return reconstruccion_dilatacion(ORimg(img,mask),img);
+//}
 
 
 ///****************************************
