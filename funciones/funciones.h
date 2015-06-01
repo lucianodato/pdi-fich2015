@@ -2189,14 +2189,6 @@ CImg<T> autom_seg_region_growed(CImg<T> img, int delta, int etiqueta, const int 
     return segmentacion;
 }
 
-//segmentacion a partir de coordenadas de una mascara booleana- Va a dejar solo la region que evuelve las coordenadas
-CImg<bool> segmenta_coord(CImg<bool> img,int x,int y){
-    CImg<bool> final(img.width(),img.height(),1,1,0);
-    final = region_growing(img,x,y,0,2);
-    ///ToDo----------No anda!!!
-    return final;
-}
-
 ///Inundar
 ///Retorna una mascara con las regiones inundadas de acuerdo a los paramatros
 //CImg<double> img : imagen en griz o bool
@@ -2455,78 +2447,32 @@ CImg<bool> Thickening(CImg<bool> A){
 }
 
 //Dilatacion Geodesica con n ciclos
-CImg<bool> dilatacion_geodesica(CImg<bool> G,int n){
-    CImg<bool> final,B(3,3);
-    CImgDisplay v1(G,"Presione sobre el lugar a rellenar"),v2(G,"Resultado");
+CImg<bool> dilatacion_geodesica(CImg<bool> G,CImg<bool> F,int n){
+    CImg<bool> B(3,3);
     B.fill(1);
 
-    while(!v1.is_closed() || !v2.is_closed()){
-        v1.wait();
-        if(v1.button()==1){
-
-            int mx=v1.mouse_x();
-            int my=v1.mouse_y();
-
-            CImg<bool> F(G.width(),G.height(),1,1,0);
-            F(mx,my)=1;//seria el p inicial picado por el usuario
-            for(int j = 0;j<n;j++){
-                F=ANDimg(F.get_dilate(B),G);
-            }
-            final = F;
-
-            v2.render(final);
-            v2.paint();
-        }
+    for(int j = 0;j<n;j++){
+        F=ANDimg(F.get_dilate(B),G);
     }
-    return final;
+
+    return F;
 }
 
 //Erosion Geodesica con n ciclos
 CImg<bool> erosion_geodesica(CImg<bool> G,CImg<bool> F,int n){//F seria la mascara donde sintetiso a partir de A
-    CImg<bool> final,B(3,3);
+    CImg<bool> B(3,3);
     B.fill(1);
 
     for(int j = 0;j<n;j++){
         F=ORimg(F.get_erode(B),G);
     }
-    final = F;
 
-    return final;
-}
-
-//Reconstruccion por dilatacion - No necesito mandarle el F porque lo creo adentro!!!
-CImg<bool> reconstruccion_dilatacion(CImg<bool> G){
-    CImg<bool> final,B(3,3);
-    CImgDisplay v1(G,"Presione sobre el lugar a rellenar"),v2(G,"Resultado");
-    B.fill(1);
-
-    while(!v1.is_closed() || !v2.is_closed()){
-        v1.wait();
-        if(v1.button()==1){
-
-            int mx=v1.mouse_x();
-            int my=v1.mouse_y();
-
-            CImg<bool> F(G.width(),G.height(),1,1,0),F_Ant;
-            F(mx,my)=1;//seria el p inicial picado por el usuario
-            F_Ant=F;
-            F=ANDimg(F.get_dilate(B),G);
-            while(F_Ant != F){
-                F_Ant=F;
-                F=ANDimg(F.get_dilate(B),G);
-            }
-            final = F;
-
-            v2.render(final);
-            v2.paint();
-        }
-    }
-    return final;
+    return F;
 }
 
 //Reconstruccion por dilatacion - Sobrecarga (no es interactiva)
 CImg<bool> reconstruccion_dilatacion(CImg<bool> G,CImg<bool> F){
-    CImg<bool> final,B(3,3);
+    CImg<bool> B(3,3);
     B.fill(1);
 
     CImg<bool> F_Ant;
@@ -2536,14 +2482,12 @@ CImg<bool> reconstruccion_dilatacion(CImg<bool> G,CImg<bool> F){
         F_Ant=F;
         F=ANDimg(F.get_dilate(B),G);
     }
-    final = F;
-
-    return final;
+    return F;
 }
 
 //Reconstruccion por erosion
 CImg<bool> reconstruccion_erosion(CImg<bool> G,CImg<bool> F){//F seria la mascara donde sintetiso a partir de A
-    CImg<bool> final,B(3,3);
+    CImg<bool> B(3,3);
     B.fill(1);
 
     CImg<bool> F_Ant;
@@ -2553,9 +2497,7 @@ CImg<bool> reconstruccion_erosion(CImg<bool> G,CImg<bool> F){//F seria la mascar
         F_Ant=F;
         F=ORimg(F.get_erode(B),G);
     }
-    final = F;
-
-    return final;
+    return F;
 }
 
 //APERTURA POR RECONSTUCCION
@@ -2579,48 +2521,112 @@ CImg<bool> apertura_reconstruccion(CImg<bool> G,CImg<bool> B,int n){
 }
 
 //Devuelve la imagen binaria con los interiores rellenos
-CImg<bool> relleno_automatico(CImg<bool> img,CImg<bool> ventana){
-    CImg<bool> f(img.width(),img.height()),final;
-    CImg<bool> bordes = extraccion_de_contornos(img,ventana);//son los bordes de la mascara
+//Se rellenan los blancos
+CImg<bool> relleno_automatico(CImg<bool> I){
+    CImg<bool> f(I.width(),I.height(),1,1,0),final;
 
-    cimg_forXY(img,i,j){
-        if(img(i,j)== bordes(i,j)){
-            f(i,j)=1-img(i,j);//si esta en el borde de la mascara
-        }
-        else
-        {
-            f(i,j)=0;
-        }
+    //Construyo f con los bordes de I
+    cimg_forY(I,j){
+            f(0,j)=1-I(0,j);//Arriba
+            f(I.width()-1,j)=1-I(I.width()-1,j);//Abajo
+    }
+    cimg_forX(I,i){
+            f(i,0)=1-I(i,0);//Izquierda
+            f(i,I.height()-1)=1-I(i,I.height()-1);//Derecha
     }
     //Uso la reconstruccion por dilatacion (uso la sobrecarga)
-    final = NOTimg(reconstruccion_dilatacion(NOTimg(img),f));
+    final = NOTimg(reconstruccion_dilatacion(NOTimg(I),f));
 
     return final;
 }
 
+//Devuelve la imagen binaria con los bordes limpios de objetos cortados por los bordes de la imagens
+//Se limpian los blancos del borde
+CImg<bool> limpieza_bordes(CImg<bool> I){
+    CImg<bool> f(I.width(),I.height(),1,1,0),final;
 
+    //Construyo f con los bordes de I
+    cimg_forY(I,j){
+            f(0,j)=I(0,j);//Arriba
+            f(I.width()-1,j)=I(I.width()-1,j);//Abajo
+    }
+    cimg_forX(I,i){
+            f(i,0)=I(i,0);//Izquierda
+            f(i,I.height()-1)=I(i,I.height()-1);//Derecha
+    }
+    //Uso la reconstruccion por dilatacion (uso la sobrecarga)
+    final = DIFERENCIAimg(I,reconstruccion_dilatacion(I,f));
 
-//Limpieza de objetos en los bordes
-//recibe una imagen maskara y retorna la misma sin los objetos en el borde
-// por defecto b=true : retorna solo elementos del borde de img el borde
-// b=false : retorna img sin los elementos del borde
-//NOTA: si no recorba bien los bordes controlar el umbral en la imagen CImg<bool> img que se le da como parametro de entrada
-CImg<bool> bordes(CImg<bool> img, bool b=true){
-    CImg<bool> mask(img.width()+2,img.height()+2,1,1,0);
-    for(int i=1;i<mask.width()-1;i++)
-        for(int j=1;j<mask.height()-1;j++)
-            mask(i,j)=img(i-1,j-1);
-    //Inundar inunda zonas true por eso hago NOTimg(mask) ->(por que el borde lo escribi en false, lo invierto a true)
-    mask=Inundar(NOTimg(mask),0.5,0,0);
-    //quito el borde agregado
-    mask.crop(1,1,mask.width()-2,mask.height()-2);
-    mask = reconstruccion_dilatacion(mask,img);//Reconstruccion es la posta
-    mask.display("maskara reco dilar");
-    if (b)
-        return NOTimg(mask);
-    else
-        return reconstruccion_dilatacion(ORimg(img,mask),img);
+    return final;
 }
+
+//Devuelve true si una mascara binaria tiene todos false
+bool mascara_vacia(CImg<bool> mascara){
+    cimg_forXY(mascara,i,j){
+        if(mascara(i,j)==true){
+            return false;
+        }
+    }
+    return true;
+}
+
+//Devuelve el esqueleto de una mascara binaria
+CImg<bool> esqueleto(CImg<bool> A,CImg<bool> B){
+    CImg<bool> esq(A.width(),A.height(),1,1,0),aux;
+    int k=0;
+    aux=nerode(A,B,k);
+    while(!mascara_vacia(aux)){
+        esq=ORimg(esq,DIFERENCIAimg(aux,apertura(aux,B)));
+        k++;
+
+        aux=nerode(A,B,k);
+    }
+    return esq;
+}
+
+//Aplicar una mascara booleana a una imagen en escala de grises
+CImg<int> mul_mb_g(CImg<int> imagen,CImg<bool> mascara){
+    cimg_forXY(imagen,i,j){
+        if(mascara(i,j)==false)
+            imagen(i,j)*=0;
+    }
+    return imagen;
+}
+
+//Aplicar una mascara booleana a una imagen en escala de grises
+template <class T>
+CImg<T> mul_mb_c(CImg<T> imagen,CImg<bool> mascara){
+    cimg_forXY(imagen,i,j){
+        if(mascara(i,j)==false){
+            imagen(i,j,0,0)*=0;
+            imagen(i,j,0,1)*=0;
+            imagen(i,j,0,2)*=0;
+        }
+    }
+    return imagen;
+}
+
+////Limpieza de objetos en los bordes
+////recibe una imagen maskara y retorna la misma sin los objetos en el borde
+//// por defecto b=true : retorna solo elementos del borde de img el borde
+//// b=false : retorna img sin los elementos del borde
+////NOTA: si no recorba bien los bordes controlar el umbral en la imagen CImg<bool> img que se le da como parametro de entrada
+//CImg<bool> bordes(CImg<bool> img, bool b=true){
+//    CImg<bool> mask(img.width()+2,img.height()+2,1,1,0);
+//    for(int i=1;i<mask.width()-1;i++)
+//        for(int j=1;j<mask.height()-1;j++)
+//            mask(i,j)=img(i-1,j-1);
+//    //Inundar inunda zonas true por eso hago NOTimg(mask) ->(por que el borde lo escribi en false, lo invierto a true)
+//    mask=Inundar(NOTimg(mask),0.5,0,0);
+//    //quito el borde agregado
+//    mask.crop(1,1,mask.width()-2,mask.height()-2);
+//    mask = reconstruccion_dilatacion(mask,img);//Reconstruccion es la posta
+//    mask.display("maskara reco dilar");
+//    if (b)
+//        return NOTimg(mask);
+//    else
+//        return reconstruccion_dilatacion(ORimg(img,mask),img);
+//}
 
 
 ///****************************************
