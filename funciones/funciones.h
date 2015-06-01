@@ -14,7 +14,19 @@
 #include <set>
 #include <deque>
 #include <queue>
+#include "malloc.h"
 
+/*#ifndef MagickPlusPlus_Header
+#include <ImageMagick-6/Magick++/Include.h>
+#include <ImageMagick-6/Magick++/Functions.h>
+#include <ImageMagick-6/Magick++/Image.h>
+#include <ImageMagick-6/Magick++/Pixels.h>
+#include <ImageMagick-6/Magick++/ResourceLimits.h>
+#include <ImageMagick-6/Magick++/STL.h>
+#define MagickPlusPlus_Header
+#endif // MagickPlusPlus_Header
+
+*/
 #define cimg_plugin "plugins/skeleton.h"
 #include "CImg.h"
 #include <PDI_functions.h>
@@ -23,7 +35,6 @@
 #include "quadprog/Array.hh"
 #include "quadprog/QuadProg++.hh"
 #include "quadprog/uQuadProg++.hh"
-
 
 using namespace cimg_library;
 using namespace std;
