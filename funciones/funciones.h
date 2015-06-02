@@ -1450,6 +1450,20 @@ CImg<T> filtrar(CImg<T> img,CImg<T> filt){
     return fourier_inv(img_tr.at(0).mul(filt),img_tr.at(1));
 }
 
+//Para RGB
+template<typename T>
+CImg<T> filtrar3(CImg<T> img,CImg<T> filt){
+    CImg<T> r,g,b,final(img.width(),img.height());
+
+    r=filtrar(img.get_channel(0),filt);
+    g=filtrar(img.get_channel(1),filt);
+    b=filtrar(img.get_channel(2),filt);
+
+    ComposeRGB(final,r,g,b);
+
+    return final;
+}
+
 ///****************************************
 ///FILTRO IDEAL
 ///****************************************
@@ -1886,22 +1900,33 @@ T filtro_adaptativo(T g,CImg<T> window,double varianza,double tolerancia){
     }
 }
 
-double distancia(double v1,double v2){
-    return abs(v1-v2);
+double distancia(double v1,double v2,int norma){
+    switch(norma){
+    case 1:
+        return fabs(v1-v2);
+        break;
+    case 2:
+        return powf(powf(v1,2)-powf(v2,2),1/2);//Norma 2
+        break;
+    }
 }
 
-double filtro_distancias(CImg<double> window){
-    double Rij=0,Rijviejo=99999;//,pivot=0;
-    cimg_forXY(window,x,y){
-        Rij=0;
-        cimg_forXY(window,z,w){
-            Rij+=abs(window(x,y,0,0)-window(z,w,0,0))+abs(window(x,y,0,1)-window(z,w,0,1))+abs(window(x,y,0,2)-window(z,w,0,2));
-        }
-        if  (Rij<Rijviejo)
-            Rijviejo=Rij;
+double filtro_distancias(CImg<double> window,int d){
+    CImg<double> R(window.width(),window.height());
 
+    //Armo la matriz R de distancias
+    cimg_forXY(window,i,j){
+        //Uso la norma 2 como calculo de distancia
+        cimg_forXY(window,s,t){
+            R(i,j)+=distancia(window(i,j),window(s,t),1);
+        }
     }
-    return Rijviejo;
+    //Veo cual es la menor distancia y devuelvo el valor de la ventana en esas coordenadas
+    cimg_forXY(R,i,j){
+        if(R(i,j)==R.min()){
+            return window(i,j);//Devuelvo el valor de la ventana con minima distancia
+        }
+    }
 }
 
 
@@ -1925,20 +1950,28 @@ double filtro_distancias(CImg<double> window){
 ///6.max = ruido sal
 ///7.minimo = ruido pimienta
 ///9.moda = ruido impulsivo
-///11. filtro adaptativo = usa d como tolerancia de la varianza (valor pequeño) y pide la seleccion de un area homogenea de la imagen
+///10. filtro adaptativo = usa d como tolerancia de la varianza (valor pequeño) y pide la seleccion de un area homogenea de la imagen
+///11. distancias = para imagenes de color
+///12. alfa recortado = para imagenes de color
 
 template <class T>
 CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
 
-    int N=img.height(),
-            M=img.width();
+    int N=img.height(),M=img.width();
     int medio=sizew/2;//posicion del medio de la ventana
+    CImg<T> imgout,window(sizew,sizew);
 
-    CImg<T> imgout(M,N),window(sizew,sizew);
+    //Para cuando se usa la funcion distancia en imagenes a color
+    if(tipofiltro == 11 || tipofiltro == 12){
+        //Es color declaro multicanal
+        imgout.assign(M,N,1,3);
+    }else{
+        imgout.assign(M,N);
+    }
 
     //Parametros para el adaptativo
     double varianza;
-    if(tipofiltro == 11){
+    if(tipofiltro == 10){
         //Capturar una zona homogenea para calcular la media y varianza del ruido
         CImgDisplay v1(img,"Presione dos puntos que formen un rectangulo en una zona homogenea");
 
@@ -1996,10 +2029,18 @@ CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
                 imgout(x,y)=moda(window);
                 break;
             case 10:
-                imgout(x,y)=filtro_distancias(window);
+                imgout(x,y)=filtro_adaptativo(img(x,y),window,varianza,d);
                 break;
             case 11:
-                imgout(x,y)=filtro_adaptativo(img(x,y),window,varianza,d);
+                imgout(x,y,0,0)=filtro_distancias(window.get_channel(0),d);
+                imgout(x,y,0,1)=filtro_distancias(window.get_channel(1),d);
+                imgout(x,y,0,2)=filtro_distancias(window.get_channel(2),d);
+                break;
+            case 12:
+                imgout(x,y,0,0)=media_alfarecortado(window.get_channel(0),d);
+                imgout(x,y,0,1)=media_alfarecortado(window.get_channel(1),d);
+                imgout(x,y,0,2)=media_alfarecortado(window.get_channel(2),d);
+                break;
             }
 
         }
@@ -2010,17 +2051,33 @@ CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     return imgout;
 }
 
-//Wrapper para 3 canales RGB
-template <class T>
-CImg<T> denoiseRGB(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
+template<class T>
+CImg<T> filtrado_pseudoinverso(CImg<T> imagen,CImg<T> filtro,double tolerancia){
+    //Creo el R a partir del filtro y el radio
+    //Es como aplicar un pasabajos ideal al filtro de entrada
+    CImg<T> R(filtro.width(),filtro.height());
+    cimg_forXY(filtro,i,j){
+        if(filtro(i,j) > tolerancia){
+            R(i,j)=1/filtro(i,j);
+        }else{
+            R(i,j)=0;
+        }
+    }
 
+    return filtrar(imagen,R);
+}
 
-    CImg<double> imgH=img.get_RGBtoHSI().channel(0);
-    CImg<double> imgS=img.get_RGBtoHSI().channel(1);
-    CImg<double> imgI=denoise(img.get_RGBtoHSI().channel(2),sizew,tipofiltro,Q,d);
+template<class T>
+CImg<T> filtrado_pseudoinverso3(CImg<T> imagen,CImg<T> filtro,double tolerancia){
+    CImg<T> r,g,b,final(imagen.width(),imagen.height());
 
+    r=filtrado_pseudoinverso(imagen.get_channel(0),filtro,tolerancia);
+    g=filtrado_pseudoinverso(imagen.get_channel(1),filtro,tolerancia);
+    b=filtrado_pseudoinverso(imagen.get_channel(2),filtro,tolerancia);
 
-    return ComposeHSI(imgH,imgS,imgI);
+    ComposeRGB(final,r,g,b);
+
+    return final;
 }
 
 ///-----------------------SEGMENTACION-----------------------
@@ -2693,7 +2750,7 @@ template <class T>
 CImg<T> equalizar_comun(CImg<T> img,const unsigned int nb_levels, const T min_value=(T)0, const T max_value=(T)0) {
   if(img.is_empty()) return img;
   T vmin = min_value, vmax = max_value;
-  if (vmin==vmax && vmin==0) vmin = min_max(vmax);
+  if (vmin==vmax && vmin==0) vmin = img.min_max(vmax);
   if (vmin<vmax) {
     CImg<T> hist = img.get_histogram(nb_levels,vmin,vmax);
     unsigned long cumul = 0;
