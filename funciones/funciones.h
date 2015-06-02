@@ -2750,7 +2750,7 @@ template <class T>
 CImg<T> equalizar_comun(CImg<T> img,const unsigned int nb_levels, const T min_value=(T)0, const T max_value=(T)0) {
   if(img.is_empty()) return img;
   T vmin = min_value, vmax = max_value;
-  if (vmin==vmax && vmin==0) vmin = min_max(vmax);
+  if (vmin==vmax && vmin==0) vmin = img.min_max(vmax);
   if (vmin<vmax) {
     CImg<T> hist = img.get_histogram(nb_levels,vmin,vmax);
     unsigned long cumul = 0;
