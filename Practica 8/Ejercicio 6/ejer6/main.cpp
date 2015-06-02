@@ -36,18 +36,41 @@ int main()
 
     //Mascara para los afluentes
 
-    copia = denoiseRGB(copia,3,5);
-    copia=filtroAP3_frecuencia(copia,ALPHA,BETA);
-    mascara_afl=colourslicing(copia,RADIO2);
-    mascara_afl.RGBtoHSI().channel(2).normalize(0,255);
-    mascara_afl.threshold(UMBRAL).normalize(0,1);
-    mascara_afl1 = reconstruccion_dilatacion(mascara_afl,apertura(mascara_afl,vent));
-    mascara_afl2 = reconstruccion_dilatacion(mascara_afl,apertura(mascara_afl,vent));
-    mascara_afl = reconstruccion_dilatacion(mascara_afl2,mascara_afl1);
 
-    final = extraccion_de_contornos(mascara_afl,vent1);
+//    copia = denoiseRGB(copia,3,2);
+//    copia=filtroAP3_frecuencia(copia,ALPHA,BETA);
+//    mascara_afl=colourslicing(copia,RADIO2);
+//    mascara_afl.RGBtoHSI().channel(2).normalize(0,255);
+//    mascara_afl.threshold(UMBRAL).normalize(0,1);
+//    mascara_afl1 = reconstruccion_dilatacion(mascara_afl,apertura(mascara_afl,vent));
+//    mascara_afl2 = reconstruccion_dilatacion(mascara_afl,apertura(mascara_afl,vent));
+//    mascara_afl = reconstruccion_dilatacion(mascara_afl2,mascara_afl1);
 
-    (original.get_mul(final),final).display();
+//    final = extraccion_de_contornos(mascara_afl,vent1);
+
+//    (original.get_mul(final),final).display();
+
+    //Hago la combinacion de ambas mascaras
+
+
+    //Otro aprouch
+    double A=2.25;
+    double alpha = A-1;
+    double b=1.5;
+
+    copia = negativo(copia.RGBtoHSI().get_channel(2).get_normalize(0,255));
+    copia = transformacion(copia,generar_lut_expb((double) 1.0,(double) 0.25));
+    copia= filtroAP_frecuencia(copia,alpha,b);
+    copia.display();
+    mascara_afl = greyslicing(copia,150);
+
+    mascara_afl = negativo(mascara_afl);
+    mascara_afl.display();
+    mascara_afl = componentes_conectadas(mascara_afl);
+    mascara_afl.display();
+
+
+
 
     return 0;
 }
