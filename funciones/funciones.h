@@ -470,13 +470,27 @@ CImg<T> umbral_invertido(CImg<T> &img, T p){
 ///****************************************
 //recibe imagen en escala de gris
 template<typename T>
-CImg<T> umbral_por_tramos(CImg<T> img, T p1,T p2){
+CImg<T> umbral_por_tramos(CImg<T> img, int p1,int p2){
     CImg<T> resultado(img.width(),img.height(),1,1);
     cimg_forXY(img,i,j){
         if (img(i,j)<=p1 || img(i,j)>=p2)
             resultado(i,j)=255;
         else
             resultado(i,j)=0;
+    }
+    return resultado;
+}
+
+//umbral por tramos booleano
+//recibe imagen en escala de gris
+template<typename T>
+CImg<bool> umbral_por_tramos_bool(CImg<T> img, int p1,int p2){
+    CImg<bool> resultado(img.width(),img.height(),1,1);
+    cimg_forXY(img,i,j){
+        if (img(i,j)<=p1 || img(i,j)>=p2) // todo lo que esta fuera de rango lo pongo a cero
+            resultado(i,j)=0;
+        else
+            resultado(i,j)=1;
     }
     return resultado;
 }
@@ -2255,6 +2269,11 @@ CImg<bool> nerode(CImg<bool> img,CImg<bool> ventana,int n){
     for(int i=0;i<n;i++){img.erode(ventana);}//Erosionamos
     return img;
 }
+//DILATE n veces
+CImg<bool> ndilate(CImg<bool> img,CImg<bool> ventana,int n){
+    for(int i=0;i<n;i++){img.dilate(ventana);}//dilatamos
+    return img;
+}
 
 //APERTURA
 CImg<bool> apertura(CImg<bool> img,CImg<bool> ventana){
@@ -2655,6 +2674,39 @@ CImg<T> equalizar_comun(CImg<T> img,const unsigned int nb_levels, const T min_va
     }
   }
   return img;
+}
+
+CImg<double>bbhe(CImg<double> img){
+    w=img.width();
+    h=img.height();
+    o_mean=floor(img.mean());
+    CImg<double> h_l(256,1,1,1,0),h_u(256,1,1,1,0),nh_l(256,1,1,1,0),nh_u(256,1,1,1,0),hist_l_cdf(256,1,1,1,0),hist_u_cdf(256,1,1,1,0);
+    cimg_forXY(img,i,j)
+            if(img(i,j)<=o_mean)
+            h_l(img(i,j)+1,1)=h_l(img(i,j)+1,1)+1;
+            else
+            h_u(img(i,j)+1,1)=h_u(img(i,j)+1,1)+1;
+
+    nh_l=h_l.get_div(h_l.sum()); //division creo
+    nh_u=h_u.get_div(h_u.sum()); //division creo
+    hist_l_cdf(0,1) = nh_l(0,0);
+      hist_u_cdf(0,1) = nh_u(0,0);
+
+      for (int k = 2;k++;nh_l.size()){
+           hist_l_cdf(k,1) =  hist_l_cdf(k-1,1) + nh_l(k,1);
+           hist_u_cdf(k,1) =  hist_u_cdf(k-1,1) + nh_u(k,1);
+       }
+
+            CImg<double> equalized_img(img.width(),img.height(),1,1,0);
+                //range_l = [0 o_mean];
+                //range_u = [(o_mean+1) 255];
+
+                        cimg_forXY(img,i,j)
+                        if(img(i,j)<=o_mean)
+                           equalized_img(i,j) = range_l(1) + round(((range_l(2)-range_l(1))*hist_l_cdf(img(i,j)+1)));
+                        else
+                           equalized_img(i,j) = range_u(1) + round(((range_u(2)-range_u(1))*hist_u_cdf(img(i,j)+1)));
+
 }
 
 
