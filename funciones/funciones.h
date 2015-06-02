@@ -518,7 +518,7 @@ vector<int> grises_disponibles(CImg<T> imagen){
 ///****************************************
 //Devuelve una imagen binaria
 template<typename T>
-CImg<bool> greyslicing(CImg<T> imagen,int ancho=10){
+CImg<bool> greyslicing(CImg<T> imagen,int ancho=10,bool creg=false){
     CImg<bool> final;
     CImgDisplay v1(imagen,"Presione sobre el gris deseado"),v2(imagen,"Resultado");
 
@@ -529,12 +529,15 @@ CImg<bool> greyslicing(CImg<T> imagen,int ancho=10){
             int mx=v1.mouse_x();
             int my=v1.mouse_y();
 
-            //Defino los puntos de la zona media
-            T p1 = imagen(mx,my)-(ancho/2) >= 0 ? imagen(mx,my)-(ancho/2):0;
-            T p2 = imagen(mx,my)+(ancho/2) <= imagen.max() ? imagen(mx,my)+(ancho/2):imagen.max();
+            if(!creg){
+                //Defino los puntos de la zona media
+                T p1 = imagen(mx,my)-(ancho/2) >= 0 ? imagen(mx,my)-(ancho/2):0;
+                T p2 = imagen(mx,my)+(ancho/2) <= imagen.max() ? imagen(mx,my)+(ancho/2):imagen.max();
 
-            final = umbral_por_tramos(imagen,p1,p2);
-
+                final = umbral_por_tramos(imagen,p1,p2);
+            }else{
+                final = region_growing(imagen,mx,my,ancho,256);
+            }
             v2.render(final);
             v2.paint();
         }
@@ -1861,6 +1864,17 @@ T equalize_local(CImg<T> window){
 
 }
 
+//filtro adaptativo
+template <class T>
+T filtro_adaptativo(T g,CImg<T> window,double varianza,double tolerancia){
+    if(fabs(window.variance()-varianza) <= tolerancia){
+        //cout<<"La diferencia de varianza es: "<<fabs(window.variance()-varianza)<<endl;
+        return window.mean();
+    }else{
+        return (g-((varianza/window.variance())*(g-window.mean())));
+    }
+}
+
 double distancia(double v1,double v2){
     return abs(v1-v2);
 }
@@ -1882,16 +1896,17 @@ double filtro_distancias(CImg<double> window){
 
 //int tipofiltro : 1 MEDIA GEOMETRICA , 2 MEDIA CONTRAARMONICA
 //                 3 MEDIANA, 4 PUNTO MEDIO ,5 PUNTO MEDIO RECORTADO,6 MAX, 7 MIN
-//el parametro Q para MEDIA CONTRAARMONICA:
+
 
 
 ///media armonica= para ruido sal (malo para pimienta), bueno para gaussiano
 ///1.media geometrica= bueno ruido gaussiano
 ///2.media contra armonica
-//Q=-1 media armonica
-//Q=0 media aritmetica
-//Q>0 = elimina pimienta
-//Q<0 =elimina sal
+    //el parametro Q para MEDIA CONTRAARMONICA:
+    //Q=-1 media armonica
+    //Q=0 media aritmetica
+    //Q>0 = elimina pimienta
+    //Q<0 =elimina sal
 ///3.mediana= ruido impulsivo (sin desenfoque)
 ///moda = ruido impulsivo (malo para otro tipo de ruido)
 ///4.punto medio = ruido gaussiano o uniforme
@@ -1899,6 +1914,7 @@ double filtro_distancias(CImg<double> window){
 ///6.max = ruido sal
 ///7.minimo = ruido pimienta
 ///9.moda = ruido impulsivo
+///11. filtro adaptativo = usa d como tolerancia de la varianza (valor pequeño) y pide la seleccion de un area homogenea de la imagen
 
 template <class T>
 CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
@@ -1908,6 +1924,32 @@ CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     int medio=sizew/2;//posicion del medio de la ventana
 
     CImg<T> imgout(M,N),window(sizew,sizew);
+
+    //Parametros para el adaptativo
+    double varianza;
+    if(tipofiltro == 11){
+        //Capturar una zona homogenea para calcular la media y varianza del ruido
+        CImgDisplay v1(img,"Presione dos puntos que formen un rectangulo en una zona homogenea");
+
+        int mx1=0,my1=0,mx2=0,my2=0;
+
+        while(!v1.is_closed()){
+            v1.wait();
+            if(v1.button()==1){
+
+                mx2=mx1;
+                my2=my1;
+
+                mx1=v1.mouse_x();
+                my1=v1.mouse_y();
+
+            }
+        }
+        //Calculo la varianza del ruido
+        varianza = img.get_crop(mx1,my1,mx2,my2).variance();
+        cout<<"La varianza del ruido es: "<<varianza<<endl;
+        if (varianza == 0.0){return img;}//Caso trivial
+    }
 
 
     for (int x=medio;x<M-medio;x++){
@@ -1945,6 +1987,8 @@ CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
             case 10:
                 imgout(x,y)=filtro_distancias(window);
                 break;
+            case 11:
+                imgout(x,y)=filtro_adaptativo(img(x,y),window,varianza,d);
             }
 
         }

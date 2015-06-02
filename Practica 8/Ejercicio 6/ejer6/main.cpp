@@ -36,7 +36,7 @@ int main()
 
     //Mascara para los afluentes
 
-    copia = denoiseRGB(copia,3,2);
+    copia = denoiseRGB(copia,3,5);
     copia=filtroAP3_frecuencia(copia,ALPHA,BETA);
     mascara_afl=colourslicing(copia,RADIO2);
     mascara_afl.RGBtoHSI().channel(2).normalize(0,255);
@@ -48,10 +48,6 @@ int main()
     final = extraccion_de_contornos(mascara_afl,vent1);
 
     (original.get_mul(final),final).display();
-
-    //Hago la combinacion de ambas mascaras
-
-
 
     return 0;
 }
