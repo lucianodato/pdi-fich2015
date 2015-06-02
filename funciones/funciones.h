@@ -2873,8 +2873,7 @@ CImg<T> trim_image(CImg<T>img,CImg<bool>mascara){
     minx=min.x;miny=min.y;
 
     //Recorto la imagen
-    CImg<T>img_copia = img.get_crop(minx,miny,maxx,maxy);
-    return img_copia;
+    return img.get_crop(maxx,maxy,minx,miny);
 
 }
 
@@ -2882,18 +2881,20 @@ CImg<T> trim_image(CImg<T>img,CImg<bool>mascara){
 /// TRIM image wrapper
 ///****************************************
 template<class T>
-CImg<T> trim_image_wrapper(CImg<T>img,CImg<T>mascara,int etiqueta=1){
+CImg<T> trim_image_wrapper(CImg<T>img,CImg<bool>mascara,int etiqueta=1){
 
     //Costruyo la mascara booleana del objeto con ese valor de etiqueta
     CImg<bool> mascara_proceso(mascara.width(),mascara.height(),1,1);
     mascara_proceso.fill(0);
 
-    //Busco los valores con ese valor de etiqueta
+    //Busco los valores con ese valor de etiqueta y genero mi mascara para ese objeto
     cimg_forXY(mascara,i,j){
         if(mascara(i,j)==etiqueta)
             mascara_proceso(i,j)==1;
 
     }
+
+    //Llamo a la funcion que corta la imagen
 
     return trim_image(img,mascara_proceso);
 }

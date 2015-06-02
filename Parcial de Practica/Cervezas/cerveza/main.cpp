@@ -1,6 +1,6 @@
 #include "funciones.h"
 
-#define UMBRAL 200
+#define UMBRAL 180
 #define INTENSIDAD_PROMEDIO 128.0
 
 
@@ -16,15 +16,13 @@ bool tipo_cerveza(CImg<T> img){
             } else { // es negra
                 return false;
             }
-
-
 }
 
 int main()
 {
     //imagen
-    CImg<float> original,byn,procesada,copia;
-    original.load("../../../../Parcial de Practica/Cervezas/training/31.jpg");
+    CImg<float> original,byn,procesada,copia,final;
+    original.load("../../../../Parcial de Practica/Cervezas/training/02.jpg");
     procesada = original;
     copia = original;
     //original.display();
@@ -38,8 +36,9 @@ int main()
 
     //a)Encontrar la mascara del objeto.
     //1- mascara difusa, 2- escala de grises, 3 - binarizo con threadhold alto y obtengo el negativo (el fondo es blanco)
-    procesada = procesada.get_convolve(mask(15));
+    procesada = procesada.get_convolve(mask(10)).get_equalize(8);
     byn =procesada.RGBtoHSI().get_channel(2).normalize(0,255);
+    byn.get_histogram(256,0,255).display_graph();
     mascara = negativo(byn.get_threshold(UMBRAL));
     //multiplico la mascara x original y obtengo el vaso de cerveza
     (original,copia.mul(mascara),mascara).display();
@@ -49,31 +48,29 @@ int main()
     //3-get crop con las cordenadas a la imagen original
     //mascara = ConvexHull(mascara,true,false);
 
-    coordenadas = maxmin_coord(mascara);
-    max=  coordenadas[1];
-    min = coordenadas[0];
-    maxx = max.x;
-    minx = min.x;
-    maxy = max.y;
-    miny = min.y;
-    //    cout<<"minx: "<<minx;
-    //    cout<<" maxx: "<<maxx;
-    //    cout<<" miny: "<<miny;
-    //    cout<<" maxy: "<<maxy;
+//    coordenadas = maxmin_coord(mascara);
+//    max=  coordenadas[1];
+//    min = coordenadas[0];
+//    maxx = max.x;
+//    minx = min.x;
+//    maxy = max.y;
+//    miny = min.y;
 
-    procesada = original.get_crop(maxx,maxy,minx,miny);
-    procesada.display();
+//    procesada = original.get_crop(maxx,maxy,minx,miny);
+//    procesada.display();
 
-    CImg<float> copia_h(procesada.width(),procesada.height(),1,1);
-    copia_h = procesada.get_channel(0);
-    int i=procesada.width()/2;
-    int j=procesada.height()/2;
-    cout<<"hola"<<copia(i,j);
+//    CImg<float> copia_h(procesada.width(),procesada.height(),1,1);
+//    copia_h = procesada.get_channel(0);
+//    int i=procesada.width()/2;
+//    int j=procesada.height()/2;
+//    cout<<"hola"<<copia(i,j);
 
+
+    final = trim_image_wrapper(original,mascara,1);
+    final.display();
     //c)determinar tipo de cerveza (negra o rubia)
 
-
-    if(tipo_cerveza(procesada)){
+    if(tipo_cerveza(final)){
         cout<<"Cerveza Rubia!!";
     }
     else{
