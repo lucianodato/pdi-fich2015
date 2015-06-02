@@ -3,21 +3,15 @@
 int main()
 {
     CImg<double> image("../../../../images/futbol.jpg");
-    CImg<double> img=image.get_noise(25,0);
-    img.noise(20,2);
-    CImg<double> img_noisy=img;
-    CImg<double> imgR=denoise(img.get_channel(0),4,10);
-    CImg<double> imgB=denoise(img.get_channel(1),4,10);
-    CImg<double> imgG=denoise(img.get_channel(2),4,10);
+    CImg<double> img=image.get_noise(25,0);//gaussiano
+    img.noise(5,2);//impulsivo
 
-    CImg<double> imgFiltrada;
-    ComposeRGB(imgFiltrada,imgR,imgG,imgB);
+    CImg<double> imgFiltrada=denoise(img,3,10,0,4);
 
     cout<<"********ECM*********\n";
-    cout<<"ECM limpia-degradada: "<<image.MSE(img_noisy)<<endl;
-    cout<<"ECM limpia-filtrada : "<<image.MSE(img)<<endl<<endl;
-    //CImgDisplay v1(img_noisy),v2(img);
-    (image,img_noisy,imgFiltrada).display("original -- img_noisy  -- imgFiltrada");
+    cout<<"ECM limpia-degradada: "<<image.MSE(img)<<endl;
+    cout<<"ECM limpia-filtrada : "<<image.MSE(imgFiltrada)<<endl<<endl;
+    (image,img,imgFiltrada).display("original -- img ruidosa  -- imgFiltrada");
 
     return 0;
 }

@@ -1886,22 +1886,36 @@ T filtro_adaptativo(T g,CImg<T> window,double varianza,double tolerancia){
     }
 }
 
-double distancia(double v1,double v2){
-    return abs(v1-v2);
+double distancia(double v1,double v2,int norma){
+    switch(norma){
+    case 1:
+        return fabs(v1-v2);
+        break;
+    case 2:
+        return powf(powf(v1,2)-powf(v2,2),1/2);//Norma 2
+        break;
+    }
 }
 
-double filtro_distancias(CImg<double> window){
-    double Rij=0,Rijviejo=99999;//,pivot=0;
-    cimg_forXY(window,x,y){
-        Rij=0;
-        cimg_forXY(window,z,w){
-            Rij+=abs(window(x,y,0,0)-window(z,w,0,0))+abs(window(x,y,0,1)-window(z,w,0,1))+abs(window(x,y,0,2)-window(z,w,0,2));
-        }
-        if  (Rij<Rijviejo)
-            Rijviejo=Rij;
+double filtro_distancias(CImg<double> window,int d){
+    CImg<double> R(window.width(),window.height());
 
+    //Calculo cualquiera de los metodos para eliminar ruido
+    window = media_alfarecortado(window,d);
+
+    //Armo la matriz R de distancias
+    cimg_forXY(window,i,j){
+        //Uso la norma 2 como calculo de distancia
+        cimg_forXY(window,s,t){
+            R(i,j)+=distancia(window(i,j),window(s,t),1);
+        }
     }
-    return Rijviejo;
+    //Veo cual es la menor distancia y devuelvo el valor de la ventana en esas coordenadas
+    cimg_forXY(R,i,j){
+        if(R(i,j)==R.min()){
+            return window(i,j);//Devuelvo el valor de la ventana con minima distancia
+        }
+    }
 }
 
 
@@ -1925,16 +1939,23 @@ double filtro_distancias(CImg<double> window){
 ///6.max = ruido sal
 ///7.minimo = ruido pimienta
 ///9.moda = ruido impulsivo
+///10. distancias = para imagenes de color
 ///11. filtro adaptativo = usa d como tolerancia de la varianza (valor pequeño) y pide la seleccion de un area homogenea de la imagen
 
 template <class T>
 CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
 
-    int N=img.height(),
-            M=img.width();
+    int N=img.height(),M=img.width();
     int medio=sizew/2;//posicion del medio de la ventana
+    CImg<T> imgout,window(sizew,sizew);
 
-    CImg<T> imgout(M,N),window(sizew,sizew);
+    //Para cuando se usa la funcion distancia en imagenes a color
+    if(tipofiltro == 10){
+        //Es color declaro multicanal
+        imgout.assign(M,N,1,3);
+    }else{
+        imgout.assign(M,N);
+    }
 
     //Parametros para el adaptativo
     double varianza;
@@ -1996,7 +2017,9 @@ CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
                 imgout(x,y)=moda(window);
                 break;
             case 10:
-                imgout(x,y)=filtro_distancias(window);
+                imgout(x,y,0,0)=filtro_distancias(window.get_channel(0),d);
+                imgout(x,y,0,1)=filtro_distancias(window.get_channel(1),d);
+                imgout(x,y,0,2)=filtro_distancias(window.get_channel(2),d);
                 break;
             case 11:
                 imgout(x,y)=filtro_adaptativo(img(x,y),window,varianza,d);
@@ -2008,19 +2031,6 @@ CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     imgout.crop(medio,medio,M-medio-1,N-medio-1);
     imgout.resize(M,N);
     return imgout;
-}
-
-//Wrapper para 3 canales RGB
-template <class T>
-CImg<T> denoiseRGB(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
-
-
-    CImg<double> imgH=img.get_RGBtoHSI().channel(0);
-    CImg<double> imgS=img.get_RGBtoHSI().channel(1);
-    CImg<double> imgI=denoise(img.get_RGBtoHSI().channel(2),sizew,tipofiltro,Q,d);
-
-
-    return ComposeHSI(imgH,imgS,imgI);
 }
 
 ///-----------------------SEGMENTACION-----------------------
