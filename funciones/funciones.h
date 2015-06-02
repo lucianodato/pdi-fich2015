@@ -1914,9 +1914,6 @@ double distancia(double v1,double v2,int norma){
 double filtro_distancias(CImg<double> window,int d){
     CImg<double> R(window.width(),window.height());
 
-    //Calculo cualquiera de los metodos para eliminar ruido
-    window = media_alfarecortado(window,d);
-
     //Armo la matriz R de distancias
     cimg_forXY(window,i,j){
         //Uso la norma 2 como calculo de distancia
@@ -1953,8 +1950,9 @@ double filtro_distancias(CImg<double> window,int d){
 ///6.max = ruido sal
 ///7.minimo = ruido pimienta
 ///9.moda = ruido impulsivo
-///10. distancias = para imagenes de color
-///11. filtro adaptativo = usa d como tolerancia de la varianza (valor pequeño) y pide la seleccion de un area homogenea de la imagen
+///10. filtro adaptativo = usa d como tolerancia de la varianza (valor pequeño) y pide la seleccion de un area homogenea de la imagen
+///11. distancias = para imagenes de color
+///12. alfa recortado = para imagenes de color
 
 template <class T>
 CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
@@ -1964,7 +1962,7 @@ CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     CImg<T> imgout,window(sizew,sizew);
 
     //Para cuando se usa la funcion distancia en imagenes a color
-    if(tipofiltro == 10){
+    if(tipofiltro == 11 || tipofiltro == 12){
         //Es color declaro multicanal
         imgout.assign(M,N,1,3);
     }else{
@@ -1973,7 +1971,7 @@ CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
 
     //Parametros para el adaptativo
     double varianza;
-    if(tipofiltro == 11){
+    if(tipofiltro == 10){
         //Capturar una zona homogenea para calcular la media y varianza del ruido
         CImgDisplay v1(img,"Presione dos puntos que formen un rectangulo en una zona homogenea");
 
@@ -2031,12 +2029,18 @@ CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
                 imgout(x,y)=moda(window);
                 break;
             case 10:
+                imgout(x,y)=filtro_adaptativo(img(x,y),window,varianza,d);
+                break;
+            case 11:
                 imgout(x,y,0,0)=filtro_distancias(window.get_channel(0),d);
                 imgout(x,y,0,1)=filtro_distancias(window.get_channel(1),d);
                 imgout(x,y,0,2)=filtro_distancias(window.get_channel(2),d);
                 break;
-            case 11:
-                imgout(x,y)=filtro_adaptativo(img(x,y),window,varianza,d);
+            case 12:
+                imgout(x,y,0,0)=media_alfarecortado(window.get_channel(0),d);
+                imgout(x,y,0,1)=media_alfarecortado(window.get_channel(1),d);
+                imgout(x,y,0,2)=media_alfarecortado(window.get_channel(2),d);
+                break;
             }
 
         }
