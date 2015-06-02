@@ -1450,6 +1450,20 @@ CImg<T> filtrar(CImg<T> img,CImg<T> filt){
     return fourier_inv(img_tr.at(0).mul(filt),img_tr.at(1));
 }
 
+//Para RGB
+template<typename T>
+CImg<T> filtrar3(CImg<T> img,CImg<T> filt){
+    CImg<T> r,g,b,final(img.width(),img.height());
+
+    r=filtrar(img.get_channel(0),filt);
+    g=filtrar(img.get_channel(1),filt);
+    b=filtrar(img.get_channel(2),filt);
+
+    ComposeRGB(final,r,g,b);
+
+    return final;
+}
+
 ///****************************************
 ///FILTRO IDEAL
 ///****************************************
@@ -2031,6 +2045,35 @@ CImg<T> denoise(CImg<T> img,int sizew,int tipofiltro,int Q=0,int d=0){
     imgout.crop(medio,medio,M-medio-1,N-medio-1);
     imgout.resize(M,N);
     return imgout;
+}
+
+template<class T>
+CImg<T> filtrado_pseudoinverso(CImg<T> imagen,CImg<T> filtro,double tolerancia){
+    //Creo el R a partir del filtro y el radio
+    //Es como aplicar un pasabajos ideal al filtro de entrada
+    CImg<T> R(filtro.width(),filtro.height());
+    cimg_forXY(filtro,i,j){
+        if(filtro(i,j) > tolerancia){
+            R(i,j)=1/filtro(i,j);
+        }else{
+            R(i,j)=0;
+        }
+    }
+
+    return filtrar(imagen,R);
+}
+
+template<class T>
+CImg<T> filtrado_pseudoinverso3(CImg<T> imagen,CImg<T> filtro,double tolerancia){
+    CImg<T> r,g,b,final(imagen.width(),imagen.height());
+
+    r=filtrado_pseudoinverso(imagen.get_channel(0),filtro,tolerancia);
+    g=filtrado_pseudoinverso(imagen.get_channel(1),filtro,tolerancia);
+    b=filtrado_pseudoinverso(imagen.get_channel(2),filtro,tolerancia);
+
+    ComposeRGB(final,r,g,b);
+
+    return final;
 }
 
 ///-----------------------SEGMENTACION-----------------------
