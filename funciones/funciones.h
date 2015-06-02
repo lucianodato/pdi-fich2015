@@ -2763,6 +2763,96 @@ CImg<T> equalizar_comun(CImg<T> img,const unsigned int nb_levels, const T min_va
   return img;
 }
 
+template <class T>
+CImg<T> equalizar_lpce(CImg<T> img,const unsigned int nb_levels, const T min_value=(T)0, const T max_value=(T)0,const T sigma=T(0)) {
+    if(img.is_empty()) return img;
+    T vmin = min_value, vmax = max_value;
+    if (vmin==vmax && vmin==0) vmin = img.min_max(vmax);
+    if (vmin<vmax) {
+        //El problema esta formulado en la ecuacion (4) la cual hay que minimizar
+        //Para esto se descompone la ecuacion y se arma un sistema
+
+        //Encuentro p y r
+        //r (es el dominio de intensidades originales)
+        CImg<T> r = img.get_histogram(nb_levels,vmin,vmax);
+
+        //p
+        unsigned long cumul = 0;
+        vector<unsigned long> p;
+        cimg_forX(r,pos) { cumul+=(r[pos]/r.sum()); p.push_back(cumul);}
+
+        //Formo el vector de pesos w
+        T w[nb_levels-1];
+        for(int i=1;i<nb_levels-1;i++){
+            w[i]=exp(-powf((r(i)-r(i-1)),2) / (2*powf(sigma,2)));
+        }
+
+        //Formar matriz D con x1...xN-1 (Tamaño (N-1)*(N-1))
+        T D[nb_levels-1][nb_levels-1];
+        D[i][j]=1;
+        for(int i=1;i<nb_levels-1;i++){
+            for(int j=0;j<nb_levels-1;j++){
+                if(i==j){
+                    D[i][j]=1;
+                    D[i][j-1]=-1;
+                }else{
+                    D[i][j]=0;
+                }
+            }
+        }
+
+        //Formar el vector x (es el dominio de intensidades nuevo)
+        T x[nb_levels];
+        x[0]=0;
+        x[nb_levels-1]=nb_levels;
+        for(int i=1;i<nb_levels-1;i++){
+            x[i]=1/(nb_levels);
+        }
+
+        //Formo la matriz tridiagonal Q (tendria ceros en la diagonal?)
+        T Q[nb_levels][nb_levels];
+        //Lleno de ceros la matriz
+        for(int i=1;i<nb_levels-1;i++){
+            for(int i=1;i<nb_levels-1;i++){
+                    Q[i][j]=0;
+            }
+        }
+        //Calculo los elementos tridiagonales
+        for(int i=1;i<nb_levels-1;i++){
+            for(int i=1;i<nb_levels-1;i++){
+                if(i==j){
+//                    Q[i][j-1]=w[];
+//                    Q[i][j+1];
+                }
+            }
+        }
+
+        //Formar el vector y=Dx
+        T y[nb_levels-1];
+        //Lleno de ceros el vector
+        for(int i=1;i<nb_levels-1;i++){
+            y[i]=0;
+        }
+
+        //Calculo los valores de la multiplicacion matriz-vector
+        for(int i=1;i<nb_levels-1;i++){
+            for(int i=1;i<nb_levels-1;i++){
+                y[i]+=D[i][j]*x[i];
+            }
+        }
+
+
+        //Calcular la solucion con de quadprog++ (en el paper usan interior-point method de matlab, quadprog++ implementa otro)
+        //Quadprog++ devuelve un double (Hay que armar un par de matrices antes)
+
+
+        //Cuando resuelva y halle el minimo p tal que conserve la localidad en ese nivel
+
+    }
+
+    return img;
+}
+
 ///****************************************
 /// TRIM image. Devuelve la imagen recortada a su minimo convexhull
 /// Necesario: Imagen con fondo blanco o similar, tiene que ser homogenea
