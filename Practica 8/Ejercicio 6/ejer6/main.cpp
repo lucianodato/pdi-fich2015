@@ -36,6 +36,7 @@ int main()
 
     //Mascara para los afluentes
 
+
 //    copia = denoiseRGB(copia,3,2);
 //    copia=filtroAP3_frecuencia(copia,ALPHA,BETA);
 //    mascara_afl=colourslicing(copia,RADIO2);
@@ -67,6 +68,7 @@ int main()
     mascara_afl.display();
     mascara_afl = componentes_conectadas(mascara_afl);
     mascara_afl.display();
+
 
 
 
