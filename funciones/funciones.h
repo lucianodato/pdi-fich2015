@@ -16,17 +16,6 @@
 #include <queue>
 #include "malloc.h"
 
-/*#ifndef MagickPlusPlus_Header
-#include <ImageMagick-6/Magick++/Include.h>
-#include <ImageMagick-6/Magick++/Functions.h>
-#include <ImageMagick-6/Magick++/Image.h>
-#include <ImageMagick-6/Magick++/Pixels.h>
-#include <ImageMagick-6/Magick++/ResourceLimits.h>
-#include <ImageMagick-6/Magick++/STL.h>
-#define MagickPlusPlus_Header
-#endif // MagickPlusPlus_Header
-
-*/
 #define cimg_plugin "plugins/skeleton.h"
 #include "CImg.h"
 #include <PDI_functions.h>
@@ -38,6 +27,7 @@
 
 using namespace cimg_library;
 using namespace std;
+
 
 #define EPS 0.00001
 
@@ -1523,7 +1513,7 @@ CImg<T> butterworth_mask(CImg<T> &img, T d,unsigned o, bool highpass=false){
 ///FILTROS GAUSSIANOS
 ///****************************************
 template <class T>
-CImg<T> gaussian_mask(CImg<T> &img, T d, bool highpass=false){
+CImg<T> gaussian_mask(CImg<T> img, T d, bool highpass=false){
     int i, j, w=img.width(), h=img.height(), w_2=w/2, h_2=h/2;
     CImg<T> mask(w, h, 1, 1);
     float dist;
@@ -1744,9 +1734,11 @@ CImg<T> filtroAP_frecuencia(CImg<T> img,T alpha,T b) {
 
     //img, frecuencia de corte (D0) y bandera = true [Highpass filter]
     //En este caso uso el gaussiano pero puede ser tambien ideal, butter o laplaciano
-    double frec_corte = img.width()/4; //nyquest / 2---> (w/2)/2
+    double frec_corte = img.width()/4.0; //nyquest / 2---> (w/2)/2
 
-    CImg<T>  filtro_PA= gaussian_mask(img,frec_corte,true);
+    CImg<T> filtro_PA;
+
+    filtro_PA = gaussian_mask(img,frec_corte,true);
 
     CImg<T> Resultado,filtro_frec;
 
@@ -2950,6 +2942,94 @@ CImg<double>bbhe(CImg<double> img){
     equalized_img(i,j) = range_u(1) + round(((range_u(2)-range_u(1))*hist_u_cdf(img(i,j)+1)));
 
 
+}
+
+
+///****************************************
+/// ROTATE IMAGE. Rota las imagenes en funcion de un angulo
+///****************************************
+
+template<class T>
+CImg<T> rotate_image(){
+
+    //Pasos para rotar una imagen:
+    //1 - Obtener la mascara del objeto a rotar (umbralizo
+    //2 - obtener la magnitud y fase de la imagen a
+
+
+
+}
+
+///****************************************
+/// COORD_HOUGH_TO_VALUE
+///****************************************
+/// En base a la coordenada y al eje, me retorna el valor que correspende la transformada Hough
+/// en grados para theta (t) entre [-90 ; 90] y entre [-sqrt(2)M;sqrt(2)M] el rho (p)
+template <typename T>
+double coord_hough_to_value(CImg<T> hough, int coord, unsigned char axis) {
+
+    unsigned int M = hough.width();
+    unsigned int N = hough.height();
+
+    // Maximos valores absolutos de theta y de rho
+    double max_theta = 90;
+    double max_rho = pow(pow(M, 2.0) + pow(N, 2.0), 0.5); // si M = N, max_rho = sqrt(2) * M
+
+    // Y le resto para ir al rango normal [-1.0 ~ 1.0]
+    double valor;
+
+    if (axis == 't') { // theta
+        valor = (2.0 * coord / M - 1.0) * max_theta;
+    } else if (axis == 'p') { //rho
+        valor = (2.0 * coord / N - 1.0) * max_rho;
+    } else {
+        assert(axis && 0); // aviso del error
+    }
+
+    return valor;
+}
+
+///****************************************
+/// GET_MAX_PEAK. maxima colinealidad
+///****************************************
+/// Busco la posicion de maximia colinealidad en Hough, y retorno por referencia el valor de
+/// tetha entre [-90, 90] y el valor en coord de posicion de rho [0, hough.height()]
+/// tambien retorno la transformada Hough sin ese maximo pico
+template<typename T>
+CImg<T> get_max_peak(CImg<T> hough, T &theta, T &rho_coord, unsigned int difuminacion = 5) {
+
+    unsigned int max_x = 0;
+    unsigned int max_y = 0;
+
+    double max_val = hough.max();
+
+    bool go_loop = true;
+
+    for (unsigned int x = 0; x < hough.width() && go_loop; x++) {
+        for (unsigned int y = 0; y < hough.height() && go_loop; y++) {
+            if (fabs(hough(x, y) - max_val) < EPS) {
+                max_x = x;
+                max_y = y;
+                go_loop = false;
+            }
+        }
+    }
+
+
+    // Guardo los valores (Giro respecto al eje x)
+    rho_coord = coord_hough_to_value(hough, max_y, 'p');
+    theta = max_x;
+
+    // Guardo los valores (Giro respecto al eje y)
+    rho_coord = coord_hough_to_value(hough, max_y, 'p');
+    theta = max_x;
+
+    //  Dibujo un circulo negro (0's) de radio difuminacion en hough
+    unsigned char color[] = {0};
+
+    hough.draw_circle(int(max_x), int(max_y), difuminacion, color);
+
+    return hough;
 }
 
 
