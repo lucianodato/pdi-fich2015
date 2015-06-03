@@ -18,7 +18,7 @@ int main()
     //Mascara
     mascara = copia.threshold(200);
 
-    copia = trim_image_wrapper(copia,mascara);
+    copia = trim_image_wrapper(copia,mascara,1);
     copia.display();
 
 

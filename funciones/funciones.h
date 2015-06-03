@@ -2980,5 +2980,34 @@ CImg<T> get_max_peak(CImg<T> hough, T &theta, T &rho_coord, unsigned int difumin
 }
 
 
+///****************************************
+/// (ACEBSF) Adaptive Contrast Enhancement Based on modified Sigmoid Function
+///****************************************
+/// 1 -  paso proceso con la funcion sigmoide modificada
+/// 2-
+/// tambien retorno la transformada Hough sin ese maximo pico
+///
+/// Implementation Steps Involved in the
+///Proposed Algorithm
+///• Step 1: Read the input image.
+///• Step 2: Convert input image into gray scale image if it is color image.
+///• Step 3: Select the control parameter K1 and K2.
+///• Step 4: Calculate f min and f max . These are calculated as follows: f min = min(min(f)) and f max = max(max(f)).
+///• Step 5: Determine f=f-f min and also Calculate f=f/f max .
+///• Step 6: Calculate output of modified sigmoid function.
+///• Step 7: Output image of modified sigmoid function
+///(i.e., o) is further passes through contrast limited
+///adaptive histogram equalization.
+///• Step 8: Repeat steps 6 to 7 for entire image.
+
+template<typename T>
+CImg<T> ACEBSF(CImg<T> img){
+
+    CImg<T>
+    //Primer paso le pasamos la funcion sigmoidea
+    return resultado;
+}
+
+
 #endif // FUNCIONES
 
