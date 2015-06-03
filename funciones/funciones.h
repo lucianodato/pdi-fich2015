@@ -105,7 +105,7 @@ struct Pixel {
 };
 
 
- // transforma radianes a reg
+// transforma radianes a reg
 double radToReg(double rad) {
     return rad*180.0/M_PI;
 }
@@ -224,6 +224,7 @@ CImg<T> generar_lut_expb(T c,T gamma){
     lut.normalize(0,255);
     return lut;
 }
+
 
 //aplica la transformacion que se la pase en "lut" a la imagen "img"
 template<typename T>
@@ -1944,11 +1945,11 @@ double filtro_distancias(CImg<double> window,int d){
 ///media armonica= para ruido sal (malo para pimienta), bueno para gaussiano
 ///1.media geometrica= bueno ruido gaussiano
 ///2.media contra armonica
-    //el parametro Q para MEDIA CONTRAARMONICA:
-    //Q=-1 media armonica
-    //Q=0 media aritmetica
-    //Q>0 = elimina pimienta
-    //Q<0 =elimina sal
+//el parametro Q para MEDIA CONTRAARMONICA:
+//Q=-1 media armonica
+//Q=0 media aritmetica
+//Q>0 = elimina pimienta
+//Q<0 =elimina sal
 ///3.mediana= ruido impulsivo (sin desenfoque)
 ///moda = ruido impulsivo (malo para otro tipo de ruido)
 ///4.punto medio = ruido gaussiano o uniforme
@@ -2321,7 +2322,7 @@ CImg<bool> Inundar( CImg<double> img, double umbral, int x, int y) {
     cola.push_back(Pixel(x, y, &img));
     //cola.push_back( MinimoP( img ) );
     procesado(cola.front().x, cola.front().y) = true;
-   // img.display("Inundar");
+    // img.display("Inundar");
     while( !cola.empty() ) {
         Pixel p = cola.front(); cola.pop_front();
         double a=p.value();
@@ -2758,22 +2759,290 @@ CImg<bool> bordes(CImg<bool> img, bool b=true){
    \image html ref_equalize.jpg
 **/
 template <class T>
-CImg<T> equalizar_comun(CImg<T> img,const unsigned int nb_levels, const T min_value=(T)0, const T max_value=(T)0) {
-  if(img.is_empty()) return img;
-  T vmin = min_value, vmax = max_value;
-  if (vmin==vmax && vmin==0) vmin = img.min_max(vmax);
-  if (vmin<vmax) {
-    CImg<T> hist = img.get_histogram(nb_levels,vmin,vmax);
-    unsigned long cumul = 0;
-    cimg_forX(hist,pos) { cumul+=hist[pos]; hist[pos] = cumul; }
-    cimg_for(img,ptrd,T) {
-      const int pos = (int)((*ptrd-vmin)*(nb_levels-1)/(vmax-vmin));
-      if (pos>=0 && pos<(int)nb_levels) *ptrd = (T)(vmin + (vmax-vmin)*hist[pos]/img.size());
+CImg<T> ecualizar_comun(CImg<T> img,int niveles,T min=(T)0,T max=(T)0) {
+    if(img.is_empty()){return img;}
+    T vmin = min, vmax = max;
+    if (vmin==vmax && vmin==0) vmin = img.min_max(vmax);
+    if (vmin<vmax) {
+        CImg<T> hist = img.get_histogram(niveles,vmin,vmax);
+        unsigned long cumul = 0;
+        cimg_forX(hist,pos) { cumul+=hist[pos]; hist[pos] = cumul; }
+        cimg_for(img,ptrd,T) {
+            const int pos = (int)((*ptrd-vmin)*(niveles-1)/(vmax-vmin));
+            if (pos>=0 && pos<(int)niveles) *ptrd = (T)(vmin + (vmax-vmin)*hist[pos]/img.size());
+        }
     }
-  }
-  return img;
+    return img;
 }
 
+
+///ECUALIZACION BBHE
+template <class T>
+CImg<T> ecualizar_bbhe(CImg<T> img){
+    double o_mean=floor(img.mean());
+    CImg<T> h_l(256),h_u(256),nh_l(256),nh_u(256),hist_l_cdf(256),hist_u_cdf(256);
+    h_l.fill(0);h_u.fill(0);nh_l.fill(0);nh_u.fill(0);hist_l_cdf.fill(0);hist_u_cdf.fill(0);
+
+    //Calculo cada uno de las ecualizaciones
+    cimg_forXY(img,i,j){
+        if(img(i,j)<=o_mean){
+            h_l(img(i,j)+1)=h_l(img(i,j)+1)+1;
+        }else{
+            h_u(img(i,j)+1)=h_u(img(i,j)+1)+1;
+        }
+    }
+
+    //Armo el cdf de cada uno
+    for(int i=0;i<nh_l.size();i++){
+        nh_l(i)=h_l(i)/(h_l.sum()); //es un promedio
+    }
+    for(int i=0;i<nh_u.size();i++){
+        nh_u(i)=h_u(i)/(h_u.sum()); //es un promedio
+    }
+
+    //Acumulado
+    hist_l_cdf(0) = nh_l(0);
+    hist_u_cdf(0) = nh_u(0);
+
+    for (int k = 1;k<nh_l.size();k++){
+        hist_l_cdf(k) =  hist_l_cdf(k-1) + nh_l(k);
+        hist_u_cdf(k) =  hist_u_cdf(k-1) + nh_u(k);
+    }
+
+    //Armo la imagen final
+    CImg<T> equalized_img(img.width(),img.height(),1,1,0);
+    double range_l[2] = {0,o_mean};
+    double range_u[2] = {(o_mean+1),255};
+
+    cimg_forXY(img,i,j){
+
+        if(img(i,j)<=o_mean){
+            equalized_img(i,j) = range_l[0] + round(((range_l[1]-range_l[0])*hist_l_cdf(img(i,j)+1)));
+        }else{
+            equalized_img(i,j) = range_u[0] + round(((range_u[1]-range_u[0])*hist_u_cdf(img(i,j)+1)));
+        }
+    }
+
+    return equalized_img;
+}
+
+
+///ECUALIZACION CLAHE
+template <class T>
+CImg<T> clahe_histogram(CImg<T> img,vector<int> &nivel,int n_niveles,T tam_nivel,int posx,int posy,int tam_vent,T niv_clip) {
+
+    int ini_vent_x = posx - (tam_vent / 2);
+    int ini_vent_y = posy - (tam_vent / 2);
+
+    T val_pix;
+    int a, b, nuevo_niv;
+    int cont;
+
+    //Logica para armar las ventanas y los valores de los niveles
+    //El histograma se reinicia cada vez que se arranca una fila nueva
+    if (posy==0) { //Si esta en la primera columna
+        //Llena de ceros el vector de niveles correspondiente al hist de la ventana
+        for (int i = 0; i < n_niveles; i++){nivel[i] = 0;}
+
+        //Arma la ventana
+        for (int i = 0; i < tam_vent; i++) {
+            for (int j = 0; j < tam_vent; j++) {
+                a = ini_vent_x + i;
+                b = ini_vent_y + j;
+
+                if ((a >= 0 && a < img.width()) && (b >= 0 && b < img.height())) {
+                    val_pix = img(a,b);
+                }
+                else {
+                    val_pix = 0; // si esta fuera de los limites de la imagen (Condicion Dirichlet)
+                }
+
+                //Calculo el nuevo nivel
+                nuevo_niv = (int)(val_pix / tam_nivel);
+
+                //Para acomodar el maximo valor en el rango
+                if (nuevo_niv == n_niveles)
+                    nuevo_niv--;
+
+                nivel[nuevo_niv] += 1;
+            }
+        }
+    }
+    else {//Si esta en las restantes filas
+        //elimina la fila vieja
+        b = ini_vent_y - 1;//Mueve la ventana como un overlap
+        for (int j = 0; j < tam_vent; j++) {
+            a = ini_vent_x + j;
+
+            if ((a >= 0 && a < img.width()) && (b >= 0 && b < img.height())) {
+                val_pix = img(a, b);
+            }
+            else {
+                val_pix = 0;// si esta fuera de los limites de la imagen
+            }
+
+            nuevo_niv = (int)(val_pix / tam_nivel);
+
+            // to accomodate the max value in the range
+            if (nuevo_niv == n_niveles)
+                nuevo_niv--;
+
+            nivel[nuevo_niv] -= 1;
+        }
+
+        //agrega la fila nueva
+        b = ini_vent_y + tam_vent - 1;
+        for (int j = 0; j < tam_vent; j++) {
+            a = ini_vent_x + j;
+
+            if ((a >= 0 && a < img.width()) && (b >= 0 && b < img.height())) {
+                val_pix = img(a, b);
+            }
+            else {
+                val_pix = 0;// si esta fuera de los limites de la imagen
+            }
+
+            nuevo_niv = (int)(val_pix / tam_nivel);
+
+            // to accomodate the max value in the range
+            if (nuevo_niv == n_niveles)
+                nuevo_niv--;
+
+            nivel[nuevo_niv] += 1;
+        }
+    }
+
+    //Armo el histograma final y controlo si hay clipping
+    CImg<T> hist(n_niveles);
+    T sobrante_niveles = 0;
+
+    // calculating the relative frequency
+    // and the total extra amount > clip level
+    for (int i = 0; i < n_niveles; i++) {
+        hist(i) = (T)nivel[i]/(T)(tam_vent*tam_vent);// estaba dividiendo por (T)cont
+        //Aca limito o clipeo el nivel para que no supere cierto contraste
+        if (hist(i) > niv_clip) {
+            sobrante_niveles += (hist(i) - niv_clip);
+            hist(i) = niv_clip;
+        }
+    }
+
+    //ajusto en base al clipping calculado
+    if (sobrante_niveles > 0) {
+        T sobrante_por_nivel = T(sobrante_niveles /(T)n_niveles);
+        for (int i = 0; i < n_niveles; i++) {
+            hist(i) += sobrante_por_nivel;
+        }
+    }
+
+    return hist;
+}
+template <class T>
+CImg<T> ecualizar_clahe(CImg<T> img,T rango,int min,int max,int tam_vent,T niv_clip) {
+    CImg<T> final(img.width(),img.height());
+    final.fill(0);
+
+    //Numero y tamaño de niveles segun parametros
+    int n_niveles=max-min;
+    T tam_niv = ceil(rango/n_niveles);
+
+    //Creo el vector de histograma
+    vector<int> nivel;
+    nivel.reserve(n_niveles);
+
+    //Si el valor de ventana no esta seteado
+    if (tam_vent == -1) {
+      tam_vent = (int)round(((img.width() < img.height()) ? img.width() : img.height()) / 25);
+    }
+
+
+    for (int i=0;i<img.width();i++) {
+        for (int j=0;j<img.height();j++) {
+            T val_pix=img(i,j);
+
+            //Creo el histograma
+            CImg<T> hist=clahe_histogram(img,nivel,n_niveles,tam_niv,i,j,tam_vent,niv_clip);
+
+            //En que nivel cae segun el rango
+            int pix_nuevo_rango=(int)(val_pix/tam_niv);
+
+            //Para acomodar el maximo valor dentro del rango posible
+            if (pix_nuevo_rango == n_niveles)
+                pix_nuevo_rango--;
+
+            //Calculo la PMF para la ventana procesada
+            T pmf = 0;
+            for (int k=0;k<=pix_nuevo_rango;k++) {
+                pmf += hist(k);
+            }
+
+            T val_pix_nuevo = round(pmf*(T)255);//255 seria max en realidad
+
+            final(i,j)= val_pix_nuevo;//Multiplico por 255 para escalarlo (no seria el max?)
+        }
+    }
+
+    return final;
+}
+
+
+///LUT SIGMOIDEA
+
+template<typename T>
+CImg<T> lut_sigmoidea(T k1,T k2){
+    //Seteamos los parametros k1 y k2.
+    //Parametros estables para k1 [10,25] - k2 [0,1]
+    //double k1=15,k2=0.5;
+
+    CImg<T> resultado(256);
+    cimg_forX(resultado,i){
+        resultado(i) = i+ k1* ( i / (1- exp(k1*(k2+i))) );
+
+    }
+
+    return resultado.normalize(0,255);
+}
+
+///LUT SIGMOIDEA
+
+template<typename T>
+CImg<T> aplicar_lut_sigmoidea(CImg<T> img,T k1,T k2){
+    //Seteamos los parametros k1 y k2.
+    //Parametros estables para k1 [10,25] - k2 [0,1]
+    //double k1=15,k2=0.5;
+
+    CImg<T> resultado(img.width(),img.height());
+    cimg_forXY(img,i,j){
+
+        //resultado(i,j) = img(i,j)+log(img(i,j)*k1+1);
+        resultado(i,j) = img(i,j)+ k1* ( img(i,j) / (1- exp(k1*(k2+img(i,j))) ) );
+
+    }
+
+    return resultado;
+}
+
+
+///ECUALIZAR ACEBSF
+
+template<typename T>
+CImg<T> ecualizar_acebsf(CImg<T> img,double k1,double k2,T rango,int min,int max,int tam_vent,T niv_clip){
+
+     CImg<T> resultado;
+
+     //Step 1 - Aplico la funcion sigmoidea modificado
+     //resultado = aplicar_lut_sigmoidea(img,k1,k2);
+     resultado = transformacion(img,lut_sigmoidea(k1,k2));
+     //Step 2 -aplico clahe
+     resultado = ecualizar_clahe(resultado,rango,min,max,tam_vent,niv_clip);
+
+
+    return resultado;
+}
+
+
+/*
+///ECUALIZACION LPCE
 template <class T>
 CImg<T> equalizar_lpce(CImg<T> img,const unsigned int nb_levels, const T min_value=(T)0, const T max_value=(T)0,const T sigma=T(0)) {
     if(img.is_empty()) return img;
@@ -2825,15 +3094,15 @@ CImg<T> equalizar_lpce(CImg<T> img,const unsigned int nb_levels, const T min_val
         //Lleno de ceros la matriz
         for(int i=1;i<nb_levels-1;i++){
             for(int j=1;j<nb_levels-1;j++){
-                    Q[i][j]=0;
+                Q[i][j]=0;
             }
         }
         //Calculo los elementos tridiagonales
         for(int i=1;i<nb_levels-1;i++){
             for(int j=1;j<nb_levels-1;j++){
                 if(i==j){
-//                    Q[i][j-1]=w[];
-//                    Q[i][j+1];
+                    //                    Q[i][j-1]=w[];
+                    //                    Q[i][j+1];
                 }
             }
         }
@@ -2863,6 +3132,12 @@ CImg<T> equalizar_lpce(CImg<T> img,const unsigned int nb_levels, const T min_val
 
     return img;
 }
+
+
+*/
+
+
+/////////////////////////////
 
 ///****************************************
 /// TRIM image. Devuelve la imagen recortada a su minimo convexhull
@@ -2910,39 +3185,6 @@ CImg<T> trim_image_wrapper(CImg<T>img,CImg<bool>mascara,int etiqueta=1){
     return trim_image(img,mascara_proceso);
 }
 
-CImg<double>bbhe(CImg<double> img){
-    int w=img.width();
-    int h=img.height();
-    double o_mean=floor(img.mean());
-    CImg<double> h_l(256,1,1,1,0),h_u(256,1,1,1,0),nh_l(256,1,1,1,0),nh_u(256,1,1,1,0),hist_l_cdf(256,1,1,1,0),hist_u_cdf(256,1,1,1,0);
-    cimg_forXY(img,i,j)
-            if(img(i,j)<=o_mean)
-            h_l(img(i,j)+1,1)=h_l(img(i,j)+1,1)+1;
-    else
-    h_u(img(i,j)+1,1)=h_u(img(i,j)+1,1)+1;
-
-    double nh_l=h_l.get_div(h_l.sum()); //division creo
-    double nh_u=h_u.get_div(h_u.sum()); //division creo
-    hist_l_cdf(0,1) = nh_l(0,0);
-    hist_u_cdf(0,1) = nh_u(0,0);
-
-    for (int k = 2;k++;nh_l.size()){
-        hist_l_cdf(k,1) =  hist_l_cdf(k-1,1) + nh_l(k,1);
-        hist_u_cdf(k,1) =  hist_u_cdf(k-1,1) + nh_u(k,1);
-    }
-
-    CImg<double> equalized_img(img.width(),img.height(),1,1,0);
-    //double range_l = [0 o_mean];
-    //double range_u = [(o_mean+1) 255];
-
-    cimg_forXY(img,i,j)
-            if(img(i,j)<=o_mean)
-            equalized_img(i,j) = range_l(1) + round(((range_l(2)-range_l(1))*hist_l_cdf(img(i,j)+1)));
-    else
-    equalized_img(i,j) = range_u(1) + round(((range_u(2)-range_u(1))*hist_u_cdf(img(i,j)+1)));
-
-
-}
 
 
 ///****************************************
@@ -3031,6 +3273,8 @@ CImg<T> get_max_peak(CImg<T> hough, T &theta, T &rho_coord, unsigned int difumin
 
     return hough;
 }
+
+
 
 
 #endif // FUNCIONES

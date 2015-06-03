@@ -18,12 +18,12 @@ int main()
     //Mascara
     mascara = copia.threshold(200);
 
-    copia = trim_image_wrapper(copia,mascara);
+    //copia = trim_image_wrapper(copia,mascara);
     copia.display();
 
 
     // Y me quedo con una region central para evitar ser afectado por bordes
-    copia.crop(copia.width()/5, copia.height()/5, copia.width()*4/5, copia.height()*4/5);
+    //copia.crop(copia.width()/5, copia.height()/5, copia.width()*4/5, copia.height()*4/5);
     copia.display();
 
     //Obtengo fourier (Me interesa la maginitud. la direccion del objeto)
