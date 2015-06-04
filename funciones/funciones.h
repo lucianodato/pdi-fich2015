@@ -2989,50 +2989,36 @@ CImg<T> ecualizar_clahe(CImg<T> img,T rango,int min,int max,int tam_vent,T niv_c
 ///LUT SIGMOIDEA
 
 template<typename T>
-CImg<T> lut_sigmoidea(T k1,T k2){
+CImg<T> lut_sigmoidea(T k,int ni,int ns){
     //Seteamos los parametros k1 y k2.
     //Parametros estables para k1 [10,25] - k2 [0,1]
     //double k1=15,k2=0.5;
 
-    CImg<T> resultado(256);
+    CImg<int> resultado(256);resultado.fill(0);
     cimg_forX(resultado,i){
-        resultado(i) = i+ k1* ( i / (1- exp(k1*(k2+i))) );
+        //resultado(i) = ceil(i+ k1* ( i / (1- exp(k1*(k2+i))) ));
+        if(i<ns && i > ni){
+            resultado(i)=i;
+        }else{
+            resultado(i) = i + k*(i / (1.0 + exp(-i)));
 
+        }
     }
 
-    return resultado.normalize(0,255);
-}
-
-///LUT SIGMOIDEA
-
-template<typename T>
-CImg<T> aplicar_lut_sigmoidea(CImg<T> img,T k1,T k2){
-    //Seteamos los parametros k1 y k2.
-    //Parametros estables para k1 [10,25] - k2 [0,1]
-    //double k1=15,k2=0.5;
-
-    CImg<T> resultado(img.width(),img.height());
-    cimg_forXY(img,i,j){
-
-        //resultado(i,j) = img(i,j)+log(img(i,j)*k1+1);
-        resultado(i,j) = img(i,j)+ k1* ( img(i,j) / (1- exp(k1*(k2+img(i,j))) ) );
-
-    }
-
+    resultado.normalize(0,255);
     return resultado;
 }
-
 
 ///ECUALIZAR ACEBSF
 
 template<typename T>
-CImg<T> ecualizar_acebsf(CImg<T> img,double k1,double k2,T rango,int min,int max,int tam_vent,T niv_clip){
+CImg<T> ecualizar_acebsf(CImg<T> img,double k1,int ni,int ns,T rango,int min,int max,int tam_vent,T niv_clip){
 
      CImg<T> resultado;
 
      //Step 1 - Aplico la funcion sigmoidea modificado
      //resultado = aplicar_lut_sigmoidea(img,k1,k2);
-     resultado = transformacion(img,lut_sigmoidea(k1,k2));
+     resultado = transformacion(img,lut_sigmoidea(k1,ni,ns));
      //Step 2 -aplico clahe
      resultado = ecualizar_clahe(resultado,rango,min,max,tam_vent,niv_clip);
 
