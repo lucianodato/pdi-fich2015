@@ -3259,12 +3259,12 @@ CImg<T> get_max_peak(CImg<T> hough, T &theta, T &rho_coord, unsigned int difumin
 
 
     // Guardo los valores (Giro respecto al eje x)
-    rho_coord = coord_hough_to_value(hough, max_y, 'p');
-    theta = max_x;
+    theta = coord_hough_to_value(hough, max_x, 't');
+    rho_coord = max_y;
 
     // Guardo los valores (Giro respecto al eje y)
-    rho_coord = coord_hough_to_value(hough, max_y, 'p');
-    theta = max_x;
+    //rho_coord = coord_hough_to_value(hough, max_y, 'p');
+    //theta = max_x;
 
     //  Dibujo un circulo negro (0's) de radio difuminacion en hough
     unsigned char color[] = {0};

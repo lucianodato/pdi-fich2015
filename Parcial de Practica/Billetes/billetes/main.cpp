@@ -7,24 +7,24 @@ int main()
     //imagen
     CImg<float> original,copia,aux,magnitud;
     CImgList<float> ff;
-    original.load("../../../../images/hough/hola.png");
+    original.load("../../../../images/hough/hough6.png");
     CImg<bool> B(8,8),B2(3,3),mascara;
     B.fill(1);
     B2.fill(1);
     //Imagen en escala de grises
-    copia = negativo(original.RGBtoHSI().get_channel(2).get_normalize(0,255));
-    //copia = original;
+    //copia = negativo(original.RGBtoHSI().get_channel(2).get_normalize(0,255));
+    copia = original;
     copia.display();
     //Mascara
     mascara = copia.threshold(200);
 
     //copia = trim_image_wrapper(copia,mascara);
-    copia.display();
+    //copia.display();
 
 
     // Y me quedo con una region central para evitar ser afectado por bordes
     //copia.crop(copia.width()/5, copia.height()/5, copia.width()*4/5, copia.height()*4/5);
-    copia.display();
+    //copia.display();
 
     //Obtengo fourier (Me interesa la maginitud. la direccion del objeto)
     ff = fourier(copia);
@@ -49,7 +49,7 @@ int main()
     max_theta = (max_theta < 0) ? 180 + max_theta : max_theta;
 
     // Me va dar 0 (<45), 90 (< 135), 180 (< 225), 270 (<315), o 360
-    double degree_to_go = round(max_theta / 90) * 90;
+    double degree_to_go = round(max_theta / 180) * 180;
 
     // Y lo rotamos
     CImg<double> page_rotate(original.get_rotate(max_theta - degree_to_go));
