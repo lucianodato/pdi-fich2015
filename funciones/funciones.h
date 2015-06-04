@@ -15,6 +15,7 @@
 #include <deque>
 #include <queue>
 #include "malloc.h"
+#include <omp.h>
 
 #define cimg_plugin "plugins/skeleton.h"
 #include "CImg.h"
@@ -2778,52 +2779,52 @@ CImg<T> ecualizar_comun(CImg<T> img,int niveles,T min=(T)0,T max=(T)0) {
 
 ///ECUALIZACION BBHE
 template <class T>
-CImg<T> ecualizar_bbhe(CImg<T> img){
+CImg<T> ecualizar_bbhe(CImg<T> img, int rango=256){
     double o_mean=floor(img.mean());
-    CImg<T> h_l(256),h_u(256),nh_l(256),nh_u(256),hist_l_cdf(256),hist_u_cdf(256);
-    h_l.fill(0);h_u.fill(0);nh_l.fill(0);nh_u.fill(0);hist_l_cdf.fill(0);hist_u_cdf.fill(0);
+    CImg<T> histogram_lower(rango),histogram_upper(rango),nhistogram_lower(rango),nhistogram_upper(rango),histogram_lower_cdf(rango),histogram_upper_cdf(rango);
+    histogram_lower.fill(0);histogram_upper.fill(0);nhistogram_lower.fill(0);nhistogram_upper.fill(0);histogram_lower_cdf.fill(0);histogram_upper_cdf.fill(0);
 
     //Calculo cada uno de las ecualizaciones
     cimg_forXY(img,i,j){
         if(img(i,j)<=o_mean){
-            h_l(img(i,j)+1)=h_l(img(i,j)+1)+1;
+            histogram_lower(img(i,j)+1)=histogram_lower(img(i,j)+1)+1;
         }else{
-            h_u(img(i,j)+1)=h_u(img(i,j)+1)+1;
+            histogram_upper(img(i,j)+1)=histogram_upper(img(i,j)+1)+1;
         }
     }
 
     //Armo el cdf de cada uno
-    for(int i=0;i<nh_l.size();i++){
-        nh_l(i)=h_l(i)/(h_l.sum()); //es un promedio
+    for(int i=0;i<nhistogram_lower.size();i++){
+        nhistogram_lower(i)=histogram_lower(i)/(histogram_lower.sum()); //es un promedio
     }
-    for(int i=0;i<nh_u.size();i++){
-        nh_u(i)=h_u(i)/(h_u.sum()); //es un promedio
+    for(int i=0;i<nhistogram_upper.size();i++){
+        nhistogram_upper(i)=histogram_upper(i)/(histogram_upper.sum()); //es un promedio
     }
 
     //Acumulado
-    hist_l_cdf(0) = nh_l(0);
-    hist_u_cdf(0) = nh_u(0);
+    histogram_lower_cdf(0) = nhistogram_lower(0);
+    histogram_upper_cdf(0) = nhistogram_upper(0);
 
-    for (int k = 1;k<nh_l.size();k++){
-        hist_l_cdf(k) =  hist_l_cdf(k-1) + nh_l(k);
-        hist_u_cdf(k) =  hist_u_cdf(k-1) + nh_u(k);
+    for (int k = 1;k<nhistogram_lower.size();k++){
+        histogram_lower_cdf(k) =  histogram_lower_cdf(k-1) + nhistogram_lower(k);
+        histogram_upper_cdf(k) =  histogram_upper_cdf(k-1) + nhistogram_upper(k);
     }
 
     //Armo la imagen final
-    CImg<T> equalized_img(img.width(),img.height(),1,1,0);
-    double range_l[2] = {0,o_mean};
-    double range_u[2] = {(o_mean+1),255};
+    CImg<T> imagen_ecualizada(img.width(),img.height(),1,1,0);
+    double rango_lower[2] = {0,o_mean};
+    double rango_upper[2] = {(o_mean+1),rango-1};
 
     cimg_forXY(img,i,j){
 
         if(img(i,j)<=o_mean){
-            equalized_img(i,j) = range_l[0] + round(((range_l[1]-range_l[0])*hist_l_cdf(img(i,j)+1)));
+            imagen_ecualizada(i,j) = rango_lower[0] + round(((rango_lower[1]-rango_lower[0])*histogram_lower_cdf(img(i,j)+1)));
         }else{
-            equalized_img(i,j) = range_u[0] + round(((range_u[1]-range_u[0])*hist_u_cdf(img(i,j)+1)));
+            imagen_ecualizada(i,j) = rango_upper[0] + round(((rango_upper[1]-rango_upper[0])*histogram_upper_cdf(img(i,j)+1)));
         }
     }
 
-    return equalized_img;
+    return imagen_ecualizada;
 }
 
 
