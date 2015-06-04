@@ -49,7 +49,7 @@ int main()
     max_theta = (max_theta < 0) ? 180 + max_theta : max_theta;
 
     // Me va dar 0 (<45), 90 (< 135), 180 (< 225), 270 (<315), o 360
-    double degree_to_go = round(max_theta / 180) * 180;
+    double degree_to_go = round(max_theta / 90) * 90;
 
     // Y lo rotamos
     CImg<double> page_rotate(original.get_rotate(max_theta - degree_to_go));
