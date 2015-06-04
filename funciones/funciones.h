@@ -2996,7 +2996,6 @@ CImg<T> lut_sigmoidea(T k,int ni,int ns){
 
     CImg<int> resultado(256);resultado.fill(0);
     cimg_forX(resultado,i){
-        //resultado(i) = ceil(i+ k1* ( i / (1- exp(k1*(k2+i))) ));
         if(i<ns && i > ni){
             resultado(i)=i;
         }else{
