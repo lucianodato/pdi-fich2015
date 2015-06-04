@@ -2836,7 +2836,6 @@ CImg<T> clahe_histogram(CImg<T> img,vector<int> &nivel,int n_niveles,T tam_nivel
 
     T val_pix;
     int a, b, nuevo_niv;
-    int cont;
 
     //Logica para armar las ventanas y los valores de los niveles
     //El histograma se reinicia cada vez que se arranca una fila nueva
@@ -2938,7 +2937,7 @@ CImg<T> clahe_histogram(CImg<T> img,vector<int> &nivel,int n_niveles,T tam_nivel
     return hist;
 }
 template <class T>
-CImg<T> ecualizar_clahe(CImg<T> img,T rango,int min,int max,int tam_vent,T niv_clip) {
+CImg<T> ecualizar_clahe(CImg<T> img,int rango,int min,int max,int tam_vent,T niv_clip) {
     CImg<T> final(img.width(),img.height());
     final.fill(0);
 
@@ -3011,7 +3010,7 @@ CImg<T> lut_sigmoidea(T k,int ni,int ns){
 ///ECUALIZAR ACEBSF
 
 template<typename T>
-CImg<T> ecualizar_acebsf(CImg<T> img,double k1,int ni,int ns,T rango,int min,int max,int tam_vent,T niv_clip){
+CImg<T> ecualizar_acebsf(CImg<T> img,double k1,int ni,int ns,int rango,int min,int max,int tam_vent,T niv_clip){
 
      CImg<T> resultado;
 
