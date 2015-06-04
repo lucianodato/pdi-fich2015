@@ -30,7 +30,7 @@ int main()
 {
     CImg<double> imagen(RUTA);
     CImg<double> imagen_he =ecualizar_comun(imagen,N_NIVELES);
-    CImg<double> imagen_bbhe =ecualizar_bbhe(imagen);
+    CImg<double> imagen_bbhe =ecualizar_bbhe(imagen,N_NIVELES);
     CImg<double> imagen_clahe =ecualizar_clahe(imagen,N_NIVELES,N_I,N_S,T_VENT,CLIP_LIMIT);
     CImg<double> imagen_acebsf =ecualizar_acebsf(imagen,K,NC_I,NC_S,N_NIVELES,N_I,N_S,T_VENT,CLIP_LIMIT);
 
@@ -41,7 +41,6 @@ int main()
     imagen_bbhe.get_histogram(N_NIVELES).display_graph("Histograma BBHE");
     imagen_clahe.get_histogram(N_NIVELES).display_graph("Histograma CLAHE");
     imagen_acebsf.get_histogram(N_NIVELES).display_graph("Histograma ACEBSF");
-
     return 0;
 }
 
