@@ -22,6 +22,7 @@ int main()
     //copia.display();
 
 
+
     // Y me quedo con una region central para evitar ser afectado por bordes
     //copia.crop(copia.width()/5, copia.height()/5, copia.width()*4/5, copia.height()*4/5);
     //copia.display();

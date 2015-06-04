@@ -3275,7 +3275,5 @@ CImg<T> get_max_peak(CImg<T> hough, T &theta, T &rho_coord, unsigned int difumin
 }
 
 
-
-
 #endif // FUNCIONES
 
