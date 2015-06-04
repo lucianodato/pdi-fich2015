@@ -5,9 +5,9 @@
 int main()
 {
     //imagen
-    CImg<float> original,copia,aux,magnitud;
+    CImg<float> original,copia,copia2,aux,magnitud;
     CImgList<float> ff;
-    original.load("../../../../images/hough/hough6.png");
+    original.load("1.jpg");
     CImg<bool> B(8,8),B2(3,3),mascara;
     B.fill(1);
     B2.fill(1);
@@ -16,25 +16,22 @@ int main()
     copia = original;
     copia.display();
     //Mascara
-    mascara = copia.threshold(200);
+    mascara = NOTimg(copia.get_RGBtoHSI().get_channel(2).get_normalize(0,255).threshold(230));
+    mascara = apertura(mascara,mask(5));
+    //Trimeo a lo cabeza de tacho
+    copia2=original.get_mul(mascara);
 
-    //copia = trim_image_wrapper(copia,mascara);
-    //copia.display();
-
+    mascara = extraccion_de_contornos(relleno_automatico(mascara),mask(3));
+    mascara.display();
 
 
     // Y me quedo con una region central para evitar ser afectado por bordes
     //copia.crop(copia.width()/5, copia.height()/5, copia.width()*4/5, copia.height()*4/5);
     //copia.display();
-
-    //Obtengo fourier (Me interesa la maginitud. la direccion del objeto)
-    ff = fourier(copia);
-
-    //Obtengo la magnitud
-    magnitud = ff(0);
-
+    mascara = extraccion_de_contornos(relleno_automatico(mascara),mask(3));
+    mas
     // Y ahora aplicamos hough
-    aux = hough(magnitud);
+    aux = hough(mascara);
 
     //buscamos el maximo pico
     double max_theta = 0;
@@ -53,9 +50,9 @@ int main()
     double degree_to_go = round(max_theta / 90) * 90;
 
     // Y lo rotamos
-    CImg<double> page_rotate(original.get_rotate(max_theta - degree_to_go));
+    CImg<double> page_rotate(copia2.get_rotate(max_theta - degree_to_go));
 
-    (original,aux.get_normalize(0,255),copia.get_normalize(0,255),page_rotate).display();
+    (original,aux.get_normalize(0,255),copia2.get_normalize(0,255),page_rotate,trim_image(page_rotate,page_rotate)).display();
 
 
     return 0;

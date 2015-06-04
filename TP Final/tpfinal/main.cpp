@@ -34,6 +34,7 @@
 int main()
 {
     CImg<double> imagen(RUTA);
+
     CImg<double> imagen_he =ecualizar_comun(imagen,N_NIVELES);
     CImg<double> imagen_bbhe =ecualizar_bbhe(imagen,N_NIVELES);
     CImg<double> imagen_clahe =ecualizar_clahe(imagen,N_NIVELES,N_I,N_S,T_VENT,CLIP_LIMIT);

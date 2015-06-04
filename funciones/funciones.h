@@ -2370,6 +2370,7 @@ CImg<bool> MaximosLocales( CImg<double>& img, double limite ) {
     return maximo;
 }
 
+
 ///****************************************
 ///MORFOLOGIA
 ///****************************************
@@ -2381,11 +2382,6 @@ CImg<bool> MaximosLocales( CImg<double>& img, double limite ) {
 //EROSION n veces
 CImg<bool> nerode(CImg<bool> img,CImg<bool> ventana,int n){
     for(int i=0;i<n;i++){img.erode(ventana);}//Erosionamos
-    return img;
-}
-//DILATE n veces
-CImg<bool> ndilate(CImg<bool> img,CImg<bool> ventana,int n){
-    for(int i=0;i<n;i++){img.dilate(ventana);}//dilatamos
     return img;
 }
 
@@ -2677,7 +2673,6 @@ CImg<bool> apertura_reconstruccion(CImg<bool> G,CImg<bool> B,int n){
     CImg<bool> final;
 
     CImg<bool> F(G),F_Ant;
-    //Erosiono n veces F
     for(int i=0;i<n;i++){
         F.get_erode(B);
     }
@@ -2691,25 +2686,89 @@ CImg<bool> apertura_reconstruccion(CImg<bool> G,CImg<bool> B,int n){
 
     return final;
 }
-
 //Devuelve la imagen binaria con los interiores rellenos
-CImg<bool> relleno_automatico(CImg<bool> img,CImg<bool> ventana){
-    CImg<bool> f(img.width(),img.height()),final;
-    CImg<bool> bordes = extraccion_de_contornos(img,ventana);//son los bordes de la mascara
+CImg<bool> relleno_automatico(CImg<bool> I){
+    CImg<bool> f(I.width(),I.height(),1,1,0),final;
 
-    cimg_forXY(img,i,j){
-        if(img(i,j)== bordes(i,j)){
-            f(i,j)=1-img(i,j);//si esta en el borde de la mascara
-        }
-        else
-        {
-            f(i,j)=0;
-        }
+    //Construyo f con los bordes de I
+    cimg_forY(I,j){
+        f(0,j)=1-I(0,j);//Arriba
+        f(I.width()-1,j)=1-I(I.width()-1,j);//Abajo
+    }
+    cimg_forX(I,i){
+        f(i,0)=1-I(i,0);//Izquierda
+        f(i,I.height()-1)=1-I(i,I.height()-1);//Derecha
     }
     //Uso la reconstruccion por dilatacion (uso la sobrecarga)
-    final = NOTimg(reconstruccion_dilatacion(NOTimg(img),f));
+    final = NOTimg(reconstruccion_dilatacion(NOTimg(I),f));
 
     return final;
+}
+
+//Devuelve la imagen binaria con los bordes limpios de objetos cortados por los bordes de la imagens
+CImg<bool> limpieza_bordes(CImg<bool> I){
+    CImg<bool> f(I.width(),I.height(),1,1,0),final;
+
+    //Construyo f con los bordes de I
+    cimg_forY(I,j){
+        f(0,j)=I(0,j);//Arriba
+        f(I.width()-1,j)=I(I.width()-1,j);//Abajo
+    }
+    cimg_forX(I,i){
+        f(i,0)=I(i,0);//Izquierda
+        f(i,I.height()-1)=I(i,I.height()-1);//Derecha
+    }
+    //Uso la reconstruccion por dilatacion (uso la sobrecarga)
+    final = DIFERENCIAimg(I,reconstruccion_dilatacion(I,f));
+
+    return final;
+}
+
+
+//Devuelve true si una mascara binaria tiene todos false
+bool mascara_vacia(CImg<bool> mascara){
+    cimg_forXY(mascara,i,j){
+        if(mascara(i,j)==true){
+            return false;
+        }
+    }
+    return true;
+}
+
+//Devuelve el esqueleto de una mascara binaria
+CImg<bool> esqueleto(CImg<bool> A,CImg<bool> B){
+    CImg<bool> esq(A.width(),A.height(),1,1,0),aux;
+    int k=0;
+    aux=nerode(A,B,k);
+    while(!mascara_vacia(aux)){
+        esq=ORimg(esq,DIFERENCIAimg(aux,apertura(aux,B)));
+        k++;
+
+        aux=nerode(A,B,k);
+    }
+    return esq;
+}
+
+//Aplicar una mascara booleana a una imagen en escala de grises
+CImg<int> mul_mb_g(CImg<int> imagen,CImg<bool> mascara){
+    cimg_forXY(imagen,i,j){
+        if(mascara(i,j)==false)
+            imagen(i,j)*=0;
+    }
+    return imagen;
+}
+
+//Aplicar una mascara booleana a una imagen en escala de grises
+template <class T>
+CImg<T> mul_mb_c(CImg<T> imagen,CImg<bool> mascara){
+    cimg_forXY(imagen,i,j){
+        if(mascara(i,j)==false){
+            imagen(i,j,0,0)*=0;
+            imagen(i,j,0,1)*=0;
+            imagen(i,j,0,2)*=0;
+        }
+    }
+    return imagen;
 }
 
 
@@ -2952,7 +3011,7 @@ CImg<T> ecualizar_clahe(CImg<T> img,int rango,int min,int max,int tam_vent,T niv
 
     //Si el valor de ventana no esta seteado
     if (tam_vent == -1) {
-      tam_vent = (int)round(((img.width() < img.height()) ? img.width() : img.height()) / 25);
+        tam_vent = (int)round(((img.width() < img.height()) ? img.width() : img.height()) / 25);
     }
 
 
@@ -3009,113 +3068,17 @@ CImg<T> lut_sigmoidea(T k,int ni,int ns){
 template<typename T>
 CImg<T> ecualizar_acebsf(CImg<T> img,double k1,int ni,int ns,int rango,int min,int max,int tam_vent,T niv_clip){
 
-     CImg<T> resultado;
+    CImg<T> resultado;
 
-     //Step 1 - Aplico la funcion sigmoidea modificado
-     //resultado = aplicar_lut_sigmoidea(img,k1,k2);
-     resultado = transformacion(img,lut_sigmoidea(k1,ni,ns));
-     //Step 2 -aplico clahe
-     resultado = ecualizar_clahe(resultado,rango,min,max,tam_vent,niv_clip);
+    //Step 1 - Aplico la funcion sigmoidea modificado
+    //resultado = aplicar_lut_sigmoidea(img,k1,k2);
+    resultado = transformacion(img,lut_sigmoidea(k1,ni,ns));
+    //Step 2 -aplico clahe
+    resultado = ecualizar_clahe(resultado,rango,min,max,tam_vent,niv_clip);
 
 
     return resultado;
 }
-
-
-/*
-///ECUALIZACION LPCE
-template <class T>
-CImg<T> equalizar_lpce(CImg<T> img,const unsigned int nb_levels, const T min_value=(T)0, const T max_value=(T)0,const T sigma=T(0)) {
-    if(img.is_empty()) return img;
-    T vmin = min_value, vmax = max_value;
-    if (vmin==vmax && vmin==0) vmin = img.min_max(vmax);
-    if (vmin<vmax) {
-        //El problema esta formulado en la ecuacion (4) la cual hay que minimizar
-        //Para esto se descompone la ecuacion y se arma un sistema
-
-        //Encuentro p y r
-        //r (es el dominio de intensidades originales)
-        CImg<T> r = img.get_histogram(nb_levels,vmin,vmax);
-
-        //p
-        unsigned long cumul = 0;
-        vector<unsigned long> p;
-        cimg_forX(r,pos) { cumul+=(r[pos]/r.sum()); p.push_back(cumul);}
-
-        //Formo el vector de pesos w
-        T w[nb_levels-1];
-        for(int i=1;i<nb_levels-1;i++){
-            w[i]=exp(-powf((r(i)-r(i-1)),2) / (2*powf(sigma,2)));
-        }
-
-        //Formar matriz D con x1...xN-1 (Tamaño (N-1)*(N-1))
-        T D[nb_levels-1][nb_levels-1];
-        D[0][0]=1;
-        for(int i=1;i<nb_levels-1;i++){
-            for(int j=0;j<nb_levels-1;j++){
-                if(i==j){
-                    D[i][j]=1;
-                    D[i][j-1]=-1;
-                }else{
-                    D[i][j]=0;
-                }
-            }
-        }
-
-        //Formar el vector x (es el dominio de intensidades nuevo)
-        T x[nb_levels];
-        x[0]=0;
-        x[nb_levels-1]=nb_levels;
-        for(int i=1;i<nb_levels-1;i++){
-            x[i]=1/(nb_levels);
-        }
-
-        //Formo la matriz tridiagonal Q (tendria ceros en la diagonal?)
-        T Q[nb_levels][nb_levels];
-        //Lleno de ceros la matriz
-        for(int i=1;i<nb_levels-1;i++){
-            for(int j=1;j<nb_levels-1;j++){
-                Q[i][j]=0;
-            }
-        }
-        //Calculo los elementos tridiagonales
-        for(int i=1;i<nb_levels-1;i++){
-            for(int j=1;j<nb_levels-1;j++){
-                if(i==j){
-                    //                    Q[i][j-1]=w[];
-                    //                    Q[i][j+1];
-                }
-            }
-        }
-
-        //Formar el vector y=Dx
-        T y[nb_levels-1];
-        //Lleno de ceros el vector
-        for(int i=1;i<nb_levels-1;i++){
-            y[i]=0;
-        }
-
-        //Calculo los valores de la multiplicacion matriz-vector
-        for(int i=1;i<nb_levels-1;i++){
-            for(int j=1;j<nb_levels-1;j++){
-                y[i]+=D[i][j]*x[i];
-            }
-        }
-
-
-        //Calcular la solucion con de quadprog++ (en el paper usan interior-point method de matlab, quadprog++ implementa otro)
-        //Quadprog++ devuelve un double (Hay que armar un par de matrices antes)
-
-
-        //Cuando resuelva y halle el minimo p tal que conserve la localidad en ese nivel
-
-    }
-
-    return img;
-}
-
-
-*/
 
 
 /////////////////////////////
