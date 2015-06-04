@@ -48,7 +48,7 @@ int main()
     imagen_acebsf.get_histogram(N_NIVELES).display_graph("Histograma ACEBSF");
 
     cout<<endl<<endl;
-    cout<<"        ----------Resultados----------"<<endl;
+    cout<<"       ----------Resultados----------"<<endl;
     cout<<"-----------------------------------------------"<<endl;
     cout<<"El MSE con respecto a HE es: "<<imagen.MSE(imagen_he)<<endl;
     cout<<"El MSE con respecto a BBHE es: "<<imagen.MSE(imagen_bbhe)<<endl;
