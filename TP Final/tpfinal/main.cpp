@@ -25,6 +25,11 @@
 #define NC_I 50
 #define NC_S 200
 
+//HE - Histogram equalization
+//BBHE - Bi-Histogram equalization
+//CLAHE - Contrast-Limited Histrogram equalization
+//ACEBSF - Adaptive Contrast Enhancement based on modified Sigmoid Function equalization
+
 
 int main()
 {
@@ -41,6 +46,17 @@ int main()
     imagen_bbhe.get_histogram(N_NIVELES).display_graph("Histograma BBHE");
     imagen_clahe.get_histogram(N_NIVELES).display_graph("Histograma CLAHE");
     imagen_acebsf.get_histogram(N_NIVELES).display_graph("Histograma ACEBSF");
+
+    cout<<endl<<endl;
+    cout<<"        ----------Resultados----------"<<endl;
+    cout<<"-----------------------------------------------"<<endl;
+    cout<<"El MSE con respecto a HE es: "<<imagen.MSE(imagen_he)<<endl;
+    cout<<"El MSE con respecto a BBHE es: "<<imagen.MSE(imagen_bbhe)<<endl;
+    cout<<"El MSE con respecto a CLAHE es: "<<imagen.MSE(imagen_clahe)<<endl;
+    cout<<"El MSE con respecto a ACEBSF es: "<<imagen.MSE(imagen_acebsf)<<endl;
+    cout<<"-----------------------------------------------"<<endl;
+    cout<<endl<<endl;
+
     return 0;
 }
 

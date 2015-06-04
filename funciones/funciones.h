@@ -2990,10 +2990,6 @@ CImg<T> ecualizar_clahe(CImg<T> img,int rango,int min,int max,int tam_vent,T niv
 
 template<typename T>
 CImg<T> lut_sigmoidea(T k,int ni,int ns){
-    //Seteamos los parametros k1 y k2.
-    //Parametros estables para k1 [10,25] - k2 [0,1]
-    //double k1=15,k2=0.5;
-
     CImg<int> resultado(256);resultado.fill(0);
     cimg_forX(resultado,i){
         if(i<ns && i > ni){
