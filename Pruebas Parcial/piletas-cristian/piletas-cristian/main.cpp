@@ -14,7 +14,7 @@ int main()
     //vent.fill(0,1,0,1,1,1,0,1,0);
     se1.fill(1);
     se2.fill(1);
-    const char* path = "/home/asusn56/Copy cristiaan3003@gmail.com/PDI-2015/pdi-fich2015/Parcial de Practica/Piletas/google4.png";
+    const char* path = "../../../../Parcial de Practica/Piletas/google4.png";
     img.load(path);
     mascara.assign(img.width(),img.height(),1,1);
     intensidad.assign(img.width(),img.height(),1,1);

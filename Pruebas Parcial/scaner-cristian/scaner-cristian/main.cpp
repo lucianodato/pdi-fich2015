@@ -10,7 +10,8 @@ int main()
 {
     //imagen
     CImg<float> original;
-    original.load("/home/asusn56/Copy cristiaan3003@gmail.com/PDI-2015/pdi-fich2015/Parcial de Practica/Escaner/2.png");
+    //original.load("/home/asusn56/Copy cristiaan3003@gmail.com/PDI-2015/pdi-fich2015/Parcial de Practica/Escaner/2.png");
+    original.load("../../../../Parcial de Practica/Escaner/2.png");
 
 
     // Primero elimino las imagenes y objetos grandes que me puedan molestar
@@ -66,4 +67,5 @@ int main()
 
     return 0;
 }
+
 
