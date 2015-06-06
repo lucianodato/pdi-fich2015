@@ -22,14 +22,14 @@ int main()
     img = intensidad.get_normalize(0,255).get_threshold(UMBRAL);//.get_dilate(se0).get_erode(se1).get_erode(se1).get_erode(se1);//.get_dilate(se1);
     (img,original).display();
 
-    //para determinar si el billete esta girado o no
+    //para determinar si el billete esta invertido o no
     double aux= img.get_crop(53,84,161,227).mean();
     if (aux<VALOR_MEDIA){
      img.rotate(180);
     }
 
-    //Operacion de etiquetado
-    etiqueta = label_cc(NOTimg(img.get_crop(134,5,186,97)));
+    ///Operacion de etiquetado
+    etiqueta = label_cc(NOTimg(img.get_crop(img.width()*0.2084,img.height()*0.0278,img.width()*0.29,img.height()*0.3585)));
     etiqueta.display("Etiquetado");
 
     //Cuenta de la cantidad de rosas (Contar niveles de grises diferentes)
