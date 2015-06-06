@@ -2495,9 +2495,7 @@ CImg<bool> ConvexHull(CImg<bool> A,bool blanco=true,bool limitar=false){
     CImg<bool> B(3,3);
     vector< CImg<bool> > D;
     B.fill(0,1,1,0,0,1,0,1,1);
-
     if(!blanco){A=NOTimg(A);}
-
     if(limitar==false){
         for(int j = 0;j<4;j++){//Avanza sobre los B - SUPUESTAMENTE EL SIZE DE B DEBERIA SER 4 (Cada una de las orientaciones)
             //Inicializo el vector X para hacer los calculos del B actual
@@ -2526,7 +2524,6 @@ CImg<bool> ConvexHull(CImg<bool> A,bool blanco=true,bool limitar=false){
             B.rotate(90);//roto B
         }
     }
-
     for(int j = 0;j<4;j++){
         CHull=ORimg(CHull,NOTimg(D[j]));
     }
