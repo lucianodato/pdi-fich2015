@@ -3166,9 +3166,9 @@ double coord_hough_to_value(CImg<T> hough, int coord, unsigned char axis) {
         valor = (2.0 * coord / M - 1.0) * max_theta;
     } else if (axis == 'p') { //rho
         valor = (2.0 * coord / N - 1.0) * max_rho;
-    } else {
+    } /*else {
         assert(axis && 0); // aviso del error
-    }
+    }*/
 
     return valor;
 }
@@ -3180,7 +3180,7 @@ double coord_hough_to_value(CImg<T> hough, int coord, unsigned char axis) {
 /// tetha entre [-90, 90] y el valor en coord de posicion de rho [0, hough.height()]
 /// tambien retorno la transformada Hough sin ese maximo pico
 template<typename T>
-CImg<T> get_max_peak(CImg<T> hough, T &theta, T &rho_coord, unsigned int difuminacion = 5) {
+void get_max_peak(CImg<T> hough, T &theta, T &rho_coord, unsigned int difuminacion = 5) {
 
     unsigned int max_x = 0;
     unsigned int max_y = 0;
@@ -3208,13 +3208,7 @@ CImg<T> get_max_peak(CImg<T> hough, T &theta, T &rho_coord, unsigned int difumin
     //rho_coord = coord_hough_to_value(hough, max_y, 'p');
     //theta = max_x;
 
-    //  Dibujo un circulo negro (0's) de radio difuminacion en hough
-    unsigned char color[] = {0};
-
-    hough.draw_circle(int(max_x), int(max_y), difuminacion, color);
-
-    return hough;
-}
+ }
 
 
 #endif // FUNCIONES
