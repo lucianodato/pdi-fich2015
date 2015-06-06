@@ -2208,23 +2208,23 @@ CImg<T> splitHough(CImg<T> Hough,double angulo = -180, double row_hough = -1,int
 }
 
 
-///  coordenada y al eje, me retorna el valor que correspende la transformada Hough en tita y rho
-// en grados para tita (t) entre [-90 ; 90] y entre [-sqrt(2)M;sqrt(2)M] el rho (p)
-template <typename T>
-double coordenadaXY_a_rho_tita(CImg<T> hough, int coord, unsigned char axis) {
-    unsigned int M = hough.width();
-    unsigned int N = hough.height();
-    // Maximos valores absolutos de theta y de rho
-    double max_theta = 90;
-    double max_rho = pow(pow(M, 2.0) + pow(N, 2.0), 0.5);
-    double valor;
-    if (axis == 't') { // tita
-        valor = (2.0 * coord / M - 1.0) * max_theta;
-    } else if (axis == 'p') { //rho
-        valor = (2.0 * coord / N - 1.0) * max_rho;
-    }
-    return valor;
-}
+/////  coordenada y al eje, me retorna el valor que correspende la transformada Hough en tita y rho
+//// en grados para tita (t) entre [-90 ; 90] y entre [-sqrt(2)M;sqrt(2)M] el rho (p)
+//template <typename T>
+//double coordenadaXY_a_rho_tita(CImg<T> hough, int coord, unsigned char axis) {
+//    unsigned int M = hough.width();
+//    unsigned int N = hough.height();
+//    // Maximos valores absolutos de theta y de rho
+//    double max_theta = 90;
+//    double max_rho = pow(pow(M, 2.0) + pow(N, 2.0), 0.5);
+//    double valor;
+//    if (axis == 't') { // tita
+//        valor = (2.0 * coord / M - 1.0) * max_theta;
+//    } else if (axis == 'p') { //rho
+//        valor = (2.0 * coord / N - 1.0) * max_rho;
+//    }
+//    return valor;
+//}
 
 
 
@@ -3085,6 +3085,8 @@ CImg<T> ecualizar_acebsf(CImg<T> img,double k1,int ni,int ns,int rango,int min,i
 /// TRIM image. Devuelve la imagen recortada a su minimo convexhull
 /// Necesario: Imagen con fondo blanco o similar, tiene que ser homogenea
 ///****************************************
+//mascara representa el convelhull que contiene la imagen que se quiere recortar
+//de la mascara se van a obtener la maxima y minimas coordenadas para cortar la imagen
 template<class T>
 CImg<T> trim_image(CImg<T>img,CImg<bool>mascara){
 
