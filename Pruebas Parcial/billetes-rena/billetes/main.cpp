@@ -1,43 +1,35 @@
 #include "funciones.h"
 
-#define UMBRAL 243
+#define UMBRAL 235
+#define RUTA "../../../../Parcial de Practica/Billetes/Billetes_Girados/1.jpg"
+
 
 int main()
 {
     //imagen
-    CImg<float> original,copia,copia2,aux,magnitud;
-    CImgList<float> ff;
-    original.load("1.jpg");
-    CImg<bool> B(8,8),B2(3,3),mascara;
-    B.fill(1);
-    B2.fill(1);
-    //Imagen en escala de grises
-    //copia = negativo(original.RGBtoHSI().get_channel(2).get_normalize(0,255));
-    copia = original;
-    copia.display();
+    CImg<float> original,billete,aux_hough;
+    original.load(RUTA);
+    CImg<bool> mascara;
+
     //Mascara
-    mascara = NOTimg(copia.get_RGBtoHSI().get_channel(2).get_normalize(0,255).threshold(230));
+    mascara = NOTimg(original.get_RGBtoHSI().get_channel(2).get_normalize(0,255).threshold(UMBRAL));
     mascara = apertura(mascara,mask(5));
-    //Trimeo a lo cabeza de tacho
-    copia2=original.get_mul(mascara);
+    //Trimeo a lo cabeza de tacho para traerme el billete
+    billete=original.get_mul(mascara);
+    billete.display("Billete rotado");
 
+    //Me quedo con el contorno de la mascara. Es la parte importante para calcular la inclinacion
     mascara = extraccion_de_contornos(relleno_automatico(mascara),mask(3));
-    mascara.display();
+    mascara.display("Mascara Contorno");
 
-
-    // Y me quedo con una region central para evitar ser afectado por bordes
-    //copia.crop(copia.width()/5, copia.height()/5, copia.width()*4/5, copia.height()*4/5);
-    //copia.display();
-    mascara = extraccion_de_contornos(relleno_automatico(mascara),mask(3));
-    mas
     // Y ahora aplicamos hough
-    aux = hough(mascara);
+    aux_hough = hough(mascara);
 
     //buscamos el maximo pico
     double max_theta = 0;
     double max_rho_coord = 0;
 
-    copia = get_max_peak<double>(aux, max_theta, max_rho_coord);
+    get_max_peak<double>(aux_hough, max_theta, max_rho_coord);
 
     // Ahora que se donde esta el maximo pico, se cual es su inclinacion, por lo que deberia
     // rotarlo hacia 90 o hacia 0, depende cual este mas cerca
@@ -50,9 +42,18 @@ int main()
     double degree_to_go = round(max_theta / 90) * 90;
 
     // Y lo rotamos
-    CImg<double> page_rotate(copia2.get_rotate(max_theta - degree_to_go));
+    CImg<double> billete_rotado(billete.get_rotate(max_theta - degree_to_go));
 
-    (original,aux.get_normalize(0,255),copia2.get_normalize(0,255),page_rotate,trim_image(page_rotate,page_rotate)).display();
+    //No me queda bien la imagen final, no me ocupa el total de las dimensiones del imagen
+    //Calculo una nueva mascara y hago nuevamente un trim
+    mascara = billete_rotado.get_RGBtoHSI().get_channel(2).get_normalize(0,255).threshold(50);
+    //Hago una apertura para eliminar la basura alrededor de la mascara... no me sirve para cortar
+    mascara = apertura(mascara,mask(5));
+    mascara.display();
+    billete_rotado = trim_image(billete_rotado,mascara);
+
+
+    (original,aux_hough.get_normalize(0,255),billete,billete_rotado).display("Original - Hough - Billete - Billete rotado");
 
 
     return 0;
