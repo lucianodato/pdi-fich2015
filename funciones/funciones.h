@@ -2374,29 +2374,41 @@ CImg<bool> MaximosLocales( CImg<double>& img, double limite ) {
 /// ORimg es equivalente a la union de conjuntos
 /// NOTimg es equivalente al complemento de un conjunto
 
-//EROSION n veces
+
+
+///---------------------------------------
+///EROSION n veces
+///---------------------------------------
 CImg<bool> nerode(CImg<bool> img,CImg<bool> ventana,int n){
     for(int i=0;i<n;i++){img.erode(ventana);}//Erosionamos
     return img;
 }
 
-//APERTURA
+///---------------------------------------
+///APERTURA
+///---------------------------------------
+//A • B = (A ⊕ B) ⊖ B
 CImg<bool> apertura(CImg<bool> img,CImg<bool> ventana){
     img.erode(ventana);//Erosionamos
     img.dilate(ventana);//Dilatamos
     return img;
 }
 
-//CIERRE
+///---------------------------------------
+///CIERRE
+///---------------------------------------
+//A ◦ B = (A ⊖ B) ⊕ B
 CImg<bool> cierre(CImg<bool> img,CImg<bool> ventana){
     img.dilate(ventana);//Dilatamos
     img.erode(ventana);//Erosionamos
     return img;
 }
 
-//HIT OR MISS - LOCALIZACION DE CONJUNTO
+///---------------------------------------
+///HIT OR MISS - LOCALIZACION DE CONJUNTO
+///---------------------------------------
+// A ⊛ B = (A ⊖ D) ∩ [A^c ⊖ (W − D)]
 CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> B,CImg<bool> X){
-    // A ⊛ B = (A ⊖ D) ∩ [A^c ⊖ (W − D)]
     CImg<bool> W=X.get_dilate(3);//Una ventana que encierra a X
     CImg<bool> D=DIFERENCIAimg(X,W);//Contorno que se formaria entre X y W
     CImg<bool> p1=A.erode(D);
@@ -2404,18 +2416,25 @@ CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> B,CImg<bool> X){
     return ANDimg(p1,p2);
 }
 
-//HIT OR MISS - LOCALIZACION DE CONJUNTO - Sobrecarga cuando no se requiere el fondo
+///---------------------------------------
+///HIT OR MISS - LOCALIZACION DE CONJUNTO - Sobrecarga cuando no se requiere el fondo
+///---------------------------------------
 CImg<bool> HitorMiss(CImg<bool> A,CImg<bool> B){
     return A.get_dilate(B);//Es una simple erosion
 }
 
-//EXTRACCION DE CONTORNOS
+///---------------------------------------
+///EXTRACCION DE CONTORNOS
+///---------------------------------------
 CImg<bool> extraccion_de_contornos(CImg<bool> img,CImg<bool> ventana){
     //(A ⊕ B) − (A ⊖ B) = dilate | erode^c
     return DIFERENCIAimg(img.get_dilate(ventana),img.get_erode(ventana));
 }
 
-//RELLENO SEMIAUTOMATICO INTERACTIVO
+///---------------------------------------
+///RELLENO SEMIAUTOMATICO INTERACTIVO
+///---------------------------------------
+//X_k = (X_k−1 ⊕ B) ∩ A c para  k = 1, 2, 3, . . .
 CImg<bool> relleno_semiautomatico(CImg<bool> A,bool continuo=false){
     CImg<bool> final(A.width(),A.height(),1,1,0),B(3,3);
     CImgDisplay v1(A,"Presione sobre el lugar a rellenar"),v2(A,"Resultado");
@@ -2451,7 +2470,10 @@ CImg<bool> relleno_semiautomatico(CImg<bool> A,bool continuo=false){
     return final;
 }
 
-//COMPONENTES CONECTADAS INTERACTIVO
+///---------------------------------------
+///COMPONENTES CONECTADAS INTERACTIVO
+///---------------------------------------
+//X_k = (X_k−1 ⊕ B) ∩ A   para k = 1, 2, 3, . . .
 CImg<bool> componentes_conectadas(CImg<bool> A){
     CImg<bool> final,B(3,3);
     CImgDisplay v1(A,"Presione sobre el lugar a rellenar"),v2(A,"Resultado");
@@ -2482,6 +2504,11 @@ CImg<bool> componentes_conectadas(CImg<bool> A){
     return final;
 }
 
+
+
+///---------------------------------------
+///CONVEXHULL
+///---------------------------------------
 //Retorna el convexhull de una imagen binaria (con posibilidad de limites)
 //IMPORTANTE Esta programado para que haga el convexhull para blancos de una mascara
 //si se desea hacer a partir de los negros hay que poner false en blanco
@@ -2530,7 +2557,11 @@ CImg<bool> ConvexHull(CImg<bool> A,bool blanco=true,bool limitar=false){
     }
 }
 
+///---------------------------------------
+/// THINNING
+///---------------------------------------
 //Adelgaza la mascara
+//A ⊗ B = A − (A ⊛ B) = A ∩ (A ⊛ B) c
 CImg<bool> Thinning(CImg<bool> A){
     //A ⊗ B = A − (A ⊛ B) = A ∩ (A ⊛ B)^c
     CImg<bool> p1=A,p2,B(3,3);
@@ -2543,7 +2574,11 @@ CImg<bool> Thinning(CImg<bool> A){
     }
 }
 
+///---------------------------------------
+/// THICKENING
+///---------------------------------------
 //Engrosa la mascara
+//A ⊙ B = A ∪ (A ⊛ B)
 CImg<bool> Thickening(CImg<bool> A){
     //A ⊗ B = A − (A ⊛ B) = A ∩ (A ⊛ B)^c
     CImg<bool> p1=A,p2,B(3,3);
@@ -2556,7 +2591,10 @@ CImg<bool> Thickening(CImg<bool> A){
     }
 }
 
-//Dilatacion Geodesica con n ciclos
+///---------------------------------------
+///DILATACION GEODESICA con n ciclos (Reconstrucción morfológica)
+///---------------------------------------
+// dilatacion geodesica geodesica n ciclos
 CImg<bool> dilatacion_geodesica(CImg<bool> G,int n){
     CImg<bool> final,B(3,3);
     CImgDisplay v1(G,"Presione sobre el lugar a rellenar"),v2(G,"Resultado");
@@ -2583,6 +2621,9 @@ CImg<bool> dilatacion_geodesica(CImg<bool> G,int n){
     return final;
 }
 
+///---------------------------------------
+///EROSION GEODESICA con n ciclos (Reconstrucción morfológica)
+///---------------------------------------
 //Erosion Geodesica con n ciclos
 CImg<bool> erosion_geodesica(CImg<bool> G,CImg<bool> F,int n){//F seria la mascara donde sintetiso a partir de A
     CImg<bool> final,B(3,3);
@@ -2596,6 +2637,9 @@ CImg<bool> erosion_geodesica(CImg<bool> G,CImg<bool> F,int n){//F seria la masca
     return final;
 }
 
+///---------------------------------------
+///RECONSTRUCCION POR DILATACION (Reconstrucción morfológica)
+///---------------------------------------
 //Reconstruccion por dilatacion - No necesito mandarle el F porque lo creo adentro!!!
 CImg<bool> reconstruccion_dilatacion(CImg<bool> G){
     CImg<bool> final,B(3,3);
@@ -2643,6 +2687,9 @@ CImg<bool> reconstruccion_dilatacion(CImg<bool> G,CImg<bool> F){
     return final;
 }
 
+///---------------------------------------
+///RECONSTRUCCION POR EROSION (Reconstrucción morfológica)
+///---------------------------------------
 //Reconstruccion por erosion
 CImg<bool> reconstruccion_erosion(CImg<bool> G,CImg<bool> F){//F seria la mascara donde sintetiso a partir de A
     CImg<bool> final,B(3,3);
@@ -2660,7 +2707,9 @@ CImg<bool> reconstruccion_erosion(CImg<bool> G,CImg<bool> F){//F seria la mascar
     return final;
 }
 
-//APERTURA POR RECONSTUCCION
+///---------------------------------------
+///APERTURA POR RECONSTUCCION
+///---------------------------------------
 CImg<bool> apertura_reconstruccion(CImg<bool> G,CImg<bool> B,int n){
     CImg<bool> final;
 
@@ -2678,7 +2727,11 @@ CImg<bool> apertura_reconstruccion(CImg<bool> G,CImg<bool> B,int n){
 
     return final;
 }
-//Devuelve la imagen binaria con los interiores rellenos
+
+///---------------------------------------
+/// RELLENO AUTOMATICO
+///---------------------------------------
+//Devuelve la imagen binaria con los interiores rellenos (Relleno de agujeros automático)
 CImg<bool> relleno_automatico(CImg<bool> I){
     CImg<bool> f(I.width(),I.height(),1,1,0),final;
 
@@ -2697,7 +2750,10 @@ CImg<bool> relleno_automatico(CImg<bool> I){
     return final;
 }
 
-//Devuelve la imagen binaria con los bordes limpios de objetos cortados por los bordes de la imagens
+///---------------------------------------
+/// LIMPIEZA DE BORDES
+///---------------------------------------
+//Devuelve la imagen binaria con los bordes limpios de objetos cortados por los bordes de la imagens (Limpieza de objetos en el borde)
 CImg<bool> limpieza_bordes(CImg<bool> I){
     CImg<bool> f(I.width(),I.height(),1,1,0),final;
 
@@ -2726,6 +2782,13 @@ bool mascara_vacia(CImg<bool> mascara){
     }
     return true;
 }
+
+///---------------------------------------
+///ESQUELETO (SKELETOR)
+///---------------------------------------
+//skeletor definido como diapositivas de teoria sin usar libreria skeletor.h
+//(usando la funciones de la libreria el skeletor.h queda mejor, ver ejemplo de uso de la libreria dentro de la carpeta)
+//pdi-fich2015/Pruebas Parcial/use_skeleton
 
 //Devuelve el esqueleto de una mascara binaria
 CImg<bool> esqueleto(CImg<bool> A,CImg<bool> B){
@@ -2765,7 +2828,8 @@ CImg<T> mul_mb_c(CImg<T> imagen,CImg<bool> mascara){
 
 
 
-//Limpieza de objetos en los bordes
+///Limpieza de objetos en los bordes
+//Otra version
 //recibe una imagen maskara y retorna la misma sin los objetos en el borde
 // por defecto b=true : retorna solo elementos del borde de img el borde
 // b=false : retorna img sin los elementos del borde
@@ -3168,9 +3232,9 @@ double coord_hough_to_value(CImg<T> hough, int coord, unsigned char axis) {
         valor = (2.0 * coord / M - 1.0) * max_theta;
     } else if (axis == 'p') { //rho
         valor = (2.0 * coord / N - 1.0) * max_rho;
-    } else {
-        assert(axis && 0); // aviso del error
-    }
+    } //else {
+       // assert(axis && 0); // aviso del error
+    //}
 
     return valor;
 }
