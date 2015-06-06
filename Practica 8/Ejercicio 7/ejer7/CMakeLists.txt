@@ -1,12 +1,11 @@
 project(ejer7)
 cmake_minimum_required(VERSION 2.8)
-aux_source_directory(. SRC_LIST)
-##########    COPIAR A PARTIR DE ACA  #################
+aux_source_directory(. SRC_LIST)##########    COPIAR A PARTIR DE ACA  #################
 #### Sobreesciribir la linea de add_executables ####
 
 #banderas de compilacion
-set(CMAKE_C_FLAGS "-g -lm -pthread -lX11 -lfftw3  -lfftw3_threads -fopenmp")
-set(CMAKE_CXX_FLAGS "-g -lm -pthread -lX11 -lfftw3  -lfftw3_threads -fopenmp")
+set(CMAKE_C_FLAGS "-g -lm -pthread -lX11 -lfftw3  -lfftw3_threads")
+set(CMAKE_CXX_FLAGS "-g -lm -pthread -lX11 -lfftw3  -lfftw3_threads")
 
 
 #Paths
@@ -26,7 +25,7 @@ file(GLOB MySources *.c *.h *.cpp)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
 #Agrega el ejecutable
-add_executable(${PROJECT_NAME} ${SRC_LIST} ${MySources} ${cimg} ${functions} ${fPDI} ${fskelet})
+add_executable(${PROJECT_NAME} ${SRC_LIST} ${MySources} ${cimg} ${functions} ${fPDI} ${fskelet} ${quadprog1} ${quadprog2} ${quadprog3} ${quadprog4})
 
 #linkea las librerias en tiempo de ejecucion
 
@@ -54,6 +53,3 @@ include_directories(${X11_INCLUDE_DIRS})
 target_link_libraries (${PROJECT_NAME} ${X11_LIBRARIES})
 endif (X11_FOUND)
 target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
-
-
-

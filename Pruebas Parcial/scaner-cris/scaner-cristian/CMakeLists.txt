@@ -15,10 +15,6 @@ set(functions ../../../funciones/funciones.h)
 set(cimg ../../../funciones/CImg.h)
 set(fPDI ../../../funciones/PDI_functions.h)
 set(fskelet ../../../funciones/plugins/skeleton.h)
-set(quadprog1 ../../../funciones/quadprog/QuadProg++.hh)
-set(quadprog2 ../../../funciones/quadprog/QuadProg++.cc)
-set(quadprog3 ../../../funciones/quadprog/uQuadProg++.hh)
-set(quadprog4 ../../../funciones/quadprog/uQuadProg++.cc)
 
 #Adds directories
 include_directories(${FUNCTIONS_DIRECTORY})
@@ -58,5 +54,3 @@ include_directories(${X11_INCLUDE_DIRS})
 target_link_libraries (${PROJECT_NAME} ${X11_LIBRARIES})
 endif (X11_FOUND)
 target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
-
-
