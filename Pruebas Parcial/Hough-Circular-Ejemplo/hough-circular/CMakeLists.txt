@@ -1,7 +1,6 @@
-project(ejer5-2)
+project(hough-circular)
 cmake_minimum_required(VERSION 2.8)
 aux_source_directory(. SRC_LIST)
-
 ##########    COPIAR A PARTIR DE ACA  #################
 #### Sobreesciribir la linea de add_executables ####
 
@@ -55,5 +54,4 @@ include_directories(${X11_INCLUDE_DIRS})
 target_link_libraries (${PROJECT_NAME} ${X11_LIBRARIES})
 endif (X11_FOUND)
 target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
-
 

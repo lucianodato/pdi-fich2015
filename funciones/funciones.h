@@ -2139,6 +2139,47 @@ CImg<double> InversaHough(CImg<double> img, int nLineas) {
     }
     return iHough;
 }
+
+///INVERSA (modificada)
+///sobrecarga que devuelve el maximo de los acumuladores pero puede ser
+///selectivo es decir max_nro indica si se quiere el segundo o el tercer
+///maximo etc. Comenzando por el maximo nro 1
+
+CImg<double> InversaHough_nmax(CImg<double> img, int max_nro=1) {
+    if(max_nro < 1){exit(1);}//Error
+    const unsigned M = img.width(),N = img.height();
+    CImg<double> iHough(M, N, 1, 1, 0.0);
+    double maxRho = sqrt(float(pow(N-1,2)+pow(M-1,2))), stepRho = 2.*maxRho/(N-1), stepTheta = M_PI/(M-1), rho, theta;
+    const double blanco[1] = {255.f};
+    float x0, x1, y0, y1;
+
+    //Hace 0 los maximos que no corresponden
+    for( int nl=0; nl < max_nro-1; nl++ ) {
+        Pixel p = MaximoP( img );
+        int t = p.x, r = p.y;
+        img(t,r) = 0;
+    }
+
+    Pixel p = MaximoP( img );
+    int t = p.x, r = p.y;
+    theta=t*stepTheta-M_PI/2;
+    rho=r*stepRho-maxRho;
+    if (theta>-M_PI/2 && theta<M_PI/2){
+        y0=0; y1=M-1;
+        x0=rho/cos(theta);
+        x1=rho/cos(theta)-(M-1)*tan(theta);
+    }
+    else {
+        x0=0; x1=N-1;
+        y0=rho/sin(theta);
+        y1=rho/sin(theta)-(N-1)/tan(theta);
+    }
+    iHough.draw_line(y0,x0,y1,x1,blanco);
+
+    return iHough;
+}
+
+
 ////para detectar circulos
 template <class T>
 CImg<T> HoughCirculos(CImg<T> &img, int r) {
@@ -2178,7 +2219,7 @@ CImg<T> splitHough(CImg<T> Hough,double angulo = -180, double row_hough = -1,int
     double max_pico = 0;
     double x_max_pico = 0;
     double y_max_pico = 0;
-    CImg<double> auxiliar(Hough.width(), Hough.height(), 1, 1, 0);
+    CImg<T> auxiliar(Hough.width(), Hough.height(), 1, 1, 0);
     for (int i = -ang_tol ; i <= ang_tol ; i++) {
         for (int j = -rho_tol ; j <= rho_tol ; j++) {
             if (col_hough + i < Hough.width() && col_hough + i >= 0 &&
@@ -3175,12 +3216,12 @@ CImg<T> trim_image(CImg<T>img,CImg<bool>mascara){
 /// se obtiene el listado de subimagenes.
 ///****************************************
 template<class T>
-CImgList<T> trim_image_wrapper(CImg<T>img,CImg<bool>mascara){
+CImgList<T> trim_image_wrapper(CImg<T>img,CImg<T>mascara){
 
     //Costruyo la mascara booleana del objeto con ese valor de etiqueta
+    CImg<T> trim;
     CImg<bool> mascara_proceso(mascara.width(),mascara.height(),1,1);
     CImgList<T> imagenes;
-    int cont =0;
 
     //Cuanto cuantos valores de etiquetas distintas de 0 y 1 tengo en la mascara
     //Esto equivale a la cantidad de subimagenes dentro de la mascara
@@ -3188,24 +3229,22 @@ CImgList<T> trim_image_wrapper(CImg<T>img,CImg<bool>mascara){
     //Busco los grises disponibles en la mascara
     vector<int> grises = grises_disponibles(mascara);
 
-    //Recorro el vector de grises disponibles y calculo las subimagenes
-    while(!grises.empty()){
 
+    //Recorro el vector de grises disponibles y calculo las subimagenes
+    for(int k=0;k<grises.size();k++){
+
+        //Busco en el vector el gris de ref.
+        int etiqueta = grises[k];
         //Inicializo la mascara en cero
         mascara_proceso.fill(0);
-        //Busco en el vector el gris de ref.
-        int etiqueta = grises.pop_back();
         //Busco los valores con ese valor de etiqueta y genero mi mascara para ese objeto
         cimg_forXY(mascara,i,j){
             if(mascara(i,j)==etiqueta)
-                mascara_proceso(i,j)==1;
+                mascara_proceso(i,j)=1;
         }
         //Llamo a la funcion que corta la imagen
-        imagenes[cont] = trim_image(img,mascara_proceso);
-
-        //Incremento el contador y paso al proximo gris
-        cont+=1;
-        etiqueta=grises.pop_back();
+        trim = trim_image(img,mascara_proceso);
+        imagenes.push_back(trim);
     }
 
     //Devuelvo la lista de subimagenes
@@ -3279,6 +3318,107 @@ void get_max_peak(CImg<T> hough, T &theta, T &rho_coord, unsigned int difuminaci
 
  }
 
+///****************************************
+/// detectar_lineas
+///****************************************
+/// Detecta las lineas con maxima coolinealidad de una imagen y las devuelve
+/// en forma de mascara. La cantidad de lineas que detecte dependera de
+/// cant_max que son la cantidad de maximos que filtraria en Hough
+
+template<class T>
+CImg<bool> detectar_lineas(CImg<T> img,int umbral_bordes,int cant_max){
+    //
+    CImg<bool> mascara(img.width(),img.height()),final(img.width(),img.height());
+    mascara.fill(0);final.fill(0);
+
+    //Detecto los bordes de la imagen
+    CImg<bool> bordes = Sobel(img).normalize(0,255).threshold(umbral_bordes);
+
+    //Calculo la transformada de Hough
+    CImg<T> img_hough = hough(bordes).normalize(0,1);
+
+    for(int k=1;k<cant_max+1;k++){
+        //Calculo el k maximo de la inversa de hough
+        mascara = InversaHough_nmax(img_hough,k).normalize(0,1);
+
+        //Corto las lineas de la antitransformada de hough segun la mascara y
+        //dist_maxima_puntos
+        CImg<bool> aux(mascara.width(),mascara.height());
+        aux.fill(0);
+        cimg_forXY(mascara,i,j){
+            if(mascara(i,j)==1){
+                //Si estoy sobre una linea de la mascara y la mascara
+                //es igual al borde guardo los pixeles de bordes en aux
+                aux(i,j)=bordes(i,j);
+            }
+        }
+        //Dibujo la linea entre los puntos que quedan en la linea
+        punto A,B;
+        B.x=-1;B.y=-1;A.x=-1;A.y=-1;
+        cimg_forXY(aux,i,j){
+            if(aux(i,j)==1){
+                B.x=A.x;
+                B.y=A.y;
+                A.x=i;
+                A.y=j;
+                if(A.x != -1 && B.x != -1)
+                    final.draw_line(A.x,A.y,0,B.x,B.y,0,white);
+            }
+        }
+    }
+    return final;
+}
+
+///****************************************
+/// detectar_linea nro cant_max
+///****************************************
+/// Detecta la linea con maxima coolinealidad de una imagen y la devuelve
+/// en forma de mascara. La linea que detecte dependera de
+/// cant_max que es el maximo nro cant_max que filtre Hough
+
+template<class T>
+CImg<bool> detectar_linea_nro(CImg<T> img,int umbral_bordes,int max=1){
+    //
+    CImg<bool> mascara(img.width(),img.height()),final(img.width(),img.height());
+    mascara.fill(0);final.fill(0);
+
+    //Detecto los bordes de la imagen
+    CImg<bool> bordes = Sobel(img).normalize(0,255).threshold(umbral_bordes);
+
+    //Calculo la transformada de Hough
+    CImg<T> img_hough = hough(bordes).normalize(0,1);
+
+
+    //Calculo el k maximo de la inversa de hough
+    mascara = InversaHough_nmax(img_hough,max).normalize(0,1);
+
+    //Corto las lineas de la antitransformada de hough segun la mascara y
+    //dist_maxima_puntos
+    CImg<bool> aux(mascara.width(),mascara.height());
+    aux.fill(0);
+    cimg_forXY(mascara,i,j){
+        if(mascara(i,j)==1){
+            //Si estoy sobre una linea de la mascara y la mascara
+            //es igual al borde guardo los pixeles de bordes en aux
+            aux(i,j)=bordes(i,j);
+        }
+    }
+    //Dibujo la linea entre los puntos que quedan en la linea
+    punto A,B;
+    B.x=-1;B.y=-1;A.x=-1;A.y=-1;
+    cimg_forXY(aux,i,j){
+        if(aux(i,j)==1){
+            B.x=A.x;
+            B.y=A.y;
+            A.x=i;
+            A.y=j;
+            if(A.x != -1 && B.x != -1)
+                final.draw_line(A.x,A.y,0,B.x,B.y,0,white);
+        }
+    }
+
+    return final;
+}
 
 ///****************************************
 /// ROTATE IMAGE. Rota las imagenes en funcion de un angulo
