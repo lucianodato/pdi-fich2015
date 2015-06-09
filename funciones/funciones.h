@@ -3216,12 +3216,12 @@ CImg<T> trim_image(CImg<T>img,CImg<bool>mascara){
 /// se obtiene el listado de subimagenes.
 ///****************************************
 template<class T>
-CImgList<T> trim_image_wrapper(CImg<T>img,CImg<bool>mascara){
+CImgList<T> trim_image_wrapper(CImg<T>img,CImg<T>mascara){
 
     //Costruyo la mascara booleana del objeto con ese valor de etiqueta
+    CImg<T> trim;
     CImg<bool> mascara_proceso(mascara.width(),mascara.height(),1,1);
     CImgList<T> imagenes;
-    int cont =0;
 
     //Cuanto cuantos valores de etiquetas distintas de 0 y 1 tengo en la mascara
     //Esto equivale a la cantidad de subimagenes dentro de la mascara
@@ -3229,24 +3229,22 @@ CImgList<T> trim_image_wrapper(CImg<T>img,CImg<bool>mascara){
     //Busco los grises disponibles en la mascara
     vector<int> grises = grises_disponibles(mascara);
 
-    //Recorro el vector de grises disponibles y calculo las subimagenes
-    while(!grises.empty()){
 
+    //Recorro el vector de grises disponibles y calculo las subimagenes
+    for(int k=0;k<grises.size();k++){
+
+        //Busco en el vector el gris de ref.
+        int etiqueta = grises[k];
         //Inicializo la mascara en cero
         mascara_proceso.fill(0);
-        //Busco en el vector el gris de ref.
-        int etiqueta = grises.pop_back();//????
         //Busco los valores con ese valor de etiqueta y genero mi mascara para ese objeto
         cimg_forXY(mascara,i,j){
             if(mascara(i,j)==etiqueta)
                 mascara_proceso(i,j)=1;
         }
         //Llamo a la funcion que corta la imagen
-        imagenes[cont] = trim_image(img,mascara_proceso);
-
-        //Incremento el contador y paso al proximo gris
-        cont+=1;
-        etiqueta=grises.pop_back();
+        trim = trim_image(img,mascara_proceso);
+        imagenes.push_back(trim);
     }
 
     //Devuelvo la lista de subimagenes
@@ -3394,7 +3392,7 @@ CImg<bool> detectar_lineas(CImg<T> img,int umbral_bordes,int cant_max){
 /// cant_max que es el maximo nro cant_max que filtre Hough
 
 template<class T>
-CImg<bool> detectar_linea_nro(CImg<T> img,int umbral_bordes,int cant_max){
+CImg<bool> detectar_linea_nro(CImg<T> img,int umbral_bordes,int max=1){
     //
     CImg<bool> mascara(img.width(),img.height()),final(img.width(),img.height());
     mascara.fill(0);final.fill(0);
@@ -3407,7 +3405,7 @@ CImg<bool> detectar_linea_nro(CImg<T> img,int umbral_bordes,int cant_max){
 
 
     //Calculo el k maximo de la inversa de hough
-    mascara = InversaHough_nmax(img_hough,cant_max).normalize(0,1);
+    mascara = InversaHough_nmax(img_hough,max).normalize(0,1);
 
     //Corto las lineas de la antitransformada de hough segun la mascara y
     //dist_maxima_puntos

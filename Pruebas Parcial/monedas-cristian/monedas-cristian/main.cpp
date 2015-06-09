@@ -5,7 +5,7 @@
 int main()
 {
     CImg<float> img,img_intensidad,final;
-    CImg<int> etiqueta;
+    CImg<float> etiqueta;
     CImg<bool> mascara,se1(3,3);
     se1.fill(1);
     int mx,my;
@@ -68,6 +68,9 @@ int main()
 
     cout<<"La cantidad de dinero es "<<suma<<endl;
 
+    //Chequeo las monedas
+    CImgList<float> miedo = trim_image_wrapper(img,etiqueta);
+    miedo.display("Monetaaaa!");
 
     return 0;
 }
