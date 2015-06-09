@@ -524,7 +524,6 @@ vector<int> grises_disponibles(CImg<T> imagen){
 
     return grises;
 }
-
 ///****************************************
 ///GREYSLICING INTERACTIVO
 ///****************************************
@@ -3172,28 +3171,47 @@ CImg<T> trim_image(CImg<T>img,CImg<bool>mascara){
 }
 
 ///****************************************
-/// TRIM image wrapper
+/// TRIM image wrapper. Pasa una mascara de grises y la imagen original
+/// se obtiene el listado de subimagenes.
 ///****************************************
 template<class T>
-CImg<T> trim_image_wrapper(CImg<T>img,CImg<bool>mascara,int etiqueta=1){
+CImgList<T> trim_image_wrapper(CImg<T>img,CImg<bool>mascara){
 
     //Costruyo la mascara booleana del objeto con ese valor de etiqueta
     CImg<bool> mascara_proceso(mascara.width(),mascara.height(),1,1);
-    mascara_proceso.fill(0);
+    CImgList<T> imagenes;
+    int cont =0;
 
-    //Busco los valores con ese valor de etiqueta y genero mi mascara para ese objeto
-    cimg_forXY(mascara,i,j){
-        if(mascara(i,j)==etiqueta)
-            mascara_proceso(i,j)==1;
+    //Cuanto cuantos valores de etiquetas distintas de 0 y 1 tengo en la mascara
+    //Esto equivale a la cantidad de subimagenes dentro de la mascara
 
+    //Busco los grises disponibles en la mascara
+    vector<int> grises = grises_disponibles(mascara);
+
+    //Recorro el vector de grises disponibles y calculo las subimagenes
+    while(!grises.empty()){
+
+        //Inicializo la mascara en cero
+        mascara_proceso.fill(0);
+        //Busco en el vector el gris de ref.
+        int etiqueta = grises.pop_back();
+        //Busco los valores con ese valor de etiqueta y genero mi mascara para ese objeto
+        cimg_forXY(mascara,i,j){
+            if(mascara(i,j)==etiqueta)
+                mascara_proceso(i,j)==1;
+        }
+        //Llamo a la funcion que corta la imagen
+        imagenes[cont] = trim_image(img,mascara_proceso);
+
+        //Incremento el contador y paso al proximo gris
+        cont+=1;
+        etiqueta=grises.pop_back();
     }
 
-    //Llamo a la funcion que corta la imagen
+    //Devuelvo la lista de subimagenes
+    return imagenes;
 
-    return trim_image(img,mascara_proceso);
 }
-
-
 
 ///****************************************
 /// ROTATE IMAGE. Rota las imagenes en funcion de un angulo
