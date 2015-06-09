@@ -2145,7 +2145,8 @@ CImg<double> InversaHough(CImg<double> img, int nLineas) {
 ///selectivo es decir max_nro indica si se quiere el segundo o el tercer
 ///maximo etc. Comenzando por el maximo nro 1
 
-CImg<double> InversaHough(CImg<double> img, int max_nro) {
+CImg<double> InversaHough_nmax(CImg<double> img, int max_nro=1) {
+    if(max_nro < 1){exit(1);}//Error
     const unsigned M = img.width(),N = img.height();
     CImg<double> iHough(M, N, 1, 1, 0.0);
     double maxRho = sqrt(float(pow(N-1,2)+pow(M-1,2))), stepRho = 2.*maxRho/(N-1), stepTheta = M_PI/(M-1), rho, theta;
@@ -2153,7 +2154,7 @@ CImg<double> InversaHough(CImg<double> img, int max_nro) {
     float x0, x1, y0, y1;
 
     //Hace 0 los maximos que no corresponden
-    for( int nl=0; nl < max_nro; nl++ ) {
+    for( int nl=0; nl < max_nro-1; nl++ ) {
         Pixel p = MaximoP( img );
         int t = p.x, r = p.y;
         img(t,r) = 0;
@@ -3342,33 +3343,98 @@ void get_max_peak(CImg<T> hough, T &theta, T &rho_coord, unsigned int difuminaci
 /// cant_max que son la cantidad de maximos que filtraria en Hough
 
 template<class T>
-CImg<bool> detectar_lineas(CImg<T> img,int umbral_bordes,int cant_max,T dist_maxima_puntos){
+CImg<bool> detectar_lineas(CImg<T> img,int umbral_bordes,int cant_max){
     //
-    CImg<bool> mascara(img.width(),img.height());
-    mascara.fill(0);
+    CImg<bool> mascara(img.width(),img.height()),final(img.width(),img.height());
+    mascara.fill(0);final.fill(0);
 
     //Detecto los bordes de la imagen
-    CImg<T> bordes = Sobel(img,0).threshold(umbral_bordes);
+    CImg<bool> bordes = Sobel(img).normalize(0,255).threshold(umbral_bordes);
 
-    //Calculo la transformada y traigo cant_max de lineas de la inversa
+    //Calculo la transformada de Hough
     CImg<T> img_hough = hough(bordes).normalize(0,1);
-    mascara = InversaHough(img_hough,cant_max);
+
+    for(int k=1;k<cant_max+1;k++){
+        //Calculo el k maximo de la inversa de hough
+        mascara = InversaHough_nmax(img_hough,k).normalize(0,1);
+
+        //Corto las lineas de la antitransformada de hough segun la mascara y
+        //dist_maxima_puntos
+        CImg<bool> aux(mascara.width(),mascara.height());
+        aux.fill(0);
+        cimg_forXY(mascara,i,j){
+            if(mascara(i,j)==1){
+                //Si estoy sobre una linea de la mascara y la mascara
+                //es igual al borde guardo los pixeles de bordes en aux
+                aux(i,j)=bordes(i,j);
+            }
+        }
+        //Dibujo la linea entre los puntos que quedan en la linea
+        punto A,B;
+        B.x=-1;B.y=-1;A.x=-1;A.y=-1;
+        cimg_forXY(aux,i,j){
+            if(aux(i,j)==1){
+                B.x=A.x;
+                B.y=A.y;
+                A.x=i;
+                A.y=j;
+                if(A.x != -1 && B.x != -1)
+                    final.draw_line(A.x,A.y,0,B.x,B.y,0,white);
+            }
+        }
+    }
+    return final;
+}
+
+///****************************************
+/// detectar_linea nro cant_max
+///****************************************
+/// Detecta la linea con maxima coolinealidad de una imagen y la devuelve
+/// en forma de mascara. La linea que detecte dependera de
+/// cant_max que es el maximo nro cant_max que filtre Hough
+
+template<class T>
+CImg<bool> detectar_linea_nro(CImg<T> img,int umbral_bordes,int cant_max){
+    //
+    CImg<bool> mascara(img.width(),img.height()),final(img.width(),img.height());
+    mascara.fill(0);final.fill(0);
+
+    //Detecto los bordes de la imagen
+    CImg<bool> bordes = Sobel(img).normalize(0,255).threshold(umbral_bordes);
+
+    //Calculo la transformada de Hough
+    CImg<T> img_hough = hough(bordes).normalize(0,1);
+
+
+    //Calculo el k maximo de la inversa de hough
+    mascara = InversaHough_nmax(img_hough,cant_max).normalize(0,1);
 
     //Corto las lineas de la antitransformada de hough segun la mascara y
     //dist_maxima_puntos
-    cimg_forXY(bordes,i,j){
-        if(mascara(i,j)==1 && bordes(i,j)==mascara(i,j)){
+    CImg<bool> aux(mascara.width(),mascara.height());
+    aux.fill(0);
+    cimg_forXY(mascara,i,j){
+        if(mascara(i,j)==1){
             //Si estoy sobre una linea de la mascara y la mascara
-            //es igual al borde guardo las max y min coord
-
-
-
+            //es igual al borde guardo los pixeles de bordes en aux
+            aux(i,j)=bordes(i,j);
+        }
+    }
+    //Dibujo la linea entre los puntos que quedan en la linea
+    punto A,B;
+    B.x=-1;B.y=-1;A.x=-1;A.y=-1;
+    cimg_forXY(aux,i,j){
+        if(aux(i,j)==1){
+            B.x=A.x;
+            B.y=A.y;
+            A.x=i;
+            A.y=j;
+            if(A.x != -1 && B.x != -1)
+                final.draw_line(A.x,A.y,0,B.x,B.y,0,white);
         }
     }
 
-
-
-
+    return final;
 }
 
 #endif // FUNCIONES

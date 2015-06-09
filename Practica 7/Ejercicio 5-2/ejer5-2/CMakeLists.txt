@@ -55,3 +55,5 @@ include_directories(${X11_INCLUDE_DIRS})
 target_link_libraries (${PROJECT_NAME} ${X11_LIBRARIES})
 endif (X11_FOUND)
 target_link_libraries (${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT})
+
+
