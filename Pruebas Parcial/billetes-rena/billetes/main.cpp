@@ -3,7 +3,7 @@
 #define UMBRAL_SOBEL 50
 #define UMBRAL_MASCARA 230
 #define UMBRAL_ROMBO 140
-#define RUTA "../../../../Parcial de Practica/Billetes/Billetes_Girados/3.jpg"
+#define RUTA "../../../../Parcial de Practica/Billetes/Billetes_Girados/4.jpg"
 #define REF_VALUE  0.97
 
 //GIRA BILLETE
@@ -22,11 +22,11 @@ template<typename T>
 int valor_billete(CImg <T> img){
 
     img = img.get_RGBtoHSI().get_channel(2).get_normalize(0,255);
-    img.display("bN");
+    //img.display("bN");
     //Hago un crop de la zona de interes (Se que estan son las coordenadas donde se ubican los rombos)
-    img = img.get_crop(117,5,180,100);
+    img = img.get_crop(img.width()*0.2084,img.height()*0.0278,img.width()*0.29,img.height()*0.3585);
     //Desgasto con una mascara promedio por q es una imagen muy pixelada
-    img = img.get_convolve(mask(9));
+    img = img.get_convolve(mask(5));
 
     //Calculo la mascara negativa con el valor de UMBRAL_ROMBO
     img = NOTimg(img.get_threshold(UMBRAL_ROMBO));
@@ -63,12 +63,30 @@ int valor_billete(CImg <T> img){
 int main()
 {
     //imagen
-    CImg<float> original,billete,aux_hough,r,g,b;
+    CImg<float> original,billete;
     original.load(RUTA);
-    CImg<bool> mascara;
     double peso;
 
+    //Roto el billete (sobel,hough y trim_image)
     billete = rotate_image(original,UMBRAL_SOBEL,UMBRAL_MASCARA);
+    billete.display("Billete Rotado resp. al Eje theta");
+
+    //Verifico si el billete esta del derecho o del revez. Roto si corresponde
+    enderezar_billete(billete);
+    billete.display("Billete enderezado");
+
+    //Determino la denominacion del billete
+    peso = valor_billete(billete);
+
+    (original,billete).display("Original - Billete");
+
+    return 0;
+
+}
+
+
+
+
 //    //Aplico un denoise previo
 //    //original=denoise(original,3,12,0,4);/*
 
@@ -86,7 +104,7 @@ int main()
 //        }
 //    }
 
-    //mascara = NOTimg(original.get_RGBtoHSI().get_channel(2).get_normalize(0,255).threshold(UMBRAL));
+//mascara = NOTimg(original.get_RGBtoHSI().get_channel(2).get_normalize(0,255).threshold(UMBRAL));
 
 //    //Mejoro la mascara con tecnica de apertura y relleno automatico
 //    mascara = apertura(mascara,mask(5));
@@ -133,18 +151,3 @@ int main()
 
 //    //Recordo nuevamente el billete pero esta ves con la mascara derecha
 //    billete_rotado = trim_image(billete_rotado,mascara);
-
-
-    //Verifico si el billete esta del derecho o del revez. Roto si corresponde
-    enderezar_billete(billete);
-
-    //Determino la denominacion del billete
-    peso = valor_billete(billete);
-
-    //(original,aux_hough.get_normalize(0,255),billete,billete_rotado).display("Original - Hough - Billete - Billete rotado");
-
-    (original,billete).display("Original - Billete");
-
-    return 0;
-}
-

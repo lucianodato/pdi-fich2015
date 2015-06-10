@@ -3192,7 +3192,7 @@ CImg<T> ecualizar_acebsf(CImg<T> img,double k1,int ni,int ns,int rango,int min,i
 //mascara representa el convelhull que contiene la imagen que se quiere recortar
 //de la mascara se van a obtener la maxima y minimas coordenadas para cortar la imagen
 template<class T>
-CImg<T> trim_image(CImg<T>img,CImg<bool>mascara){
+CImg<T> trim_image(CImg<T>img,CImg<int>mascara){
 
     //Puntos x e y maximos y minimos
     vector<punto> coordenadas;
@@ -3206,6 +3206,8 @@ CImg<T> trim_image(CImg<T>img,CImg<bool>mascara){
     maxx=max.x;maxy=max.y;
     minx=min.x;miny=min.y;
 
+    //Previa a hacer el crop multiplico por la mascara para evitar q objetos no se intercepten
+    img = img.mul(mascara);
     //Recorto la imagen
     return img.get_crop(maxx,maxy,minx,miny);
 
@@ -3216,13 +3218,12 @@ CImg<T> trim_image(CImg<T>img,CImg<bool>mascara){
 /// se obtiene el listado de subimagenes.
 ///****************************************
 template<class T>
-CImgList<T> trim_image_wrapper(CImg<T>img,CImg<T>mascara){
+CImgList<T> trim_image_wrapper(CImg<T>img,CImg<int>mascara){
 
     //Costruyo la mascara booleana del objeto con ese valor de etiqueta
     CImg<T> trim;
-    CImg<bool> mascara_proceso(mascara.width(),mascara.height(),1,1);
     CImgList<T> imagenes;
-
+    CImg<int> mascara_proceso(mascara.width(),mascara.height());
     //Cuanto cuantos valores de etiquetas distintas de 0 y 1 tengo en la mascara
     //Esto equivale a la cantidad de subimagenes dentro de la mascara
 
@@ -3235,16 +3236,20 @@ CImgList<T> trim_image_wrapper(CImg<T>img,CImg<T>mascara){
 
         //Busco en el vector el gris de ref.
         int etiqueta = grises[k];
-        //Inicializo la mascara en cero
+        //Inicializo la mascara. Borro su dimension e inicializo en cero
+        //mascara_proceso.clear();
         mascara_proceso.fill(0);
         //Busco los valores con ese valor de etiqueta y genero mi mascara para ese objeto
         cimg_forXY(mascara,i,j){
             if(mascara(i,j)==etiqueta)
                 mascara_proceso(i,j)=1;
         }
+        mascara_proceso.display("Mascara Proceso");
         //Llamo a la funcion que corta la imagen
         trim = trim_image(img,mascara_proceso);
+        trim.display();
         imagenes.push_back(trim);
+
     }
 
     //Devuelvo la lista de subimagenes
@@ -3467,14 +3472,13 @@ CImg<T> rotate_image(CImg<T> img,double umbral_sobel,double umbral_mascara,bool 
     // Y lo rotamos
     resultado = img.get_rotate(max_theta - degree_to_go);
 
-
     //Hago el blur para homogeneizar el objeto
-    greyscale.blur(3);
-    greyscale.display("blur");
+    //greyscale.blur(3);
+    //greyscale.display("blur");
 
     //calculamos la mascara para la recortar los sobrantes
     mascara = greyscale.get_threshold(umbral_mascara);
-    mascara = NOTimg(mascara);
+    //mascara = NOTimg(mascara);
 
     //Morfologia - apertura
     mascara = apertura(mascara,mask(5));
