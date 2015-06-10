@@ -1,6 +1,5 @@
 #include "funciones.h"
 
-using namespace std;
 #define UMBRAL 245
 #define VALOR_MEDIA 0.97
 #define nLineas 80
@@ -17,7 +16,7 @@ void forma1(){
     se2.fill(1);
     //imagen
     CImg<double> original,intensidad,copia;
-     CImg<int> etiqueta;
+    CImg<int> etiqueta;
     original.load("../../../../Parcial de Practica/Billetes/Billetes_Girados/3.jpg");
     original=denoise(original,3,12,0,4);
     original.display("filtrada");
@@ -37,43 +36,43 @@ void forma1(){
 
 
     // Para calcular el angulo calculo la transformada de Hough y la multiplico por una imagen para pesar los angulos
-      //giro la imagen de peso un poco.
-            CImg<double> Hough = hough( contorno);
-            //peso imagen un poco girada
-            CImg<double> peso(Hough.width(),Hough.height(),1,1,"1 / (1 + 2 * (((x/w)*2)-1) * (((x/w)*2)-1))",false);
-            Hough.mul( peso );
+    //giro la imagen de peso un poco.
+    CImg<double> Hough = hough( contorno);
+    //peso imagen un poco girada
+    CImg<double> peso(Hough.width(),Hough.height(),1,1,"1 / (1 + 2 * (((x/w)*2)-1) * (((x/w)*2)-1))",false);
+    Hough.mul( peso );
 
-            CImgList<double> lista2( Hough.get_div(peso), peso, Hough, original-InversaHough( Hough, nLineas ) );
-            lista2.display("Calcular angulo - Hough", false);
+    CImgList<double> lista2( Hough.get_div(peso), peso, Hough, original-InversaHough( Hough, nLineas ) );
+    lista2.display("Calcular angulo - Hough", false);
 
-            // Para calcular el angulo de giro de la imagen tomo los "nLineas" maximos de la imagen y los promedio
-            double angulo = 0;
-            for(int i=0; i<nLineas; i++) {
-                Pixel p = MaximoP( Hough );
-                angulo += p.x;
-                Hough( p.x, p.y ) = 0;
-            }
-            angulo /= (double)nLineas;
-            angulo -= (double)(Hough.width()/2);
-            angulo *= 90.0 / (double)(Hough.width()/2);
-            cout<<"Angulo de giro: "<<angulo<<endl;
-            copia.rotate(angulo);
-            mascara.rotate(angulo);
-            copia.display("rotada");
-            //img=original.get_RGBtoHSI().get_channel(2).get_normalize(0,255).get_threshold(UMBRAL);
-            //img.display();
+    // Para calcular el angulo de giro de la imagen tomo los "nLineas" maximos de la imagen y los promedio
+    double angulo = 0;
+    for(int i=0; i<nLineas; i++) {
+        Pixel p = MaximoP( Hough );
+        angulo += p.x;
+        Hough( p.x, p.y ) = 0;
+    }
+    angulo /= (double)nLineas;
+    angulo -= (double)(Hough.width()/2);
+    angulo *= 90.0 / (double)(Hough.width()/2);
+    cout<<"Angulo de giro: "<<angulo<<endl;
+    copia.rotate(angulo);
+    mascara.rotate(angulo);
+    copia.display("rotada");
+    //img=original.get_RGBtoHSI().get_channel(2).get_normalize(0,255).get_threshold(UMBRAL);
+    //img.display();
 
-           copia=trim_image(copia,mascara);
-           copia.display("trimmm");
-           intensidad=copia.get_RGBtoHSI().get_channel(2);
-           img = intensidad.get_normalize(0,255).get_threshold(150);
+    copia=trim_image(copia,mascara);
+    copia.display("trimmm");
+    intensidad=copia.get_RGBtoHSI().get_channel(2);
+    img = intensidad.get_normalize(0,255).get_threshold(150);
 
-           img.display("billete");
+    img.display("billete");
 
     //para determinar si el billete esta invertido o no
     double aux= img.get_crop(53,84,161,227).mean();
     if (aux<VALOR_MEDIA){
-     img.rotate(180);
+        img.rotate(180);
     }
 
     img.display("girado final");
@@ -108,7 +107,7 @@ void forma1(){
 
 }
 
- void forma2(){
+void forma2(){
     //kernels
     CImg<bool> img,mascara,se2(3,3),se1(3,3),se0(5,5,1,1,0),contorno;
     se0(0,0)=se0(1,1)=se0(2,2)=se0(3,3)=se0(4,4)=se0(5,5)=1;
@@ -117,7 +116,7 @@ void forma1(){
     se2.fill(1);
     //imagen
     CImg<double> original,intensidad,copia;
-     CImg<int> etiqueta;
+    CImg<int> etiqueta;
     original.load("../../../../Parcial de Practica/Billetes/Billetes_Girados/3.jpg");
     original=denoise(original,3,12,0,4);
     original.display("filtrada");
@@ -165,7 +164,7 @@ void forma1(){
     //trim_image(page_rotate,page_rotate).display("trimm");
     mascara.display("mascara sin rotar (la debo rotar antes de aplicar trim_image)");
     mascara.rotate(max_theta - degree_to_go);
-     copia=trim_image(copia.rotate(max_theta - degree_to_go),mascara);
+    copia=trim_image(copia.rotate(max_theta - degree_to_go),mascara);
 
     copia.display("trimmm");
     intensidad=copia.get_RGBtoHSI().get_channel(2);
@@ -173,53 +172,53 @@ void forma1(){
 
     img.display("billete");
 
-//para determinar si el billete esta invertido o no
-double auxx= img.get_crop(53,84,161,227).mean();
-if (auxx<VALOR_MEDIA){
-img.rotate(180);
-}
+    //para determinar si el billete esta invertido o no
+    double auxx= img.get_crop(53,84,161,227).mean();
+    if (auxx<VALOR_MEDIA){
+        img.rotate(180);
+    }
 
-img.display("girado final");
+    img.display("girado final");
 
-//Operacion de etiquetado
-etiqueta = label_cc(NOTimg(img.get_crop(img.width()*0.2084,img.height()*0.0278,img.width()*0.29,img.height()*0.3585)));
-etiqueta.display("Etiquetado");
-//Cuenta de la cantidad de rosas (Contar niveles de grises diferentes)
-int cant_rosas = cant_grises(etiqueta);
-vector<int> grises = grises_disponibles(etiqueta);
-switch(cant_rosas){
-case 6:
-    cout<<"2 PESOS";
-    break;
-case 4:
-    cout<<"10 PESOS";
-    break;
-case 5:
-    cout<<"5 PESOS";
-    break;
-case 2:
-    cout<<"50 PESOS";
-    break;
-case 1:
-    cout<<"100 PESOS";
-    break;
-case 3:
-    cout<<"20 PESOS";
-    break;
-}
+    //Operacion de etiquetado
+    etiqueta = label_cc(NOTimg(img.get_crop(img.width()*0.2084,img.height()*0.0278,img.width()*0.29,img.height()*0.3585)));
+    etiqueta.display("Etiquetado");
+    //Cuenta de la cantidad de rosas (Contar niveles de grises diferentes)
+    int cant_rosas = cant_grises(etiqueta);
+    vector<int> grises = grises_disponibles(etiqueta);
+    switch(cant_rosas){
+    case 6:
+        cout<<"2 PESOS";
+        break;
+    case 4:
+        cout<<"10 PESOS";
+        break;
+    case 5:
+        cout<<"5 PESOS";
+        break;
+    case 2:
+        cout<<"50 PESOS";
+        break;
+    case 1:
+        cout<<"100 PESOS";
+        break;
+    case 3:
+        cout<<"20 PESOS";
+        break;
+    }
 
 }
 
 int main()
 {
 
-   forma1();
-   //forma2();
+    forma1();
+    //forma2();
 
-//la diferencia entra forma 1 y forma 2 es la forma es que se calcular el angulo con tranformada huogh
-   // forma 2 con  get_max_peak, calcula el angulo en funcion de un solo maximo, el primer maximo
-   //forma 1, hace un promedio entre n maximos, la cantidad de maximos a tomar para el promedio
-   // se determina con el parametro nLineas.
+    //la diferencia entra forma 1 y forma 2 es la forma es que se calcular el angulo con tranformada huogh
+    // forma 2 con  get_max_peak, calcula el angulo en funcion de un solo maximo, el primer maximo
+    //forma 1, hace un promedio entre n maximos, la cantidad de maximos a tomar para el promedio
+    // se determina con el parametro nLineas.
 
 
     return 0;
