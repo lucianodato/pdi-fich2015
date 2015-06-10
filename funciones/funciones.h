@@ -78,7 +78,8 @@ green[] = { 0,255,0 },
 blue[] = { 0,0,255 },
 white[] = { 255,255,255 },
 black[] = { 0,0,0 },
-yellow[] = { 255,255,0 };
+yellow[] = { 255,255,0 },
+grey[] = { 127,127,127 };
 
 struct Pixel {
     int x;
@@ -976,7 +977,7 @@ CImg<T> LoG(CImg<T> img){
 ///****************************************
 //Recibe la imagen el kernel pasa bajo y la amplificacion
 template<typename T>
-CImg<T> filtroAP(CImg<T> img,CImg<T> kernel,float amp=0.0){
+CImg<T> filtroAP(CImg<T> img,CImg<int> kernel,float amp=0.0){
     //auxiliares
     CImg<T> pb,dif,sum;
 
@@ -3475,7 +3476,8 @@ CImg<bool> detectar_lineas(CImg<T> img,int umbral_bordes,int cant_max){
     mascara.fill(0);final.fill(0);
 
     //Detecto los bordes de la imagen
-    CImg<bool> bordes = Sobel(img).normalize(0,255).threshold(umbral_bordes);
+    CImg<bool> bordes = (Sobel(img,0)+Sobel(img,1)).normalize(0,255).threshold(umbral_bordes);
+    bordes.display();
 
     //Calculo la transformada de Hough
     CImg<T> img_hough = hough(bordes).normalize(0,1);
@@ -3526,7 +3528,8 @@ CImg<bool> detectar_linea_nro(CImg<T> img,int umbral_bordes,int max=1){
     mascara.fill(0);final.fill(0);
 
     //Detecto los bordes de la imagen
-    CImg<bool> bordes = Sobel(img).normalize(0,255).threshold(umbral_bordes);
+    CImg<bool> bordes = (Sobel(img,0)+Sobel(img,1)).normalize(0,255).threshold(umbral_bordes);
+    //bordes.display();
 
     //Calculo la transformada de Hough
     CImg<T> img_hough = hough(bordes).normalize(0,1);
@@ -3560,6 +3563,89 @@ CImg<bool> detectar_linea_nro(CImg<T> img,int umbral_bordes,int max=1){
         }
     }
 
+    return final;
+}
+
+///****************************************
+/// detectar_lineas
+///****************************************
+/// Detecta las lineas con maxima coolinealidad de una imagen y las devuelve
+/// en forma de mascara. La cantidad de lineas que detecte dependera de
+/// cant_max que son la cantidad de maximos que filtraria en Hough
+/// ademas incluye la inspeccion de un area especifica de la transformada
+/// segun un angulo que se pasa
+
+
+
+template<class T>
+CImg<bool> detectar_lineas_cond(CImg<T> img,int umbral_bordes,int cant_max,int angulo,int ancho_inspeccion){
+    //
+    CImg<bool> mascara(img.width(),img.height()),final(img.width(),img.height());
+    mascara.fill(0);final.fill(0);
+
+    //Detecto los bordes de la imagen
+    CImg<bool> bordes = (Sobel(img,0)+Sobel(img,1)).normalize(0,255).threshold(umbral_bordes);
+    //bordes.display();
+
+    //Calculo la transformada de Hough
+    CImg<T> img_hough = hough(bordes).normalize(0,1);
+
+    //Filtro el area a inspeccionar segun los parametros de entrada
+    int pos=0;
+    switch(angulo){
+    case 0:
+        pos = img_hough.width()/2;
+        break;
+    case 45:
+        pos = img_hough.width()*3/4;
+        break;
+    case -45:
+        pos = img_hough.width()/4;
+        break;
+    case 90:
+        pos = img_hough.width();
+        break;
+    case -90:
+        pos = 0;
+        break;
+    }
+
+    cimg_forXY(img_hough,i,j){
+        if(i < pos-ancho_inspeccion || i > pos+ancho_inspeccion){
+            //esta que no corresponde a la inspeccion
+            img_hough(i,j)=0;
+        }
+    }
+
+    for(int k=1;k<cant_max+1;k++){
+        //Calculo el k maximo de la inversa de hough
+        mascara = InversaHough_nmax(img_hough,k).normalize(0,1);
+
+        //Corto las lineas de la antitransformada de hough segun la mascara y
+        //dist_maxima_puntos
+        CImg<bool> aux(mascara.width(),mascara.height());
+        aux.fill(0);
+        cimg_forXY(mascara,i,j){
+            if(mascara(i,j)==1){
+                //Si estoy sobre una linea de la mascara y la mascara
+                //es igual al borde guardo los pixeles de bordes en aux
+                aux(i,j)=bordes(i,j);
+            }
+        }
+        //Dibujo la linea entre los puntos que quedan en la linea
+        punto A,B;
+        B.x=-1;B.y=-1;A.x=-1;A.y=-1;
+        cimg_forXY(aux,i,j){
+            if(aux(i,j)==1){
+                B.x=A.x;
+                B.y=A.y;
+                A.x=i;
+                A.y=j;
+                if(A.x != -1 && B.x != -1)
+                    final.draw_line(A.x,A.y,0,B.x,B.y,0,white);
+            }
+        }
+    }
     return final;
 }
 
