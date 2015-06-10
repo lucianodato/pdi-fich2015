@@ -1,84 +1,99 @@
 #include "funciones.h"
 
-#define UMBRAL 180
-#define INTENSIDAD_PROMEDIO 128.0
+#define UMBRAL 240
+#define INTENSIDAD_PROMEDIO 160.0
+#define RADIO_SLICE 100
+#define CANT_EROSION 15
 
 
 //Este metodo identifica dos tipos rubia o negra. True si es rubia, false es negra o cualquier otra
 template<typename T>
 bool tipo_cerveza(CImg<T> img){
 
-        double img_mean = img.RGBtoHSI().get_channel(2).get_normalize(0,255).mean();
+    double img_mean = img.RGBtoHSI().get_channel(2).get_normalize(0,255).mean();
 
-        // Ahora determino si es rubia o negra, en base a intensidad promedio
-            if (img_mean > INTENSIDAD_PROMEDIO) { // es rubia
-                return true;
-            } else { // es negra
-                return false;
-            }
+    // Ahora determino si es rubia o negra, en base a intensidad promedio
+    if (img_mean > INTENSIDAD_PROMEDIO) { // es rubia
+        return true;
+    } else { // es negra
+        return false;
+    }
 }
 
 int main()
 {
     //imagen
     CImg<float> original,byn,procesada,copia,final;
-    original.load("../../../../Parcial de Practica/Cervezas/training/02.jpg");
+    original.load("../../../../Parcial de Practica/Cervezas/training/13.jpg");
     procesada = original;
     copia = original;
-    //original.display();
-    CImg<bool> B(8,8),B2(3,3),mascara;
-    B.fill(1);
-    B2.fill(1);
-    //cordenadas para crop
-    vector<punto> coordenadas;
-    punto max,min;
-    int minx,miny,maxx,maxy;
+    CImg<bool> mascara;
 
     //a)Encontrar la mascara del objeto.
     //1- mascara difusa, 2- escala de grises, 3 - binarizo con threadhold alto y obtengo el negativo (el fondo es blanco)
-    procesada = procesada.get_convolve(mask(10)).get_equalize(8);
-    byn =procesada.RGBtoHSI().get_channel(2).normalize(0,255);
-    byn.get_histogram(256,0,255).display_graph();
+    procesada = transformacion3(procesada,generar_lut_logb((float)1));
+    procesada = procesada.get_blur(3);
+    byn =procesada.get_RGBtoHSI().channel(2).normalize(0,255);
     mascara = negativo(byn.get_threshold(UMBRAL));
-    //multiplico la mascara x original y obtengo el vaso de cerveza
-    (original,copia.mul(mascara),mascara).display();
 
-    //b) recortar imagen usando para esto la mascara y el convexhull
-    //1 -convexhull,2- obtengo cordendas minimas y maximas de x,y para recortar
-    //3-get crop con las cordenadas a la imagen original
-    //mascara = ConvexHull(mascara,true,false);
-
-//    coordenadas = maxmin_coord(mascara);
-//    max=  coordenadas[1];
-//    min = coordenadas[0];
-//    maxx = max.x;
-//    minx = min.x;
-//    maxy = max.y;
-//    miny = min.y;
-
-//    procesada = original.get_crop(maxx,maxy,minx,miny);
-//    procesada.display();
-
-//    CImg<float> copia_h(procesada.width(),procesada.height(),1,1);
-//    copia_h = procesada.get_channel(0);
-//    int i=procesada.width()/2;
-//    int j=procesada.height()/2;
-//    cout<<"hola"<<copia(i,j);
-
-
-    final = trim_image_wrapper(original,mascara,1);
-    final.display();
+    final = trim_image(original,mascara);
     //c)determinar tipo de cerveza (negra o rubia)
 
     if(tipo_cerveza(final)){
-        cout<<"Cerveza Rubia!!";
+        cout<<"Cerveza Rubia!!"<<endl;
     }
     else{
-        cout<<"Cerveza Negra!!";
+        cout<<"Cerveza Negra!!"<<endl;
     }
 
-    //d)Determino si la cerveza fue bien tirada
+    //d)Determino el porcentaje de espuma
 
-   return 0;
+    //Hago una mascara que me distinga la linea de la espuma
+    //Hay que tener en cuenta que el porcentaje seria sin contar la parte de la base del vaso
+    //por eso no seria teniendo en cuenta la altura de final.width()
+
+    //Calculo el alto de la cerveza haciendo la mascara necesaria
+
+    //Primero hago el promedio de una ventana centrada para obtener el color promedio de la cerveza
+    int cent_x = final.width()/2;
+    int cent_y = final.height()/2;
+    CImg<float> color(1,1,1,3);
+    color(0,0,0,0)=final.get_crop(cent_x-1,cent_y-1,cent_x+1,cent_y+1).channel(0).mean();
+    color(0,0,0,1)=final.get_crop(cent_x-1,cent_y-1,cent_x+1,cent_y+1).channel(1).mean();
+    color(0,0,0,2)=final.get_crop(cent_x-1,cent_y-1,cent_x+1,cent_y+1).channel(2).mean();
+
+    //Genero la mascara
+    mascara = ColorMaskRGB(final.get_blur(9),color,RADIO_SLICE).RGBtoHSI().channel(2).normalize(0,1).threshold(0.01);
+
+    //Elimino los pequeños pixeles y reconstruyo a partir de la que tiene el borde
+    mascara = apertura(mascara,mask(3));
+    mascara = reconstruccion_dilatacion(mascara,nerode(mascara,mask(3),CANT_EROSION));
+    mascara = relleno_automatico(mascara);
+
+    //Cuento el alto de la cerveza en si
+    int alto_cerveza=0;
+    int alto_espuma=0;
+    //Cuenta espuma
+    cimg_forY(final,j){
+        if(mascara(final.width()/2,j)==0){
+            alto_espuma++;
+        }else{
+            break;
+        }
+    }
+    //Cuenta cerveza
+    cimg_forY(final,j){
+        if(mascara(final.width()/2,j)==1){
+            alto_cerveza++;
+        }
+    }
+
+    (original,final,color,mascara).display();
+
+    //Calculo el porcentaje de espuma
+    cout<<"El porcentaje de espuma es: "<<alto_espuma*100/(alto_cerveza+alto_espuma)<<"%"<<endl;
+
+
+    return 0;
 }
 

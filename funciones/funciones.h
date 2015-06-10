@@ -230,6 +230,19 @@ CImg<T> transformacion(CImg<T> img,CImg<T> lut){
     return img;
 }
 
+//aplica la transformacion que se la pase en "lut" a la imagen "img"
+template<typename T>
+CImg<T> transformacion3(CImg<T> img,CImg<T> lut){
+
+    cimg_forXY(img,i,j){
+        img(i,j,0,0)=lut(img(i,j,0,0)); // "map"
+        img(i,j,0,1)=lut(img(i,j,0,1)); // "map"
+        img(i,j,0,2)=lut(img(i,j,0,2)); // "map"
+    }
+
+    return img;
+}
+
 ///****************************************
 /// FUNCION DETECTAR_MEDIOTONO - Devuelve una imagen 3x3 del mediotono correspondiente a la intensidad recibida
 ///****************************************
@@ -529,7 +542,7 @@ vector<int> grises_disponibles(CImg<T> imagen){
 ///****************************************
 //Devuelve una imagen binaria
 template<typename T>
-CImg<bool> greyslicing(CImg<T> imagen,int ancho=10,bool creg=false){
+CImg<bool> greyg(CImg<T> imagen,int ancho=10,bool creg=false){
     CImg<bool> final;
     CImgDisplay v1(imagen,"Presione sobre el gris deseado"),v2(imagen,"Resultado");
 
@@ -1238,6 +1251,32 @@ CImg<T> ColorMaskRGB(CImg<T> img, unsigned char x, unsigned char y, float radio)
     return img;
 }
 ///****************************************
+/// Color Slicing RGB a partir de un pixel (Sobrecarga)
+///****************************************
+template <class T>
+CImg<T> ColorMaskRGB(CImg<T> img,CImg<T> color, float radio){
+    unsigned ww=img.width();
+    unsigned hh=img.height();
+    T r0, g0, b0;
+    r0=color(0, 0, 0, 0);
+    g0=color(0, 0, 0, 1);
+    b0=color(0, 0, 0, 2);
+    float dist;
+    for(unsigned i=0; i<ww; i++){
+        for(unsigned j=0; j<hh; j++){
+            dist=sqrt(powf(r0-img(i,j,0,0),2)+powf(g0-img(i,j,0,1),2)+powf(b0-img(i,j,0,2),2));
+            if(dist>radio){
+                img(i,j,0,0)=0;
+                img(i,j,0,1)=0;
+                img(i,j,0,2)=0;
+            }
+        }
+    }
+    return img;
+}
+
+
+///****************************************
 /// Color Slicing HSI
 ///****************************************
 template <class T>
@@ -1246,6 +1285,32 @@ CImg<T> ColorMaskHSI(CImg<T> img, unsigned mx, unsigned my, float radio){
     T h=img(mx, my, 0, 0);//h
     T s=img(mx, my, 0, 1);//s
     T i=img(mx, my, 0, 2);//I
+    unsigned ww=img.width();
+    unsigned hh=img.height();
+    float dist;
+    for(unsigned i=0; i<ww; i++){
+        for(unsigned j=0; j<hh; j++){
+            dist=sqrt(powf(h-img(i,j,0,0),2)+powf(s-img(i,j,0,1),2));
+            if(dist>radio){
+                img(i,j,0,0)=0;//h
+                img(i,j,0,1)=0;//s
+                img(i,j,0,2)=0;//I
+            }
+        }
+    }
+    return img.HSItoRGB();
+}
+
+///****************************************
+/// Color Slicing HSI a partir de un pixel (Sobrecarga)
+///****************************************
+template <class T>
+CImg<T> ColorMaskHSI(CImg<T> img,CImg<T> color, float radio){
+    img.RGBtoHSI();
+    color.RGBtoHSI();
+    T h=color(0, 0, 0, 0);//h
+    T s=color(0, 0, 0, 1);//s
+    T i=color(0, 0, 0, 2);//I
     unsigned ww=img.width();
     unsigned hh=img.height();
     float dist;
@@ -3321,7 +3386,78 @@ void get_max_peak(CImg<T> hough, T &theta, T &rho_coord, unsigned int difuminaci
     //rho_coord = coord_hough_to_value(hough, max_y, 'p');
     //theta = max_x;
 
- }
+}
+
+///****************************************
+/// ROTATE IMAGE. Rota las imagenes en funcion de un angulo
+///****************************************
+
+template<class T>
+CImg<T> rotate_image(CImg<T> img,double umbral_sobel,double umbral_mascara,bool color=true){
+
+    CImg<T>greyscale;
+    CImg<bool> mascara;
+    CImg<T> aux_hough,resultado;
+
+    //Si la imagen es color la hago en escala de grises
+    if(color){
+        greyscale = img.get_RGBtoHSI().get_channel(2).get_normalize(0,255);
+    }
+    else{
+        greyscale = img.get_normalize(0,255);
+    }
+
+
+    //Sobel para deteccion de bordes
+    aux_hough = Sobel(greyscale,0)+Sobel(greyscale,1);
+    aux_hough.threshold(umbral_sobel);
+    aux_hough.display("sobel");
+
+    // Y ahora aplicamos hough
+    aux_hough = hough(aux_hough);
+
+    //buscamos el maximo pico
+    double max_theta = 0;
+    double max_rho_coord = 0;
+
+    get_max_peak<double>(aux_hough, max_theta, max_rho_coord);
+
+    // Ahora que se donde esta el maximo pico, se cual es su inclinacion, por lo que deberia
+    // rotarlo hacia 90 o hacia 0, depende cual este mas cerca
+    //std::cout << max_theta << std::endl;
+
+    // Si theta es negativo, tomo consideracion especial
+    max_theta = (max_theta < 0) ? 180 + max_theta : max_theta;
+
+    // Me va dar 0 (<45), 90 (< 135), 180 (< 225), 270 (<315), o 360
+    double degree_to_go = round(max_theta / 90) * 90;
+
+    // Y lo rotamos
+    resultado = img.get_rotate(max_theta - degree_to_go);
+
+
+    //Hago el blur para homogeneizar el objeto
+    greyscale.blur(3);
+    greyscale.display("blur");
+
+    //calculamos la mascara para la recortar los sobrantes
+    mascara = greyscale.get_threshold(umbral_mascara);
+    mascara = NOTimg(mascara);
+
+    //Morfologia - apertura
+    mascara = apertura(mascara,mask(5));
+    mascara=relleno_automatico(mascara);
+
+    //roto la mascara
+    mascara.rotate(max_theta - degree_to_go);
+    mascara.display();
+
+    //Recortamos la imagen
+    resultado = trim_image(resultado,mascara);
+    //resultado.display("recortada");
+
+    return resultado;
+}
 
 ///****************************************
 /// detectar_lineas
@@ -3424,76 +3560,6 @@ CImg<bool> detectar_linea_nro(CImg<T> img,int umbral_bordes,int max=1){
 
     return final;
 }
-
-///****************************************
-/// ROTATE IMAGE. Rota las imagenes en funcion de un angulo
-///****************************************
-
-template<class T>
-CImg<T> rotate_image(CImg<T> img,double umbral_sobel,double umbral_mascara,bool color=true){
-
-    CImg<T>greyscale;
-    CImg<bool> mascara;
-    CImg<T> aux_hough,resultado;
-
-    //Si la imagen es color la hago en escala de grises
-    if(color){
-        greyscale = img.get_RGBtoHSI().get_channel(2).get_normalize(0,255);
-    }
-    else{
-        greyscale = img.get_normalize(0,255);
-    }
-
-
-    //Sobel para deteccion de bordes
-    aux_hough = Sobel(greyscale,0)+Sobel(greyscale,1);
-    aux_hough.threshold(umbral_sobel);
-    aux_hough.display("sobel");
-
-    // Y ahora aplicamos hough
-    aux_hough = hough(aux_hough);
-
-    //buscamos el maximo pico
-    double max_theta = 0;
-    double max_rho_coord = 0;
-
-    get_max_peak<double>(aux_hough, max_theta, max_rho_coord);
-
-    // Ahora que se donde esta el maximo pico, se cual es su inclinacion, por lo que deberia
-    // rotarlo hacia 90 o hacia 0, depende cual este mas cerca
-    //std::cout << max_theta << std::endl;
-
-    // Si theta es negativo, tomo consideracion especial
-    max_theta = (max_theta < 0) ? 180 + max_theta : max_theta;
-
-    // Me va dar 0 (<45), 90 (< 135), 180 (< 225), 270 (<315), o 360
-    double degree_to_go = round(max_theta / 90) * 90;
-
-    // Y lo rotamos
-    resultado = img.get_rotate(max_theta - degree_to_go);
-
-    //Hago el blur para homogeneizar el objeto
-    //greyscale.blur(3);
-    //greyscale.display("blur");
-
-    //calculamos la mascara para la recortar los sobrantes
-    mascara = greyscale.get_threshold(umbral_mascara);
-    //mascara = NOTimg(mascara);
-
-    //Morfologia - apertura
-    mascara = apertura(mascara,mask(5));
-    mascara=relleno_automatico(mascara);
-
-    //roto la mascara
-    mascara.rotate(max_theta - degree_to_go);
-    mascara.display();
-
-    //Recortamos la imagen
-    resultado = trim_image(resultado,mascara);
-    //resultado.display("recortada");
-
-    return resultado;
-  }
 
 #endif // FUNCIONES
 
