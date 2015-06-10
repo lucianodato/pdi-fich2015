@@ -1,17 +1,26 @@
 #include "funciones.h"
 
 #define UMBRAL_SOBEL 50
-#define UMBRAL_MASCARA 230
+#define UMBRAL_MASCARA 2
+#define UMBRAL_CORTE 240
 #define UMBRAL_ROMBO 140
-#define RUTA "../../../../Parcial de Practica/Billetes/Billetes_Girados/4.jpg"
+#define RUTA "../../../../Parcial de Practica/Billetes/Billetes_Girados/1.jpg"
 #define REF_VALUE  0.97
 
 //GIRA BILLETE
 //en funcion de la media chequeo como esta el billete, del derecho o del revez
 template<typename T>
 void enderezar_billete(CImg <T> &img){
-    CImg <T>intensidad = img.get_RGBtoHSI().get_channel(2).get_normalize(0,255).get_threshold(150);
-    double aux= intensidad.get_crop(53,84,161,227).mean();
+    CImg <T>intensidad = img.get_RGBtoHSI().get_channel(2).get_normalize(0,255).get_threshold(180);
+    //Pregunto si la dimension del ancho no es mas chica q el largo.
+    //Si esto sucede, el objeto no fue rotado adecuadamente, quedo vertical
+    if(img.width()<img.height()){
+        //Tengo que rotar la mascara y la imagen 90 grados
+        intensidad.rotate(90);
+        img.rotate(90);
+    }
+    //Rota la imagen si corresponde
+    double aux = intensidad.get_crop(53,84,161,227).mean();
     if (aux<REF_VALUE)
         img.rotate(180);
 }
@@ -22,7 +31,7 @@ template<typename T>
 int valor_billete(CImg <T> img){
 
     img = img.get_RGBtoHSI().get_channel(2).get_normalize(0,255);
-    //img.display("bN");
+
     //Hago un crop de la zona de interes (Se que estan son las coordenadas donde se ubican los rombos)
     img = img.get_crop(img.width()*0.2084,img.height()*0.0278,img.width()*0.29,img.height()*0.3585);
     //Desgasto con una mascara promedio por q es una imagen muy pixelada
@@ -30,7 +39,7 @@ int valor_billete(CImg <T> img){
 
     //Calculo la mascara negativa con el valor de UMBRAL_ROMBO
     img = NOTimg(img.get_threshold(UMBRAL_ROMBO));
-    img.display("Mascara rombos");
+    //img.display("Mascara rombos");
 
     //Operacion de etiquetado (calculo cuantos objetos tengo en la mascara)
     CImg <T>etiqueta = label_cc(img);
@@ -62,13 +71,43 @@ int valor_billete(CImg <T> img){
 
 int main()
 {
-    //imagen
-    CImg<float> original,billete;
-    original.load(RUTA);
+    //Variables auxiliares
+    CImg<float> original,copia,billete,r,g,b;
+    CImg<int> mascara;
+    CImg<float>se0(3,3);
     double peso;
 
+    //asignacion de variales
+    original.load(RUTA);
+    se0.fill(1);   //  Structuring element 1
+
+    //Obtengo la Mascara del billete. Lo hago en RGB por que las componentes de intensidad en escala de grises entre
+    //fondo y billete se confunden y me arman una mala mascara. Este proceso es mas caro pero efectivo
+
+    copia = original.get_convolve(mask(5));
+
+    r=copia.get_channel(0);
+    g=copia.get_channel(1);
+    b=copia.get_channel(2);
+    //lleno inicialmente la mascara de unos..
+    //voy a buscar los blancos mas blancos y hacerlos ceros
+    mascara = original.get_RGBtoHSI().get_channel(2).fill(1);
+    cimg_forXY(copia,i,j){
+        if(r(i,j)>=UMBRAL_CORTE && g(i,j)>=UMBRAL_CORTE && b(i,j)>=UMBRAL_CORTE){
+            mascara(i,j) = 0;
+        }
+    }
+
+    mascara = mascara.erode(7).dilate(7);
+
+    //Morfologia - Arreglo la mascara
+    mascara = apertura(mascara,se0);
+
+    //Arreglo la imagen para pasarsela a rotate_image
+    copia = trim_image(original,mascara);
+
     //Roto el billete (sobel,hough y trim_image)
-    billete = rotate_image(original,UMBRAL_SOBEL,UMBRAL_MASCARA);
+    billete = rotate_image(copia,UMBRAL_SOBEL,UMBRAL_MASCARA,true,true); /*bandera true si hay q chequear si es horizontal*/
     billete.display("Billete Rotado resp. al Eje theta");
 
     //Verifico si el billete esta del derecho o del revez. Roto si corresponde

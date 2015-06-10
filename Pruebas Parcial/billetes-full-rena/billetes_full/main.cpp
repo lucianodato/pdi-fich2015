@@ -10,8 +10,16 @@
 //en funcion de la media chequeo como esta el billete, del derecho o del revez
 template<typename T>
 void enderezar_billete(CImg <T> &img){
-    CImg <T>intensidad = img.get_RGBtoHSI().get_channel(2).get_normalize(0,255).get_threshold(150);
-    double aux= intensidad.get_crop(53,84,161,227).mean();
+    CImg <T>intensidad = img.get_RGBtoHSI().get_channel(2).get_normalize(0,255).get_threshold(180);
+    //Pregunto si la dimension del ancho no es mas chica q el largo.
+    //Si esto sucede, el objeto no fue rotado adecuadamente, quedo vertical
+    if(img.width()<img.height()){
+        //Tengo que rotar la mascara y la imagen 90 grados
+        intensidad.rotate(90);
+        img.rotate(90);
+    }
+    //Rota la imagen si corresponde
+    double aux = intensidad.get_crop(53,84,161,227).mean();
     if (aux<REF_VALUE)
         img.rotate(180);
 }
@@ -22,7 +30,7 @@ template<typename T>
 int valor_billete(CImg <T> img){
 
     img = img.get_RGBtoHSI().get_channel(2).get_normalize(0,255);
-    //img.display("bN");
+
     //Hago un crop de la zona de interes (Se que estan son las coordenadas donde se ubican los rombos)
     img = img.get_crop(img.width()*0.2084,img.height()*0.0278,img.width()*0.29,img.height()*0.3585);
     //Desgasto con una mascara promedio por q es una imagen muy pixelada
@@ -30,7 +38,7 @@ int valor_billete(CImg <T> img){
 
     //Calculo la mascara negativa con el valor de UMBRAL_ROMBO
     img = NOTimg(img.get_threshold(UMBRAL_ROMBO));
-    img.display("Mascara rombos");
+    //img.display("Mascara rombos");
 
     //Operacion de etiquetado (calculo cuantos objetos tengo en la mascara)
     CImg <T>etiqueta = label_cc(img);
@@ -39,22 +47,22 @@ int valor_billete(CImg <T> img){
     int cant_rombos = cant_grises(etiqueta);
     switch(cant_rombos){
     case 6:
-        cout<<"2 PESOS";
+        //cout<<"2 PESOS";
         return 2;
     case 5:
-        cout<<"5 PESOS";
+        //cout<<"5 PESOS";
         return 5;
     case 4:
-        cout<<"10 PESOS";
+        //cout<<"10 PESOS";
         return 10;
     case 3:
-        cout<<"20 PESOS";
+        //cout<<"20 PESOS";
         return 20;
     case 2:
-        cout<<"50 PESOS";
+        //cout<<"50 PESOS";
         return 50;
     case 1:
-        cout<<"100 PESOS";
+        //cout<<"100 PESOS";
         return 100;
 
     }
@@ -97,33 +105,29 @@ int main()
     CImgList<double> billetes_rotados;
     for(int indice =0;indice<billetes.size();indice++){
 
-    billete = billetes(indice);
-    //Roto el billete (sobel,hough y trim_image)
+        billete = billetes(indice);
+        //Roto el billete (sobel,hough y trim_image)
 
-    billete = rotate_image(billete,UMBRAL_SOBEL,UMBRAL_MASCARA);
+        billete = rotate_image(billete,UMBRAL_SOBEL,UMBRAL_MASCARA);
 
-    //Hough solo rota respecto al eje theta. Hay que arreglar rotando 90 respecto a theta
-    if(billete.width()<billete.height()){
-        billete.get_rotate(90);
-    }
-    billete.display("Billete Rotado resp. al Eje theta");
+        //billete.display("Billete Rotado resp. al Eje theta");
 
-    //Verifico si el billete esta del derecho o del revez. Roto si corresponde
-    enderezar_billete(billete);
-    //billete.display("Billete enderezado");
+        //Verifico si el billete esta del derecho o del revez. Roto si corresponde
+        enderezar_billete(billete);
+        //billete.display("Billete enderezado");
 
-    //Determino el valor trim_image_wrapper del billete
-    peso = valor_billete(billete);
+        //Determino el valor trim_image_wrapper del billete
+        peso = valor_billete(billete);
 
-    //Push de billetes y calculo total de monto
-    total +=peso;
-    billetes_rotados.push_back(billete);
+        //Push de billetes y calculo total de monto
+        total +=peso;
+        billetes_rotados.push_back(billete);
 
     }
 
     //Muestro el listado de billetes rotados y muestro el total de pesos calculados
     billetes_rotados.display("Billetes Rotados");
-    cout<<"El total de pesos es de:"<<total<<endl;
+    cout<<"El total de pesos es: $"<<total<<endl;
 
     return 0;
 
