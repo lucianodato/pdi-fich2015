@@ -6,7 +6,7 @@ int main()
 {
     //imagen
     CImg<float> original;
-    original.load("../../../../Parcial de Practica/tenis/tenis02.jpg");
+    original.load("../../../../Parcial de Practica/tenis/tenis01.jpg");
 
     //En primera instancia deberia detectar la linea de saque
     //Tengo en cuenta entonces solo la imagen de la mitad para abajo
@@ -36,9 +36,9 @@ int main()
     //Cartel
     CImg<bool> cartel(original.width(),original.height(),1,1,0);
     cartel.draw_rectangle(posx,posy,posx+ancho,posy+alto,white).normalize(0,1);
-    //Bordes
+    //Bordes (es una combinacion de los bordes con sobel y un threshold de la imagen en greyscale)
     CImg<float> aux = original.get_RGBtoHSI().channel(2).normalize(0,255);
-    CImg<bool> bordes = (Sobel(aux,0)+Sobel(aux,1)).threshold(UMBRAL).normalize(0,1);
+    CImg<bool> bordes = (Sobel(aux,0)+Sobel(aux,1)).threshold(UMBRAL).normalize(0,1)+negativo(aux.get_threshold(100)).normalize(0,1);
     bordes = apertura(bordes,mask(3));
     //bordes = relleno_automatico(bordes);
     //Interseccion
@@ -51,7 +51,7 @@ int main()
     cartel2.draw_rectangle(posx,posy,posx+ancho,posy+alto,red);
     final=final.get_mul(NOTimg(cartel))+cartel2.get_mul(cartel);
 
-    (original,mascara,final).display();
+    (original,final).display();
 
     return 0;
 }
