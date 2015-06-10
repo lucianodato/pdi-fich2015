@@ -1431,7 +1431,6 @@ CImg<T> copia_canal(CImg<T> img_orig,int canal,CImg<T> img_a_copiar,int canal_a_
     return img_orig;
 }
 
-
 ///----------------FILTRADO FRECUENCIAL------------------------
 
 ///****************************************
