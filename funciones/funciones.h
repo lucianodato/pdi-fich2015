@@ -3410,7 +3410,7 @@ CImg<T> rotate_image(CImg<T> img,double umbral_sobel,double umbral_mascara,bool 
     //Sobel para deteccion de bordes
     aux_hough = Sobel(greyscale,0)+Sobel(greyscale,1);
     aux_hough.threshold(umbral_sobel);
-    //aux_hough.display("sobel");
+    aux_hough.display("sobel");
 
     // Y ahora aplicamos hough
     aux_hough = hough(aux_hough);
