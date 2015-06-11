@@ -27,7 +27,7 @@ using namespace std;
 
 #define EPS 0.00001
 
-/// STRUCTS Y VARIABLES AUXILIARES
+///------------STRUCTS Y VARIABLES AUXILIARES----------------
 
 //Punto
 typedef struct punto{
@@ -124,7 +124,7 @@ CImg<T> negativo(CImg<T> imagen){
     return imagen.normalize(0,255);
 }
 
-///--------FUNCIONES LUT----------
+///---------------------FUNCIONES LUT--------------------------
 
 //s=a*r+c
 //con r: valor de entrada
@@ -203,8 +203,6 @@ CImg<T> generar_lut_logb(T c){
 
 }
 
-
-
 ///LUT EXPONECIAL
 // gamma es positivo
 // 0 < gamma < 1 Aclara la imagenimgnueva
@@ -244,161 +242,6 @@ CImg<T> transformacion3(CImg<T> img,CImg<T> lut){
     return img;
 }
 
-///****************************************
-/// FUNCION DETECTAR_MEDIOTONO - Devuelve una imagen 3x3 del mediotono correspondiente a la intensidad recibida
-///****************************************
-template<typename T>
-CImg<T> detectar_mediotono(T intensidad){
-    
-    CImg <T> nivel(3,3,1,1);
-    
-    //9 niveles de 28 cada uno. El ultimo tiene 31
-    if(intensidad >=0 && intensidad<25){
-        //nivel 0
-
-        return nivel.fill(0);
-    }
-    if(intensidad >=25 && intensidad<50){
-        //nivel 1
-
-        nivel.fill(0);
-        nivel(0,1)= 255;
-        return nivel;
-    }
-    if(intensidad >=50 && intensidad<75){
-        //nivel 2
-
-        nivel.fill(0);
-        nivel(0,1)= 255;
-        nivel(2,2)= 255;
-        return nivel;
-    }
-    if(intensidad >=75 && intensidad<100){
-        //nivel 3
-
-        nivel.fill(0);
-        nivel(0,0)= 255;
-        nivel(0,1)= 255;
-        nivel(2,2)= 255;
-        return nivel;
-    }
-    if(intensidad >=100 && intensidad<125){
-        //nivel 4
-
-        nivel.fill(0);
-        nivel(0,0)= 255;
-        nivel(0,1)= 255;
-        nivel(2,0)= 255;
-        nivel(2,2)= 255;
-        return nivel;
-    }
-    if(intensidad >=125 && intensidad<150){
-        //nivel 5
-
-        nivel.fill(0);
-        nivel(0,0)= 255;
-        nivel(0,1)= 255;
-        nivel(0,2)= 255;
-        nivel(2,0)= 255;
-        nivel(2,2)= 255;
-        return nivel;
-    }
-    if(intensidad >=150 && intensidad<175){
-        //nivel 6
-
-        nivel.fill(0);
-        nivel(0,0)= 255;
-        nivel(0,1)= 255;
-        nivel(0,2)= 255;
-        nivel(1,2)= 255;
-        nivel(2,0)= 255;
-        nivel(2,2)= 255;
-        return nivel;
-    }
-    if(intensidad >=175 && intensidad<200){
-        //nivel 7
-
-        nivel.fill(255);
-        nivel(1,0)= 0;
-        nivel(1,1)= 0;
-        return nivel;
-    }
-    if(intensidad >=200 && intensidad<225){
-        //nivel 8
-
-        nivel.fill(255);
-        nivel(1,1)= 0;
-        return nivel;
-    }
-    if(intensidad >=225){
-        //nivel 9
-
-        return nivel.fill(255);
-    }
-
-}
-///****************************************
-///FUNCION MEDIOTONO - Recibe una imagen y la devuelve en binario con los medios tonos correspondientes
-///****************************************
-template<typename T>
-CImg<T> mediotono(CImg<T> original){
-
-    CImg<T> modificada(original.width()*3,original.height()*3,1,1), aux(3,3,1,1);
-    T var_x,var_y;
-    
-    original.normalize(0,255);
-
-    for (int x =0;x<original.width();x++){
-        for (int y =0;y<original.height();y++){
-
-            aux = detectar_mediotono((int)*original.data(x,y,0,0));
-            //cout <<"Fija x: "<<x<<" Columna y: "<<y<<" Intensidad: "<<(int)*original.data(x,y,0,0)<<endl;
-
-            var_x=3*x;
-            var_y=3*y;
-
-            modificada(var_x,var_y) = aux(0,0);
-            modificada(var_x,var_y+1) = aux(0,1);
-            modificada(var_x,var_y+2) = aux(0,2);
-            modificada(var_x+1,var_y) = aux(1,0);
-            modificada(var_x+1,var_y+1) = aux(1,1);
-            modificada(var_x+1,var_y+2) = aux(1,2);
-            modificada(var_x+2,var_y) = aux(2,0);
-            modificada(var_x+2,var_y+1) = aux(2,1);
-            modificada(var_x+2,var_y+2) = aux(2,2);
-        }
-
-    }
-
-    modificada.resize(original.width(),original.height(),-100,-100,3);
-    return modificada;
-}
-
-///****************************************
-///FUNCION BINARIO - Caso que recibe un umbral (En la libreria esta la funcion get_threshold tambien)
-///****************************************
-template<typename T>
-CImg<T> binario(CImg<T> imagen, T umbral){
-
-    CImg<T> modificada(imagen.width(),imagen.height(),1,1);
-
-    for (int i=0;i<imagen.width();i++){
-        for(int j=0;j<imagen.height();j++){
-
-            if( (int)*imagen.data(i,j,0,0) > umbral )
-            {
-                modificada(i,j)= 255;
-            }
-            else
-            {
-                modificada (i,j)=0;
-            }
-
-        }
-    }
-    return modificada;
-
-}
 ///****************************************
 ///SUMA
 ///****************************************
@@ -459,6 +302,36 @@ CImg<T> division(CImg<T> &img, CImg<T> &masc){
 
 }
 ///****************************************
+///MAYOR
+///****************************************
+// las imagenes en escala de griz
+template<typename T>
+CImg<T> MAYORimg(CImg<T> &img, CImg<T> &img2){
+    CImg<T> resultado(img.width(),img.height(),1,1);
+    cimg_forXY(img,i,j)
+            if ( img(i,j)>img2(i,j) )
+            resultado(i,j)=1;
+    else
+    resultado(i,j)=0;
+
+    return resultado;
+}
+///****************************************
+///MENOR
+///****************************************
+//imagenes en escala de griz
+template<typename T>
+CImg<T> MENORimg(CImg<T> &img, CImg<T> &img2){
+    CImg<T> resultado(img.width(),img.height(),1,1);
+    cimg_forXY(img,i,j)
+            if ( img(i,j)<img2(i,j) )
+            resultado(i,j)=1;
+    else
+    resultado(i,j)=0;
+
+    return resultado;
+}
+///****************************************
 ///REDUCIR RUIDO //pasar una imagen con ruido en "img",  //genera la suma de "n" imagenes con ruido
 ///****************************************
 //pasar lista de imagenes con ruido
@@ -469,6 +342,33 @@ CImg<T> reducRuido(CImgList<T>img){
         suma=sumaImg(suma,img[i],0); //sumo
     return suma;
 }
+
+///****************************************
+///FUNCION BINARIO - Caso que recibe un umbral (En la libreria esta la funcion get_threshold tambien)
+///****************************************
+template<typename T>
+CImg<T> binario(CImg<T> imagen, T umbral){
+
+    CImg<T> modificada(imagen.width(),imagen.height(),1,1);
+
+    for (int i=0;i<imagen.width();i++){
+        for(int j=0;j<imagen.height();j++){
+
+            if( (int)*imagen.data(i,j,0,0) > umbral )
+            {
+                modificada(i,j)= 255;
+            }
+            else
+            {
+                modificada (i,j)=0;
+            }
+
+        }
+    }
+    return modificada;
+
+}
+
 ///****************************************
 ///UMBRAL INVERTIDO
 ///****************************************
@@ -570,36 +470,19 @@ CImg<bool> greyg(CImg<T> imagen,int ancho=10,bool creg=false){
 
     return final;
 }
-///****************************************
-///MAYOR
-///****************************************
-// las imagenes en escala de griz
-template<typename T>
-CImg<T> MAYORimg(CImg<T> &img, CImg<T> &img2){
-    CImg<T> resultado(img.width(),img.height(),1,1);
-    cimg_forXY(img,i,j)
-            if ( img(i,j)>img2(i,j) )
-            resultado(i,j)=1;
-    else
-    resultado(i,j)=0;
 
-    return resultado;
-}
 ///****************************************
-///MENOR
+///EMBOSS
 ///****************************************
-//imagenes en escala de griz
+//Filtro emboss
 template<typename T>
-CImg<T> MENORimg(CImg<T> &img, CImg<T> &img2){
-    CImg<T> resultado(img.width(),img.height(),1,1);
-    cimg_forXY(img,i,j)
-            if ( img(i,j)<img2(i,j) )
-            resultado(i,j)=1;
-    else
-    resultado(i,j)=0;
-
-    return resultado;
+CImg<T> emboss(CImg<T> img,int corrimiento){
+    CImg<T> img_neg(img.width(),img.height(),1,1);//
+    img_neg = negativo(img);
+    return sumaImg(img, img_neg,corrimiento);//suma a img su negativo un poquito desplazado
 }
+
+
 ///****************************************
 ///BINARIO
 ///****************************************
@@ -617,34 +500,7 @@ vector<T> binario(T numero) {
 
     return bin;
 }
-///****************************************
-///EMBOSS
-///****************************************
-//Filtro emboss
-template<typename T>
-CImg<T> emboss(CImg<T> img,int corrimiento){
-    CImg<T> img_neg(img.width(),img.height(),1,1);//
-    img_neg = negativo(img);
-    return sumaImg(img, img_neg,corrimiento);//suma a img su negativo un poquito desplazado
-}
-///****************************************
-///BLISTER
-///****************************************
-//Detector de faltantes de pastillas en bliter,
-//Recive:la imagen blister (es deseable que este umbralizada o con buen contraste)
-//Retorna: vector con coordenadas en las que faltan pastillas
-template<typename T>
-vector<punto> blister(CImg<T> img)
-{   vector<punto> vectorcoord;
-    punto puntos;
-    for (int j=53;j<142;j=j+48)
-        for (int i=53;i<img.width();i=i+50)
-            if(img.get_crop(i-18,j-18,i+18,j+18).mean()<0.2){
-                puntos.x=i;puntos.y=j;
-                vectorcoord.push_back(puntos);
-            }
-    return vectorcoord;
-}
+
 ///****************************************
 ///BIT LIST
 ///****************************************
@@ -680,7 +536,155 @@ CImgList<T> bitlist(CImg<T> original)
     return lista;
 }
 
-///----------------Operaciones Logicas Binarias-------------------
+///****************************************
+///BLISTER
+///****************************************
+//Detector de faltantes de pastillas en bliter,
+//Recive:la imagen blister (es deseable que este umbralizada o con buen contraste)
+//Retorna: vector con coordenadas en las que faltan pastillas
+template<typename T>
+vector<punto> blister(CImg<T> img)
+{   vector<punto> vectorcoord;
+    punto puntos;
+    for (int j=53;j<142;j=j+48)
+        for (int i=53;i<img.width();i=i+50)
+            if(img.get_crop(i-18,j-18,i+18,j+18).mean()<0.2){
+                puntos.x=i;puntos.y=j;
+                vectorcoord.push_back(puntos);
+            }
+    return vectorcoord;
+}
+///****************************************
+/// FUNCION DETECTAR_MEDIOTONO - Devuelve una imagen 3x3 del mediotono correspondiente a la intensidad recibida
+///****************************************
+template<typename T>
+CImg<T> detectar_mediotono(T intensidad){
+
+    CImg <T> nivel(3,3,1,1);
+
+    //9 niveles de 28 cada uno. El ultimo tiene 31
+    if(intensidad >=0 && intensidad<25){
+        //nivel 0
+
+        return nivel.fill(0);
+    }
+    if(intensidad >=25 && intensidad<50){
+        //nivel 1
+
+        nivel.fill(0);
+        nivel(0,1)= 255;
+        return nivel;
+    }
+    if(intensidad >=50 && intensidad<75){
+        //nivel 2
+
+        nivel.fill(0);
+        nivel(0,1)= 255;
+        nivel(2,2)= 255;
+        return nivel;
+    }
+    if(intensidad >=75 && intensidad<100){
+        //nivel 3
+
+        nivel.fill(0);
+        nivel(0,0)= 255;
+        nivel(0,1)= 255;
+        nivel(2,2)= 255;
+        return nivel;
+    }
+    if(intensidad >=100 && intensidad<125){
+        //nivel 4
+
+        nivel.fill(0);
+        nivel(0,0)= 255;
+        nivel(0,1)= 255;
+        nivel(2,0)= 255;
+        nivel(2,2)= 255;
+        return nivel;
+    }
+    if(intensidad >=125 && intensidad<150){
+        //nivel 5
+
+        nivel.fill(0);
+        nivel(0,0)= 255;
+        nivel(0,1)= 255;
+        nivel(0,2)= 255;
+        nivel(2,0)= 255;
+        nivel(2,2)= 255;
+        return nivel;
+    }
+    if(intensidad >=150 && intensidad<175){
+        //nivel 6
+
+        nivel.fill(0);
+        nivel(0,0)= 255;
+        nivel(0,1)= 255;
+        nivel(0,2)= 255;
+        nivel(1,2)= 255;
+        nivel(2,0)= 255;
+        nivel(2,2)= 255;
+        return nivel;
+    }
+    if(intensidad >=175 && intensidad<200){
+        //nivel 7
+
+        nivel.fill(255);
+        nivel(1,0)= 0;
+        nivel(1,1)= 0;
+        return nivel;
+    }
+    if(intensidad >=200 && intensidad<225){
+        //nivel 8
+
+        nivel.fill(255);
+        nivel(1,1)= 0;
+        return nivel;
+    }
+    if(intensidad >=225){
+        //nivel 9
+
+        return nivel.fill(255);
+    }
+
+}
+///****************************************
+///FUNCION MEDIOTONO - Recibe una imagen y la devuelve en binario con los medios tonos correspondientes
+///****************************************
+template<typename T>
+CImg<T> mediotono(CImg<T> original){
+
+    CImg<T> modificada(original.width()*3,original.height()*3,1,1), aux(3,3,1,1);
+    T var_x,var_y;
+
+    original.normalize(0,255);
+
+    for (int x =0;x<original.width();x++){
+        for (int y =0;y<original.height();y++){
+
+            aux = detectar_mediotono((int)*original.data(x,y,0,0));
+            //cout <<"Fija x: "<<x<<" Columna y: "<<y<<" Intensidad: "<<(int)*original.data(x,y,0,0)<<endl;
+
+            var_x=3*x;
+            var_y=3*y;
+
+            modificada(var_x,var_y) = aux(0,0);
+            modificada(var_x,var_y+1) = aux(0,1);
+            modificada(var_x,var_y+2) = aux(0,2);
+            modificada(var_x+1,var_y) = aux(1,0);
+            modificada(var_x+1,var_y+1) = aux(1,1);
+            modificada(var_x+1,var_y+2) = aux(1,2);
+            modificada(var_x+2,var_y) = aux(2,0);
+            modificada(var_x+2,var_y+1) = aux(2,1);
+            modificada(var_x+2,var_y+2) = aux(2,2);
+        }
+
+    }
+
+    modificada.resize(original.width(),original.height(),-100,-100,3);
+    return modificada;
+}
+
+///----------------OPERACIONES LOGICAS BINARIAS-------------------
 
 ///****************************************
 ///OR LOGICO (Union de conjuntos)
@@ -1011,6 +1015,8 @@ CImg<T> filtroAP3(CImg<T> img,CImg<T> kernel, float amp=0.0){
     return c1+c2+c3;
 }
 
+///----------------HISTOGRAMAS-------------------
+
 ///PROMEDIO HISTOGRAMA
 template<typename T>
 CImg<T> promedio_histograma(CImgList<T> lista){
@@ -1093,7 +1099,7 @@ void LocalHistoEq(CImg<T> &img, T windowSize){
     img=ret;
 }
 
-
+///----------------AUXILIARES PARA LA CARGA DE PALETAS-------------------
 
 ///****************************************
 /// CARGAR PALETA
@@ -1178,25 +1184,9 @@ CImg<float> AplicarPaleta(CImg<float> img, string nomPaleta){
     return ret;
 }
 
-///****************************************
-///COMPLEMENTO COLOR
-///****************************************
-///la idea es girar el H 180 grados en todos sus puntos(como decia Rena)
-///  de la circunfencia del plato de color
-/// y e invertir la intensidad
-template <class T>
-CImg<T> complemento_color(CImg<T> img){
-    img.RGBtoHSI();
-    cimg_forXY(img,i,j){
-        img(i,j,0,0)+=180;
-        if(img(i,j,0,0) > 360)
-            img(i,j,0,0)=(img(i,j,0,0)-360);
-        img(i,j,0,2)=1-img(i,j,0,2);//Hace el negativo de la intensidad
-    }
-    img.HSItoRGB();
-    return img;
-}
+///----------------OPERACIONES CON COLOR-------------------
 
+//Fusiona los canales en una imagen RGB
 template <class T>
 void ComposeRGB(CImg<T> &img, CImg<T> &r, CImg<T> &g, CImg<T> &b){
     int ww=r.width(), hh=r.height(), i, j;
@@ -1210,6 +1200,7 @@ void ComposeRGB(CImg<T> &img, CImg<T> &r, CImg<T> &g, CImg<T> &b){
     }
 }
 
+//Fusiona los canales en una imagen HSI y la devuelve como RGB
 template <class T>
 CImg<T>  ComposeHSI(CImg<T> h, CImg<T> s, CImg<T> I){
     CImg<T> img;
@@ -1225,6 +1216,17 @@ CImg<T>  ComposeHSI(CImg<T> h, CImg<T> s, CImg<T> I){
     }
     img.HSItoRGB();
     return img;
+}
+
+///****************************************
+///COPIA CANAL A CANAL
+///****************************************
+//Sirve para no tener que escribir los ciclos en el main
+template<typename T>
+CImg<T> copia_canal(CImg<T> img_orig,int canal,CImg<T> img_a_copiar,int canal_a_copiar){
+    cimg_forXYZ(img_orig,i,j,k)
+            img_orig(i,j,k,canal) = img_a_copiar(i,j,k,canal_a_copiar);
+    return img_orig;
 }
 
 ///****************************************
@@ -1329,7 +1331,7 @@ CImg<T> ColorMaskHSI(CImg<T> img,CImg<T> color, float radio){
 }
 
 ///****************************************
-/// GreySlicing
+/// GreySlicing (Version de Renato)
 ///****************************************
 template <class T>
 CImg<T> GreyMask(CImg<T> img, unsigned char x, unsigned char y, float radio){
@@ -1376,6 +1378,25 @@ CImg<T> colourslicing(CImg<T> imagen,int radio=10){
 }
 
 ///****************************************
+///COMPLEMENTO COLOR
+///****************************************
+///la idea es girar el H 180 grados en todos sus puntos(como decia Rena)
+///  de la circunfencia del plato de color
+/// y e invertir la intensidad
+template <class T>
+CImg<T> complemento_color(CImg<T> img){
+    img.RGBtoHSI();
+    cimg_forXY(img,i,j){
+        img(i,j,0,0)+=180;
+        if(img(i,j,0,0) > 360)
+            img(i,j,0,0)=(img(i,j,0,0)-360);
+        img(i,j,0,2)=1-img(i,j,0,2);//Hace el negativo de la intensidad
+    }
+    img.HSItoRGB();
+    return img;
+}
+
+///****************************************
 ///BALANCE DE COLOR RGB
 ///****************************************
 template<typename T>
@@ -1418,17 +1439,6 @@ CImg<T> balancecolorRGB_condicional(CImg<T> img_orig,int canal,int aumento){
             //img_orig(i,j,k,der)+=aumento/2;
         }
     }
-    return img_orig;
-}
-
-///****************************************
-///COPIA CANAL A CANAL
-///****************************************
-//Sirve para no tener que escribir los ciclos en el main
-template<typename T>
-CImg<T> copia_canal(CImg<T> img_orig,int canal,CImg<T> img_a_copiar,int canal_a_copiar){
-    cimg_forXYZ(img_orig,i,j,k)
-            img_orig(i,j,k,canal) = img_a_copiar(i,j,k,canal_a_copiar);
     return img_orig;
 }
 
@@ -1826,6 +1836,7 @@ CImg<T> filtroAP3_frecuencia(CImg<T> img,T alpha,T b) {
     return ComposeHSI(c1,c2,c3);
 }
 
+///------------------RESTAURACION-------------------------
 
 ///****************************************
 ///FILTRO DE FILTRADO DE RUIDO (DENOISE)
@@ -3389,9 +3400,13 @@ void get_max_peak(CImg<T> hough, T &theta, T &rho_coord, unsigned int difuminaci
 }
 
 ///****************************************
-/// ROTATE IMAGE. Rota las imagenes en funcion de un angulo
+/// ROTATE IMAGE.
 ///****************************************
-
+//Rota las imagenes en funcion de un angulo que detecta automaticamente y recorta los sobrantes del fondo
+//Recibe la imagen que se desea rotar un umbral para el calculo del sobel que va a entrar en el hough
+//Un umbral para el calculo de la mascara
+//Un limite de giro angular
+//Funciona para imagenes a color y para en escala de grises
 template<class T>
 CImg<T> rotate_image(CImg<T> img,double umbral_sobel,double umbral_mascara,bool correccion_eje=true,bool color=true){
 
@@ -3441,7 +3456,7 @@ CImg<T> rotate_image(CImg<T> img,double umbral_sobel,double umbral_mascara,bool 
         resultado = img.get_rotate(max_theta - degree_to_go);
     }
 
-    //Hago el blur para homogeneizar el objeto
+    //Hago el blur para homogeneizar el objeto y obtener una mejor mascara con el threshold
     //greyscale.blur(3);
     //greyscale.display("blur");
 
@@ -3453,7 +3468,7 @@ CImg<T> rotate_image(CImg<T> img,double umbral_sobel,double umbral_mascara,bool 
 
     //roto la mascara segun corresponda. Si hay correccion resp. al eje y ang. theta es<tol, entonces roto.
     if(max_theta > tolerancia && correccion_eje){
-    mascara.rotate(max_theta - degree_to_go);
+        mascara.rotate(max_theta - degree_to_go);
     }
 
     //Recortamos la imagen
@@ -3567,7 +3582,7 @@ CImg<bool> detectar_linea_nro(CImg<T> img,int umbral_bordes,int max=1){
 }
 
 ///****************************************
-/// detectar_lineas
+/// detectar_lineas_cond
 ///****************************************
 /// Detecta las lineas con maxima coolinealidad de una imagen y las devuelve
 /// en forma de mascara. La cantidad de lineas que detecte dependera de
