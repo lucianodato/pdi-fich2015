@@ -5,7 +5,7 @@
 #define PLATO 200
 #define RADIO 5.0
 #define RUTA "../../../../Parcial de Practica/Moscas/Platos0.jpg"
-#define REF_SOPA  113
+#define REF_  113
 
 const float blanco[] = {1, 1, 1};
 
@@ -61,9 +61,9 @@ CImg<T> buscar_plato(CImg<T>img){
 }
 
 template<class T>
-CImg<T> buscar_sopa(CImg<T>img,int &tipo_sopa){
+CImg<T> buscar_parking(CImg<T>img){
 
-    CImg<T> sopa;
+    CImg<T> parking;
     CImg<int> mascara;
 
     //Genero una mascara del centro del plato para determinar el color promedio
