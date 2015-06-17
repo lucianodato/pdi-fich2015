@@ -3492,7 +3492,7 @@ CImg<bool> detectar_lineas(CImg<T> img,int umbral_bordes,int cant_max){
 
     //Detecto los bordes de la imagen
     CImg<bool> bordes = (Sobel(img,0)+Sobel(img,1)).normalize(0,255).threshold(umbral_bordes);
-    bordes.display();
+    //bordes.display();
 
     //Calculo la transformada de Hough
     CImg<T> img_hough = hough(bordes).normalize(0,1);
