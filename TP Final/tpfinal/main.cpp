@@ -1,7 +1,7 @@
 #include "funciones.h"
 
 //Ruta de la imagen
-#define RUTA "../../../images/TP/aerial.tif"
+#define RUTA "../../../images/TP/rio.jpg"
 
 //Parametros Ecualizacion Generales
 //N_NIVELES niveles finales deseado
@@ -49,12 +49,34 @@ int main()
     imagen_acebsf.get_histogram(N_NIVELES).display_graph("Histograma ACEBSF");
 
     cout<<endl<<endl;
-    cout<<"       ----------Resultados----------"<<endl;
+    cout<<"       ----------Resultados MSE----------"<<endl;
     cout<<"-----------------------------------------------"<<endl;
     cout<<"El MSE con respecto a HE es: "<<imagen.MSE(imagen_he)<<endl;
     cout<<"El MSE con respecto a BBHE es: "<<imagen.MSE(imagen_bbhe)<<endl;
     cout<<"El MSE con respecto a CLAHE es: "<<imagen.MSE(imagen_clahe)<<endl;
     cout<<"El MSE con respecto a ACEBSF es: "<<imagen.MSE(imagen_acebsf)<<endl;
+    cout<<"-----------------------------------------------"<<endl;
+    cout<<endl<<endl;
+
+
+    cout<<endl<<endl;
+    cout<<"       ----------Resultados ENTROPIA DISCRETA----------"<<endl;
+    cout<<"-----------------------------------------------"<<endl;
+    cout<<"la ED de la imagen orginal es:"<<entropia_discreta(imagen)<<endl;
+    cout<<"la ED respecto a HE es: "<<entropia_discreta(imagen_he)<<endl;
+    cout<<"la ED respecto a BBHE es: "<<entropia_discreta(imagen_bbhe)<<endl;
+    cout<<"la ED respecto a CLAHE es: "<<entropia_discreta(imagen_clahe)<<endl;
+    cout<<"la ED respecto a ACEBSF es: "<<entropia_discreta(imagen_acebsf)<<endl;
+    cout<<"-----------------------------------------------"<<endl;
+    cout<<endl<<endl;
+
+    cout<<endl<<endl;
+    cout<<"       ----------Resultados INTERCEPCION ENTRE HISTOGRAMAS----------"<<endl;
+    cout<<"-----------------------------------------------"<<endl;
+    cout<<"la HI respecto a HE con la original es: "<<interseccion_histograma(imagen,imagen_he)<<endl;
+    cout<<"la HI respecto a BBHE con la original es: "<<interseccion_histograma(imagen,imagen_bbhe)<<endl;
+    cout<<"la HI respecto a CLAHE con la original es: "<<interseccion_histograma(imagen,imagen_clahe)<<endl;
+    cout<<"la HI respecto a ACEBSF con la original es: "<<interseccion_histograma(imagen,imagen_acebsf)<<endl;
     cout<<"-----------------------------------------------"<<endl;
     cout<<endl<<endl;
 
