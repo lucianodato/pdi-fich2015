@@ -1,7 +1,9 @@
 #include "funciones.h"
 
 //Ruta de la imagen
-#define RUTA "../../../images/TP/rio.jpg"
+///#define RUTA "../../../images/TP/BAJO_CONTRASTE/1.tif"
+///#define RUTA "../../../images/TP/MEDIO_CONTRASTE/1.tif"
+#define RUTA "../../../images/TP/ALTO_CONTRASTE/1.tif"
 
 //Parametros Ecualizacion Generales
 //N_NIVELES niveles finales deseado
@@ -40,8 +42,18 @@ int main()
     CImg<double> imagen_clahe =ecualizar_clahe(imagen,N_NIVELES,N_I,N_S,T_VENT,CLIP_LIMIT);
     CImg<double> imagen_acebsf =ecualizar_acebsf(imagen,K,NC_I,NC_S,N_NIVELES,N_I,N_S,T_VENT,CLIP_LIMIT);
 
+    //Muestro el resultado
     (imagen,imagen_he,imagen_bbhe,imagen_clahe,imagen_acebsf).display();
 
+    //Guardo el resultado
+    imagen_he.save_tiff("../../../images/TP/ALTO_CONTRASTE/2.tif");
+    imagen_bbhe.save_tiff("../../../images/TP/ALTO_CONTRASTE/3.tif");
+    imagen_clahe.save_tiff("../../../images/TP/ALTO_CONTRASTE/4.tif");
+    imagen_acebsf.save_tiff("../../../images/TP/ALTO_CONTRASTE/5.tif");
+
+
+
+    //Muestro el histograma de las ecualizaciones resultantes y luego guardo su resultado
     imagen.get_histogram(N_NIVELES).display_graph("Histograma de la Original");
     imagen_he.get_histogram(N_NIVELES).display_graph("Histograma HE");
     imagen_bbhe.get_histogram(N_NIVELES).display_graph("Histograma BBHE");

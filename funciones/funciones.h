@@ -3280,8 +3280,10 @@ double interseccion_histograma(CImg<T> original,CImg<T> ecualizada){
 
     //HI(p,q) = sum(min(orginal,ecualizada)) o bien 0.5*(org(i) + ecu(i) - abs(org(i) - ecu(i)))
     cimg_forX(org,i){
-        hi_intersep += 0.5*(org(i) + ecu(i) - abs(org(i) - ecu(i)));
+       hi_intersep +=0.5*(org(i) + ecu(i) - abs(org(i) - ecu(i)));
+       ////hi_intersep +=min(org(i),ecu(i));
     }
+
 
     return hi_intersep;
 }
