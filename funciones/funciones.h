@@ -3252,6 +3252,43 @@ CImg<T> ecualizar_acebsf(CImg<T> img,double k1,int ni,int ns,int rango,int min,i
     return resultado;
 }
 
+///CALCULO DE ENTROPIA DISCRETA
+template<typename T>
+float entropia_discreta(CImg<T> img){
+
+    float entropia=0.0;
+    CImg<T> histo= img.get_histogram(256,0,255).get_normalize(0,1);
+
+    //-1*sum(entropia)*log2(entropia)
+    cimg_forX(histo,i){
+        if(histo(i)!=0){
+            entropia += histo(i)*log2(histo(i));
+        }
+    }
+
+    return entropia*-1.0;
+}
+
+
+///CALCULO DE LA INTERSECCION ENTRE HISTOGRAMAS
+template<typename T>
+double interseccion_histograma(CImg<T> original,CImg<T> ecualizada){
+
+    double hi_intersep=0;
+    CImg<T> org= original.get_histogram(256,0,255).get_normalize(0,1);
+    CImg<T> ecu= ecualizada.get_histogram(256,0,255).get_normalize(0,1);
+
+    //HI(p,q) = sum(min(orginal,ecualizada)) o bien 0.5*(org(i) + ecu(i) - abs(org(i) - ecu(i)))
+    cimg_forX(org,i){
+       hi_intersep +=0.5*(org(i) + ecu(i) - abs(org(i) - ecu(i)));
+       ////hi_intersep +=min(org(i),ecu(i));
+    }
+
+
+    return hi_intersep;
+}
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////////

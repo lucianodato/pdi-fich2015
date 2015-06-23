@@ -9,7 +9,7 @@ int main()
 {
     //imagen
     CImg<float> original;
-    original.load("../../../../Parcial de Practica/tormentas/2.png");
+    original.load("../../../../Parcial de Practica/tormentas/4.png");
 
     //Guardo el color que esta centrado entre 48 y 68 para hacer color slicing
     CImg<float> maxdbz(1,1,1,3);
