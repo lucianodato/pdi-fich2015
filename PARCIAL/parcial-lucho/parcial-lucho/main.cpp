@@ -1,6 +1,6 @@
 #include "funciones.h"
 
-#define PATH "../../../Imagenes parcial/parking5.png"
+#define PATH "../../../Imagenes parcial/parking1.png"
 #define CP_R 202
 #define CP_G 163
 #define CP_B 88

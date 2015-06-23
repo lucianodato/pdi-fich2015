@@ -18,7 +18,7 @@
 #define T_VENT 30
 
 //Parametros para sigmoidea
-//K coeficiente de mezcla (0-1)
+//K c   oeficiente de mezcla (0-1)
 //NC_I Nivel de corte de aplicacion inferior
 //NC_S Nivel de corte de aplicacion superior
 #define K 0.2
