@@ -3277,15 +3277,18 @@ double interseccion_histograma(CImg<T> original,CImg<T> ecualizada){
     double hi_intersep=0;
     CImg<T> org= original.get_histogram(256,0,255).get_normalize(0,1);
     CImg<T> ecu= ecualizada.get_histogram(256,0,255).get_normalize(0,1);
+    double sum=0;
 
     //HI(p,q) = sum(min(orginal,ecualizada)) o bien 0.5*(org(i) + ecu(i) - abs(org(i) - ecu(i)))
     cimg_forX(org,i){
-       hi_intersep +=0.5*(org(i) + ecu(i) - abs(org(i) - ecu(i)));
-       ////hi_intersep +=min(org(i),ecu(i));
+       //hi_intersep +=0.5*(org(i) + ecu(i) - abs(org(i) - ecu(i)));
+       //hi_intersep +=min(org(i),ecu(i));
+        hi_intersep+=min(org(i),ecu(i));
+        sum+=org(i);
     }
 
 
-    return hi_intersep;
+    return hi_intersep/sum;
 }
 
 

@@ -1,9 +1,9 @@
 #include "funciones.h"
 
 //Ruta de la imagen
-///#define RUTA "../../../images/TP/BAJO_CONTRASTE/1.tif"
-///#define RUTA "../../../images/TP/MEDIO_CONTRASTE/1.tif"
-#define RUTA "../../../images/TP/ALTO_CONTRASTE/1.tif"
+#define RUTA "../../../images/TP/BAJO_CONTRASTE/1.tif"
+//#define RUTA "../../../images/TP/CONTRASTE_MEDIO/1.tif"
+//#define RUTA "../../../images/TP/ALTO_CONTRASTE/1.tif"
 
 //Parametros Ecualizacion Generales
 //N_NIVELES niveles finales deseado
@@ -46,10 +46,10 @@ int main()
     (imagen,imagen_he,imagen_bbhe,imagen_clahe,imagen_acebsf).display();
 
     //Guardo el resultado
-    imagen_he.save_tiff("../../../images/TP/ALTO_CONTRASTE/2.tif");
-    imagen_bbhe.save_tiff("../../../images/TP/ALTO_CONTRASTE/3.tif");
-    imagen_clahe.save_tiff("../../../images/TP/ALTO_CONTRASTE/4.tif");
-    imagen_acebsf.save_tiff("../../../images/TP/ALTO_CONTRASTE/5.tif");
+//    imagen_he.save_tiff("../../../images/TP/ALTO_CONTRASTE/2.tif");
+//    imagen_bbhe.save_tiff("../../../images/TP/ALTO_CONTRASTE/3.tif");
+//    imagen_clahe.save_tiff("../../../images/TP/ALTO_CONTRASTE/4.tif");
+//    imagen_acebsf.save_tiff("../../../images/TP/ALTO_CONTRASTE/5.tif");
 
 
 
